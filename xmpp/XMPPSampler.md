@@ -1,4 +1,5 @@
 # XMPP Sampler
+![](xmpp.png)
 
 XMPP Samlper uses [XMPP Connection](XMPPConnection.md) to obtain connection context, then it performs one of available XMPP actions. Action is selected in the UI from the list of available actions. To use the plugin properly, you need to have at least basic knowledge of [XMPP protocol](http://xmpp.org/xmpp-protocols/) and its client-server interaction.
 

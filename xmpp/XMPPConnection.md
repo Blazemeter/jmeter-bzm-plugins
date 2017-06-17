@@ -1,4 +1,5 @@
-# XMPP Connection Config
+# XMPP Connection Config 
+![](xmpp.png)
 
 XMPP Connection Config item is required for any XMPP testing script. [XMPP Samplers](XMPPSampler.md) takes connection context from this element.
 
