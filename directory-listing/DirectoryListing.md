@@ -1,15 +1,4 @@
-= Directory Listing Config =
-
-<span class=''>[/?search=jpgc-directory-listing <i class='fa fa-download'></i> Download]</span>
-
-== Authorship ==
-<span class="pull-right" style="margin-left: 1em">
-[http://blazemeter.com/?utm_source=jmplinnerpages&utm_medium=cpc&utm_content=jmpininnerpgs&utm_campaign=JMeter%2BPlug%2BIn%2BWiki https://d3qmoqvtroy6p7.cloudfront.net/logo.png]
-</span>
-
-This plugin was implemented by _[http://blazemeter.com/?utm_source=jmplinnerpages&utm_medium=cpc&utm_content=jmpininnerpgs&utm_campaign=JMeter%2BPlug%2BIn%2BWiki BlazeMeter Inc.]_ and then contributed to community as Open Source.
-
-== Description ==
+# Directory Listing Config 
 
 Directory listing config plugin offers capabilities list files from source directory and iterate over this list with JMeter variable. This is convenient for data-driven testing when you have, for example, 1000 files to upload into server.
 
@@ -23,4 +12,4 @@ This plugin has following options that affect the behavior:
 
 _Default value of destination variable name is "filename"._
 
-[/img/wiki/directoryListing.png]
+![](directoryListing.png)
