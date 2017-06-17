@@ -1,5 +1,9 @@
-package org.apache.jmeter.protocol.http.sampler;
+package com.blazemeter.jmeter.http;
 
+import org.apache.jmeter.protocol.http.sampler.HCAccessor;
+import org.apache.jmeter.protocol.http.sampler.HTTPAbstractImpl;
+import org.apache.jmeter.protocol.http.sampler.HTTPSampleResult;
+import org.apache.jmeter.protocol.http.sampler.HTTPSamplerBase;
 import org.apache.jmeter.samplers.Interruptible;
 import org.apache.jmeter.testelement.property.CollectionProperty;
 import org.apache.jmeter.testelement.property.JMeterProperty;
@@ -18,6 +22,7 @@ public class ParallelHTTPSampler extends HTTPSamplerBase implements Interruptibl
     public static final Class[] columnClasses = new Class[]{
             String.class,
     };
+    protected transient HTTPAbstractImpl impl;
 
     public ParallelHTTPSampler() {
         super();
@@ -35,30 +40,35 @@ public class ParallelHTTPSampler extends HTTPSamplerBase implements Interruptibl
         if (depth < 1) {
             JMeterProperty data = getData();
             StringBuilder body = new StringBuilder();
+            StringBuilder req = new StringBuilder();
             if (!(data instanceof NullProperty)) {
                 CollectionProperty rows = (CollectionProperty) data;
 
                 for (JMeterProperty row : rows) {
                     ArrayList<Object> curProp = (ArrayList<Object>) row.getObjectValue();
-
+                    req.append(curProp.get(0)).append("\n");
                     body.append("<iframe src='").append(curProp.get(0)).append("'></iframe>\n");
                 }
             }
 
             log.info("Body: " + body.toString());
             HTTPSampleResult res = new HTTPSampleResult();
+            res.setSamplerData(req.toString());
             res.setSuccessful(true);
             res.setResponseData(body.toString(), res.getDataEncodingWithDefault());
             res.setContentType("text/html");
             res.sampleStart();
             downloadPageResources(res, res, depth);
-            if(res.getEndTime() == 0L) {
+            if (res.getEndTime() == 0L) {
                 res.sampleEnd();
             }
             return res;
         } else {
-            HTTPAbstractImpl impl = new HTTPHC4Impl(this); // TODO: make lazy inst single instance
-            return impl.sample(u, method, areFollowingRedirect, depth);
+            if (impl == null) {
+                impl = HCAccessor.getInstance(this);
+            }
+
+            return HCAccessor.sample(impl, u, method, areFollowingRedirect, depth);
         }
     }
 

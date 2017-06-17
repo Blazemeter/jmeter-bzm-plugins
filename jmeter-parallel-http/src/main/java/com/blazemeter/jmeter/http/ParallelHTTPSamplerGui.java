@@ -1,4 +1,4 @@
-package org.apache.jmeter.protocol.http.sampler;
+package com.blazemeter.jmeter.http;
 
 import kg.apc.jmeter.JMeterPluginsUtils;
 import kg.apc.jmeter.gui.ButtonPanelAddCopyRemove;
