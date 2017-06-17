@@ -11,6 +11,8 @@ import org.apache.jmeter.testelement.property.NullProperty;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 
 public class ParallelHTTPSampler extends HTTPSamplerBase implements Interruptible {
@@ -51,9 +53,16 @@ public class ParallelHTTPSampler extends HTTPSamplerBase implements Interruptibl
                 }
             }
 
-            log.info("Body: " + body.toString());
             HTTPSampleResult res = new HTTPSampleResult();
             res.setSamplerData(req.toString());
+            res.setRequestHeaders("\n");
+            res.setHTTPMethod("GET");
+            try {
+                res.setURL(new URL("http://parallel-urls-list"));
+            } catch (MalformedURLException e) {
+                log.warn("Failed to set empty url", e);
+            }
+
             res.setSuccessful(true);
             res.setResponseData(body.toString(), res.getDataEncodingWithDefault());
             res.setContentType("text/html");

@@ -28,7 +28,8 @@ public class ParallelHTTPSamplerTest {
     @Test
     public void sample() throws Exception {
         ParallelHTTPSampler obj = new ParallelHTTPSamplerMock();
-        obj.setConcurrentDwn(false); //FIXME: remove/comment this
+        obj.setName("parent");
+        //obj.setConcurrentDwn(false); //FIXME: remove or comment this
         PowerTableModel dataModel = new PowerTableModel(ParallelHTTPSampler.columnIdentifiers, ParallelHTTPSampler.columnClasses);
         dataModel.addRow(new String[]{"http://localhost:8000/rtimes/const?delay=1"});
         dataModel.addRow(new String[]{"http://localhost:8000/rtimes/const?delay=2"});
@@ -42,7 +43,7 @@ public class ParallelHTTPSamplerTest {
     private class ParallelHTTPSamplerMock extends ParallelHTTPSampler {
         public ParallelHTTPSamplerMock() {
             super();
-            impl=new HCMock(this);
+            impl = new HCMock(this);
         }
     }
 
