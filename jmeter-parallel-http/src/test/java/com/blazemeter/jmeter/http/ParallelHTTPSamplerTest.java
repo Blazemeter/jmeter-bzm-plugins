@@ -3,6 +3,7 @@ package com.blazemeter.jmeter.http;
 import kg.apc.emulators.TestJMeterUtils;
 import kg.apc.jmeter.JMeterPluginsUtils;
 import org.apache.jmeter.gui.util.PowerTableModel;
+import org.apache.jmeter.protocol.http.sampler.HTTPAbstractImpl;
 import org.apache.jmeter.protocol.http.sampler.HTTPSampleResult;
 import org.apache.jmeter.protocol.http.sampler.HTTPSamplerBase;
 import org.apache.jmeter.samplers.SampleResult;
@@ -40,28 +41,15 @@ public class ParallelHTTPSamplerTest {
         assertEquals(2, res.getSubResults().length);
     }
 
-    private class ParallelHTTPSamplerMock extends ParallelHTTPSampler {
-        public ParallelHTTPSamplerMock() {
-            super();
-            impl = new HCMock(this);
-        }
+    @Test
+    public void empty_list_call() throws Exception {
+        ParallelHTTPSampler obj = new ParallelHTTPSamplerMock();
+        obj.setName("parent");
+        obj.addURL("http://localhost:8000/rtimes/const?delay=1");
+        obj.addURL("http://localhost:8000/rtimes/const?delay=2");
+        SampleResult res = obj.sample();
+        assertTrue(res.isSuccessful());
+        assertEquals(2, res.getSubResults().length);
     }
 
-    private class HCMock extends org.apache.jmeter.protocol.http.sampler.HTTPAbstractImpl {
-        protected HCMock(HTTPSamplerBase testElement) {
-            super(testElement);
-        }
-
-        @Override
-        protected HTTPSampleResult sample(URL url, String s, boolean b, int i) {
-            HTTPSampleResult res = new HTTPSampleResult();
-            res.setSuccessful(true);
-            return res;
-        }
-
-        @Override
-        public boolean interrupt() {
-            return false;
-        }
-    }
 }

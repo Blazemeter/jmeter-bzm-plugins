@@ -93,4 +93,19 @@ public class ParallelHTTPSampler extends HTTPSamplerBase implements Interruptibl
     public JMeterProperty getData() {
         return getProperty(DATA_PROPERTY);
     }
+
+    public void addURL(String s) {
+        JMeterProperty data = getData();
+
+        if (data instanceof NullProperty) {
+            data = new CollectionProperty();
+            data.setName(DATA_PROPERTY);
+        }
+        CollectionProperty rows = (CollectionProperty) data;
+        CollectionProperty row = new CollectionProperty();
+        row.addItem(s);
+        rows.addItem(row);
+        setData(rows);
+    }
+
 }
