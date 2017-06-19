@@ -7,6 +7,10 @@ Contents:
  - [Weighted Switch Controller](wsc/WeightedSwitchController.md)
  - [XMPP Connection](xmpp/XMPPConnection.md) and [XMPP Sampler](xmpp/XMPPSampler.md)  
 
-## Licesnse
+## Support
+
+To get support on these plugins, please use regular [JMeter Plugins support forums](https://groups.google.com/forum/#!forum/jmeter-plugins)
+
+## License
 
 The plugins are proudly controbuted to community as Open Source, under [Apache 2.0 License](LICENSE).
