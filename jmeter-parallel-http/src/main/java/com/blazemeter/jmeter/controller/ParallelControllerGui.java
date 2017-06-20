@@ -16,7 +16,7 @@ public class ParallelControllerGui extends AbstractControllerGui {
 
     @Override
     public TestElement createTestElement() {
-        ParallelController te = new ParallelController();
+        ParallelSampler te = new ParallelSampler();
         modifyTestElement(te);
         return te;
     }
