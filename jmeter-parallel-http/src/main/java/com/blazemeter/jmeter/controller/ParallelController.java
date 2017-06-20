@@ -57,6 +57,7 @@ public class ParallelController extends AbstractTestElement implements Controlle
         } else if (child instanceof Sampler) {
             GenericController wrapper = new GenericController();
             wrapper.addTestElement(child);
+            wrapper.setName(child.getName());
             subControllersAndSamplers.add(wrapper);
         }
     }
