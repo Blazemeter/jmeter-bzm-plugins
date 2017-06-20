@@ -3,6 +3,7 @@ package com.blazemeter.jmeter.controller;
 import kg.apc.emulators.TestJMeterUtils;
 import org.apache.jmeter.control.GenericController;
 import org.apache.jmeter.sampler.DebugSampler;
+import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.threads.JMeterContextService;
@@ -18,7 +19,7 @@ import org.junit.Test;
 
 import java.lang.reflect.Field;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 public class ParallelSamplerTest {
     @BeforeClass
@@ -34,14 +35,13 @@ public class ParallelSamplerTest {
     @Test
     public void sample() throws Exception {
         ParallelSampler obj = new ParallelSampler();
-        ///obj.addSampler(new DebugSampler());
         GenericController ctl = new GenericController();
-        DebugSampler sam = new DebugSampler();
+        EmulSampler sam = new EmulSampler();
         addToContext(sam);
         ctl.addTestElement(sam);
-        obj.add(ctl);
+        obj.addTestElement(ctl);
         SampleResult res = obj.sample(null);
-        assertTrue(res.isSuccessful());
+        assertEquals(1, sam.count);
     }
 
     public void addToContext(TestElement te) throws NoSuchFieldException, IllegalAccessException {
@@ -51,5 +51,15 @@ public class ParallelSamplerTest {
         TestCompiler parentCompiler = (TestCompiler) field.get(parentThread);
         parentCompiler.addNode(te, null);
         parentCompiler.subtractNode();
+    }
+
+    private class EmulSampler extends DebugSampler {
+        private int count = 0;
+
+        @Override
+        public SampleResult sample(Entry e) {
+            count++;
+            return super.sample(e);
+        }
     }
 }
