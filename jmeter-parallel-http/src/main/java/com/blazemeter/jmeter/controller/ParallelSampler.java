@@ -2,6 +2,7 @@ package com.blazemeter.jmeter.controller;
 
 import org.apache.jmeter.control.Controller;
 import org.apache.jmeter.control.GenericController;
+import org.apache.jmeter.control.LoopController;
 import org.apache.jmeter.engine.event.LoopIterationListener;
 import org.apache.jmeter.samplers.*;
 import org.apache.jmeter.testelement.TestElement;
@@ -67,20 +68,13 @@ public class ParallelSampler extends AbstractSampler implements Sampler, Control
         return false; // TOOD
     }
 
-    public void addItems(List<Controller> controllers) {
-        log.debug("Adding items: {}", controllers.size());
-        this.controllers.addAll(controllers);
-    }
-
-    public void addSampler(Sampler sampler) {
-        GenericController wrapper = new GenericController();
+    public void add(TestElement sampler) {
+        LoopController wrapper = new LoopController();
+        wrapper.setLoops(1);
+        wrapper.setContinueForever(false);
         wrapper.addTestElement(sampler);
         wrapper.setName(sampler.getName());
         controllers.add(wrapper);
-    }
-
-    public void addController(Controller ctl) {
-        controllers.add(ctl);
     }
 
     @Override
