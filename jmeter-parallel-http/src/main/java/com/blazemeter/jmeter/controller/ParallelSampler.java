@@ -4,8 +4,10 @@ import org.apache.jmeter.control.Controller;
 import org.apache.jmeter.control.GenericController;
 import org.apache.jmeter.engine.StandardJMeterEngine;
 import org.apache.jmeter.samplers.*;
-import org.apache.jmeter.threads.*;
-import org.apache.jmeter.threads.ThreadGroup;
+import org.apache.jmeter.threads.AbstractThreadGroup;
+import org.apache.jmeter.threads.JMeterThread;
+import org.apache.jmeter.threads.JMeterThreadMonitor;
+import org.apache.jmeter.threads.ListenerNotifier;
 import org.apache.jorphan.collections.HashTree;
 import org.apache.jorphan.collections.ListedHashTree;
 import org.slf4j.Logger;
@@ -19,14 +21,19 @@ import java.util.Map;
 public class ParallelSampler extends AbstractSampler implements Sampler, Interruptible, JMeterThreadMonitor {
     private static final Logger log = LoggerFactory.getLogger(ParallelController.class);
     protected transient List<Controller> controllers = new ArrayList<>();
-    private final ListenerNotifier notifier = new ListenerNotifier();
+    private final ParallelListenerNotifier notifier = new ParallelListenerNotifier();
 
     @Override
     public SampleResult sample(Entry e) {
         SampleResult res = new SampleResult();
+        res.setSampleLabel(getName());
         res.setSuccessful(true);
         res.sampleStart();
 
+        notifier.setContainer(res);
+        log.debug("Parallel controllers size: {}", controllers.size());
+
+        // TODO: make this execitor pool or whatever
         Map<JMeterThread, Thread> threads = new HashMap<>(controllers.size());
         for (Controller ctl : controllers) {
             HashTree test = new HashTree();
@@ -38,12 +45,14 @@ public class ParallelSampler extends AbstractSampler implements Sampler, Interru
         }
 
         for (Thread thr : threads.values()) {
+            log.debug("Starting thread {}", thr);
             thr.start();
         }
 
         for (Thread thr : threads.values()) {
             try {
                 thr.join();
+                log.debug("Thread is done {}", thr);
             } catch (InterruptedException e1) {
                 log.debug("Interrupted");
             }
@@ -55,7 +64,6 @@ public class ParallelSampler extends AbstractSampler implements Sampler, Interru
         return res;
     }
 
-
     @Override
     public boolean interrupt() {
         return false; // TOOD
@@ -63,14 +71,11 @@ public class ParallelSampler extends AbstractSampler implements Sampler, Interru
 
     @Override
     public void threadFinished(JMeterThread thread) {
-        // TODO
-    }
-
-    protected int getParallelCount() {
-        return controllers.size();
+        log.debug("Thread finished: {}", thread);
     }
 
     public void addItems(List<Controller> controllers) {
+        log.debug("Adding items: {}", controllers.size());
         this.controllers.addAll(controllers);
     }
 
@@ -128,7 +133,21 @@ public class ParallelSampler extends AbstractSampler implements Sampler, Interru
 
         @Override
         public void threadFinished(JMeterThread jMeterThread) {
+            log.debug("BG thread finished");
+        }
+    }
 
+    private class ParallelListenerNotifier extends ListenerNotifier {
+        private SampleResult container = new SampleResult();
+
+        @Override
+        public void notifyListeners(SampleEvent res, List<SampleListener> listeners) {
+            container.addSubResult(res.getResult());
+            super.notifyListeners(res, listeners);
+        }
+
+        public void setContainer(SampleResult container) {
+            this.container = container;
         }
     }
 }
