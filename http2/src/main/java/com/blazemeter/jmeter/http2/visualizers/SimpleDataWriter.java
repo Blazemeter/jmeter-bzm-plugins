@@ -1,4 +1,4 @@
-package blazemeter.jmeter.plugins.http2.visualizers;
+package com.blazemeter.jmeter.http2.visualizers;
 
 import java.awt.BorderLayout;
 
@@ -22,7 +22,7 @@ public class SimpleDataWriter extends AbstractVisualizer{
 	 * @see org.apache.jmeter.visualizers.gui.AbstractVisualizer#setModel(org.apache.jmeter.reporters.ResultCollector)
 	 */
 	
-	blazemeter.jmeter.plugins.http2.visualizers.ResultCollector resCollector = new blazemeter.jmeter.plugins.http2.visualizers.ResultCollector();
+	com.blazemeter.jmeter.http2.visualizers.ResultCollector resCollector = new com.blazemeter.jmeter.http2.visualizers.ResultCollector();
 	
 	@Override
 	protected void setModel(ResultCollector collector) {

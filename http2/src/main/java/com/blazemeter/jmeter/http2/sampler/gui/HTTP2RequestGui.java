@@ -1,4 +1,4 @@
-package blazemeter.jmeter.plugins.http2.sampler.gui;
+package com.blazemeter.jmeter.http2.sampler.gui;
 
 import org.apache.jmeter.protocol.http.sampler.HTTPSamplerBase;
 import org.apache.jmeter.gui.util.HorizontalPanel;
@@ -10,7 +10,7 @@ import org.apache.jorphan.gui.JLabeledTextField;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 
-import blazemeter.jmeter.plugins.http2.sampler.HTTP2Request;
+import com.blazemeter.jmeter.http2.sampler.HTTP2Request;
 
 import java.awt.*;
 

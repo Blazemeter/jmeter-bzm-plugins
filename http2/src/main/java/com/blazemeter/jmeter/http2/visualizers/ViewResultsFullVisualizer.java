@@ -20,7 +20,7 @@
 /**
  *
  */
-package blazemeter.jmeter.plugins.http2.visualizers;
+package com.blazemeter.jmeter.http2.visualizers;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -53,7 +53,6 @@ import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
@@ -70,7 +69,7 @@ import org.apache.jmeter.visualizers.gui.AbstractVisualizer;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 
-import blazemeter.jmeter.plugins.http2.sampler.HTTP2SampleResult;
+import com.blazemeter.jmeter.http2.sampler.HTTP2SampleResult;
 
 /**
  * Base for ViewResults

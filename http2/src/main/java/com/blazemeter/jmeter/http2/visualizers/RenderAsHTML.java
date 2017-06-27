@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package blazemeter.jmeter.plugins.http2.visualizers;
+package com.blazemeter.jmeter.http2.visualizers;
 
 import javax.swing.JEditorPane;
 import javax.swing.text.ComponentView;

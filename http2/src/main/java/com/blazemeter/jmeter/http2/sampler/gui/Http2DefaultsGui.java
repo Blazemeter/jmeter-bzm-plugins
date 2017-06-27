@@ -16,12 +16,10 @@
  *
  */
 
-package blazemeter.jmeter.plugins.http2.sampler.gui;
+package com.blazemeter.jmeter.http2.sampler.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
@@ -44,7 +42,7 @@ import org.apache.jmeter.testelement.property.StringProperty;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jorphan.gui.JLabeledTextField;
 
-import blazemeter.jmeter.plugins.http2.sampler.HTTP2Request;
+import com.blazemeter.jmeter.http2.sampler.HTTP2Request;
 
 /**
  * GUI for Http Request defaults

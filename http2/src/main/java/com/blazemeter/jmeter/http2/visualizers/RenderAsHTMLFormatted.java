@@ -17,23 +17,24 @@
  * limitations under the License.
  */
 
-package blazemeter.jmeter.plugins.http2.visualizers;
+package com.blazemeter.jmeter.http2.visualizers;
 
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.util.JMeterUtils;
+import org.jsoup.Jsoup;
 
-public class RenderAsText extends SamplerResultTab implements ResultRenderer {
+public class RenderAsHTMLFormatted extends SamplerResultTab implements ResultRenderer {
 
     /** {@inheritDoc} */
     @Override
     public void renderResult(SampleResult sampleResult) {
         String response = ViewResultsFullVisualizer.getResponseAsString(sampleResult);
-        showTextResponse(response);
+        showHTMLFormattedResponse(response);
     }
 
-    private void showTextResponse(String response) {
+    private void showHTMLFormattedResponse(String response) {
         results.setContentType("text/plain"); // $NON-NLS-1$
-        results.setText(response == null ? "" : response); // $NON-NLS-1$
+        results.setText(response == null ? "" : Jsoup.parse(response).html()); // $NON-NLS-1$
         results.setCaretPosition(0);
         resultsScrollPane.setViewportView(results);
         // Bug 55111 - Refresh JEditor pane size depending on the presence or absence of scrollbars
@@ -44,7 +45,7 @@ public class RenderAsText extends SamplerResultTab implements ResultRenderer {
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        return JMeterUtils.getResString("view_results_render_text"); // $NON-NLS-1$
+        return JMeterUtils.getResString("view_results_render_html_formatted"); // $NON-NLS-1$
     }
 
 }

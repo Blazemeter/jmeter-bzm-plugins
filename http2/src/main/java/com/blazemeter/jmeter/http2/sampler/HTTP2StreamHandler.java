@@ -1,5 +1,5 @@
 
-package blazemeter.jmeter.plugins.http2.sampler;
+package com.blazemeter.jmeter.http2.sampler;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package blazemeter.jmeter.plugins.http2.visualizers;
+package com.blazemeter.jmeter.http2.visualizers;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -59,8 +59,6 @@ import org.apache.jorphan.gui.GuiUtils;
 import org.apache.jorphan.gui.ObjectTableModel;
 import org.apache.jorphan.gui.RendererUtils;
 import org.apache.jorphan.reflect.Functor;
-
-import blazemeter.jmeter.plugins.http2.sampler.HTTP2SampleResult;
 
 /**
  * Right side in View Results Tree

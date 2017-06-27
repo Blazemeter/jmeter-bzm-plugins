@@ -1,4 +1,4 @@
-package blazemeter.jmeter.plugins.http2.visualizers;
+package com.blazemeter.jmeter.http2.visualizers;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -24,7 +24,7 @@ import org.apache.jmeter.util.JMeterUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import blazemeter.jmeter.plugins.http2.sampler.HTTP2SampleResult;
+import com.blazemeter.jmeter.http2.sampler.HTTP2SampleResult;
 
 /**
  * This class handles all saving of samples. The class must be thread-safe

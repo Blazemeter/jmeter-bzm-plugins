@@ -1,4 +1,4 @@
-package blazemeter.jmeter.plugins.http2.sampler;
+package com.blazemeter.jmeter.http2.sampler;
 
 import java.net.InetSocketAddress;
 import java.net.URL;

@@ -17,46 +17,25 @@
  * limitations under the License.
  */
 
-/**
- *
- */
-package blazemeter.jmeter.plugins.http2.visualizers;
-
-import java.awt.Color;
-
-import javax.swing.JTabbedPane;
+package com.blazemeter.jmeter.http2.visualizers;
 
 import org.apache.jmeter.samplers.SampleResult;
+import org.apache.jmeter.util.JMeterUtils;
 
+public class RenderAsHTMLWithEmbedded extends RenderAsHTML
+    implements ResultRenderer {
 
-/**
- * Interface to results render
- */
-public interface ResultRenderer {
-
-    void clearData();
-
-    void init();
-
-    void setupTabPane();
-
-    void setLastSelectedTab(int index);
-
-    void setRightSide(JTabbedPane rightSide);
-
-    void setSamplerResult(Object userObject);
-
-    void renderResult(SampleResult sampleResult);
-
-    void renderImage(SampleResult sampleResult);
-
-    /**
-     *
-     * @return the string to be displayed by the ComboBox
-     */
+    /** {@inheritDoc} */
     @Override
-    String toString();
+    protected void showRenderedResponse(String response, SampleResult res) {
+        // enable embedded html resources
+        showRenderedResponse(response, res, true);
+    }
 
-    void setBackgroundColor(Color backGround);
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        return JMeterUtils.getResString("view_results_render_html_embedded"); // $NON-NLS-1$
+    }
 
 }

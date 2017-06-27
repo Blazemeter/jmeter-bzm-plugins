@@ -1,4 +1,4 @@
-package blazemeter.jmeter.plugins.http2.sampler.gui;
+package com.blazemeter.jmeter.http2.sampler.gui;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jmeter.config.Arguments;
@@ -15,7 +15,7 @@ import org.apache.jmeter.testelement.property.JMeterProperty;
 import org.apache.jmeter.testelement.property.TestElementProperty;
 import org.apache.jmeter.util.JMeterUtils;
 
-import blazemeter.jmeter.plugins.http2.sampler.HTTP2Request;
+import com.blazemeter.jmeter.http2.sampler.HTTP2Request;
 
 import javax.swing.*;
 

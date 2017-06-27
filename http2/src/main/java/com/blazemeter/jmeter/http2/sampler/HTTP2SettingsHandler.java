@@ -1,7 +1,6 @@
-package blazemeter.jmeter.plugins.http2.sampler;
+package com.blazemeter.jmeter.http2.sampler;
 
 import org.eclipse.jetty.http2.api.Session;
-import org.eclipse.jetty.http2.api.Stream;
 import org.eclipse.jetty.http2.frames.SettingsFrame;
 
 public class HTTP2SettingsHandler extends Session.Listener.Adapter {

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package blazemeter.jmeter.plugins.http2.visualizers;
+package com.blazemeter.jmeter.http2.visualizers;
 
 import java.awt.BorderLayout;
 import java.awt.Color;

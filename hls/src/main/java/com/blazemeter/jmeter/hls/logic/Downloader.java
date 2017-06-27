@@ -16,9 +16,9 @@ public class Downloader implements Runnable {
     private static String dir;
 
     public Downloader(List<String> newMedia, String baseUrl, String dir) {
-        this.newMedia = newMedia;
-        this.baseUrl = baseUrl;
-        this.dir = dir;
+        Downloader.newMedia = newMedia;
+        Downloader.baseUrl = baseUrl;
+        Downloader.dir = dir;
     }
 
     @Override

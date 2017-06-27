@@ -1,4 +1,4 @@
-package blazemeter.jmeter.plugins.http2.sampler;
+package com.blazemeter.jmeter.http2.sampler;
 
 /**
  * Created by ABS-34 on 16/03/2017.

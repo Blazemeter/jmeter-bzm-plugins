@@ -2,11 +2,11 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>jmeter.plugins.http2.sampler</groupId>
-    <artifactId>HTTP2Plugin</artifactId>
+    <groupId>com.blazemeter.jmeter</groupId>
+    <artifactId>http2</artifactId>
     <packaging>jar</packaging>
     <version>1.0</version>
-    <name>HTTP/2 Sampler as JMeter plugin</name>
+    <name>HTTP/2 Sampler as JMeter Plugin</name>
 
     <properties>
         <version.org.apache.jmeter.all>3.1</version.org.apache.jmeter.all>
