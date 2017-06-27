@@ -40,7 +40,7 @@ public class ParallelSamplerTest {
         addToContext(sam);
         ctl.addTestElement(sam);
         obj.addTestElement(ctl);
-        SampleResult res = obj.sample(null);
+        obj.sample(null);
         assertEquals(1, sam.count);
     }
 

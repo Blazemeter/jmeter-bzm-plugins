@@ -29,4 +29,6 @@ public class JMeterThreadParallel extends JMeterThread {
         TestCompiler parentCompiler = (TestCompiler) field.get(parentThread);
         field.set(this, parentCompiler);
     }
+
+
 }

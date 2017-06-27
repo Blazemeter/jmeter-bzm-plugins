@@ -24,6 +24,18 @@ public class ParallelSampler extends AbstractSampler implements Sampler, Control
     private Map<JMeterThread, Thread> threads = new HashMap<>();
 
     @Override
+    public void addTestElement(TestElement te) {
+        if (te instanceof Controller || te instanceof Sampler) {
+            LoopController wrapper = new LoopController();
+            wrapper.setLoops(1);
+            wrapper.addTestElement(te);
+            wrapper.setName(te.getName());
+            controllers.add(wrapper);
+        }
+        log.debug("Added {}, list size: {}", te, controllers.size());
+    }
+
+    @Override
     public SampleResult sample(Entry e) {
         log.debug("Parallel controllers size: {}", controllers.size());
 
@@ -41,6 +53,14 @@ public class ParallelSampler extends AbstractSampler implements Sampler, Control
         for (Thread thr : threads.values()) {
             log.debug("Starting thread {}", thr);
             thr.start();
+            /*
+            try {
+                thr.join();
+                log.debug("Thread is done {}", thr);
+            } catch (InterruptedException e1) {
+                log.debug("Interrupted");
+            }
+            */
         }
 
         for (Thread thr : threads.values()) {
@@ -48,7 +68,7 @@ public class ParallelSampler extends AbstractSampler implements Sampler, Control
                 thr.join();
                 log.debug("Thread is done {}", thr);
             } catch (InterruptedException e1) {
-                log.debug("Interrupted");
+                log.debug("Interrupted {}", thr);
             }
         }
 
@@ -93,19 +113,6 @@ public class ParallelSampler extends AbstractSampler implements Sampler, Control
     @Override
     public void triggerEndOfLoop() {
 
-    }
-
-    @Override
-    public void addTestElement(TestElement te) {
-        if (te instanceof Controller || te instanceof Sampler) {
-            LoopController wrapper = new LoopController();
-            wrapper.setLoops(1);
-            wrapper.setContinueForever(false);
-            wrapper.addTestElement(te);
-            wrapper.setName(te.getName());
-            controllers.add(wrapper);
-        }
-        log.debug("Added {}, list size: {}", te, controllers.size());
     }
 
     @Override
