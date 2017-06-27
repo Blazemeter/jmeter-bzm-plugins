@@ -1,16 +1,15 @@
-package Logic;
+package com.blazemeter.jmeter.hls.logic;
 
-/**
- * Created by marcos on 3/15/17.
- */
-public class dataFragment {
+
+public class DataFragment {
     private String duration;
     private String tsUri;
 
-    public dataFragment(String _duration, String _tsUri){
+    public DataFragment(String _duration, String _tsUri) {
         this.duration = _duration;
         this.tsUri = _tsUri;
     }
+
     public String getDuration() {
         return duration;
     }
@@ -26,8 +25,6 @@ public class dataFragment {
     public void setTsUri(String tsUri) {
         this.tsUri = tsUri;
     }
-
-
 
 
 }

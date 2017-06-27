@@ -1,4 +1,4 @@
-package Logic;
+package com.blazemeter.jmeter.hls.logic;
 
 import com.github.axet.wget.WGet;
 

@@ -1,8 +1,7 @@
-package Logic;
+package com.blazemeter.jmeter.hls.logic;
 
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
-import org.apache.jmeter.protocol.http.util.HTTPConstants;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
@@ -166,14 +165,14 @@ public class Parser {
     }
 
 
-    public List<dataFragment> extractVideoUrl(String playlistUrl) {
+    public List<DataFragment> extractVideoUrl(String playlistUrl) {
 
         String pattern = "EXTINF:(\\d?\\d*\\.*\\d*).*\\n(#.*:.*\\n)*(.*\\.ts(\\?.*\\n*)*)";//"EXTINF:(\\d?\\d*\\.\\d*).*\\n(#.*:.*\\n)*(.*\\.ts)";
-        final List<dataFragment> mediaList = new ArrayList<>();
+        final List<DataFragment> mediaList = new ArrayList<>();
         Pattern r = Pattern.compile(pattern);
         Matcher m = r.matcher(playlistUrl);
         while (m.find()) {
-            dataFragment data = new dataFragment(m.group(1), m.group(3));
+            DataFragment data = new DataFragment(m.group(1), m.group(3));
             mediaList.add(data);
         }
         return mediaList;

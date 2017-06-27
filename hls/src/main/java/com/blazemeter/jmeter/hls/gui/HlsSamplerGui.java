@@ -1,6 +1,6 @@
-package GUI;
+package com.blazemeter.jmeter.hls.gui;
 
-import Logic.HlsSampler;
+import com.blazemeter.jmeter.hls.logic.HlsSampler;
 import org.apache.jmeter.samplers.gui.AbstractSamplerGui;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jorphan.logging.LoggingManager;
@@ -8,9 +8,6 @@ import org.apache.log.Logger;
 
 import java.awt.BorderLayout;
 
-/**
- * Created by marcos on 3/7/17.
- */
 public class HlsSamplerGui extends AbstractSamplerGui {
     private static final Logger log = LoggingManager.getLoggerForClass();
     private HlsSamplerPanel hlsSamplerPanel;

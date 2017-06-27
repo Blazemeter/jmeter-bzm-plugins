@@ -1,4 +1,4 @@
-package Logic;
+package com.blazemeter.jmeter.hls.logic;
 
 import org.apache.jmeter.protocol.http.control.CacheManager;
 import org.apache.jmeter.protocol.http.control.CookieManager;
@@ -155,8 +155,8 @@ public class HlsSampler extends AbstractSampler {
             while ((playSeconds >= currenTimeseconds) && !out) {
                 SampleResult playListResult = new SampleResult();
                 DataRequest subRespond = getPlayList(playListResult, parser);
-                List<dataFragment> videoUri = parser.extractVideoUrl(subRespond.getResponse());
-                List<dataFragment> fragmentToDownload = new ArrayList<>();
+                List<DataFragment> videoUri = parser.extractVideoUrl(subRespond.getResponse());
+                List<DataFragment> fragmentToDownload = new ArrayList<>();
 
                 if (firstTime) {
                     if (!(((getHlsVideoType().equals("live")) && (parser.isLive(subRespond.getResponse()))) ||
@@ -171,7 +171,7 @@ public class HlsSampler extends AbstractSampler {
                 }
 
                 while ((!videoUri.isEmpty()) && (playSeconds >= currenTimeseconds)) {
-                    dataFragment frag = videoUri.remove(0);
+                    DataFragment frag = videoUri.remove(0);
 
                     boolean isPresent = false;
                     int length = fragmentsDownloaded.size();
@@ -299,7 +299,7 @@ public class HlsSampler extends AbstractSampler {
     }
 
 
-    public List<SampleResult> getFragments(Parser parser, List<dataFragment> uris, String url) {
+    public List<SampleResult> getFragments(Parser parser, List<DataFragment> uris, String url) {
         List<SampleResult> res = new ArrayList<>();
 
         if (!uris.isEmpty()) {

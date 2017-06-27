@@ -4,9 +4,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.github.aerok</groupId>
-    <artifactId>hls-jmeter</artifactId>
+    <groupId>com.blazemeter.jmeter</groupId>
+    <artifactId>hls</artifactId>
     <version>0.7</version>
+
     <build>
         <plugins>
             <plugin>
@@ -53,9 +54,6 @@
             <artifactId>httpclient</artifactId>
             <version>4.3</version>
         </dependency>
-
-
-
     </dependencies>
 
 </project>

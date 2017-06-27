@@ -1,4 +1,4 @@
-package GUI;
+package com.blazemeter.jmeter.hls.gui;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;

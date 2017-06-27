@@ -1,4 +1,4 @@
-package Logic;
+package com.blazemeter.jmeter.hls.logic;
 
 import java.util.List;
 import java.util.Map;
