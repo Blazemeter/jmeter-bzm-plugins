@@ -1,0 +1,159 @@
+package blazemeter.jmeter.plugins.websocket.sampler;
+
+import java.io.IOException;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
+
+import org.apache.jmeter.engine.util.CompoundVariable;
+import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.StatusCode;
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
+import org.eclipse.jetty.websocket.api.annotations.WebSocket;
+import org.eclipse.jetty.websocket.client.WebSocketClient;
+import org.apache.jorphan.logging.LoggingManager;
+import org.apache.log.Logger;
+
+@WebSocket(maxTextMessageSize = 256 * 1024 * 1024)
+public class WebSocketConnection {
+
+	private static final Logger log = LoggingManager.getLoggerForClass();
+	
+	private WebSocketClient webSocketClient;
+	private Session session;
+	private boolean connected;
+	
+	protected CountDownLatch openLatch = new CountDownLatch(1);
+    protected CountDownLatch closeLatch = new CountDownLatch(1);
+    protected CountDownLatch messageLatch = new CountDownLatch(1);
+	
+	private String closeConnectionPattern;
+	private Pattern closeConnectionExpression;
+	
+	private String waitResponsePatter;
+	private Pattern waitResponseExpresion;
+	
+	private String encoding;
+	
+	private Queue<String> messages = new LinkedList<String>();
+	
+	private boolean waitMessage;
+	
+	public WebSocketConnection(WebSocketClient webSocketClient, String closeConnectionPattern){
+		new WebSocketConnection(webSocketClient, closeConnectionPattern, "utf-8");
+	}
+	
+	public WebSocketConnection(WebSocketClient webSocketClient, String closeConnectionPattern, String encoding) {
+		this.webSocketClient = webSocketClient;
+		this.closeConnectionPattern= new CompoundVariable(closeConnectionPattern).execute();
+		initializePatterns();
+		this.encoding = encoding;
+		this.waitMessage = false;
+	}
+	
+	@OnWebSocketMessage
+    public void onMessage(String msg) {
+        messages.add("[RECIVED at "+ System.currentTimeMillis() + "] " + msg);
+        if (!closeConnectionPattern.isEmpty()){
+        	if (closeConnectionExpression.matcher(msg).find()) {
+                closeLatch.countDown();
+                close();
+            }
+        }   
+        if (this.waitMessage){
+        	if (!waitResponsePatter.isEmpty()){
+            	if (waitResponseExpresion.matcher(msg).find()) {
+                    messageLatch.countDown();
+                    this.waitMessage = false;
+                }
+            }   
+        }
+    }
+
+    @OnWebSocketConnect
+    public void onConect(Session session) {
+        this.session = session;
+        connected = true;
+        openLatch.countDown();
+    }
+
+    @OnWebSocketClose
+    public void onClose(int statusCode, String reason) {
+    	if (statusCode != StatusCode.NORMAL)
+    		log.error("Disconnect " + statusCode + ": " + reason);
+    	else
+    		log.debug("Disconnect " + statusCode + ": " + reason);
+        openLatch.countDown();
+        closeLatch.countDown();
+        connected = false;
+    }
+    
+    public void sendMessage(String message) throws IOException {
+        session.getRemote().sendString(message);
+        messages.add("[SEND at "+ System.currentTimeMillis() + "] " + message);
+    }
+	
+    public String getMessages(){
+    	String ret = "";
+    	for (String s : messages){
+    		ret = ret + s + "\n";
+    	}
+    	messages.clear();
+    	return ret;
+    }
+    
+    public boolean isConnected() {
+        return connected;
+    }
+    
+    public void initialize() {
+        this.closeLatch = new CountDownLatch(1);
+    }
+	
+	protected void initializePatterns() {
+        try {
+        	closeConnectionExpression = (closeConnectionPattern != null || !closeConnectionPattern.isEmpty()) ? Pattern.compile(closeConnectionPattern) : null;
+        } catch (Exception ex) {
+            log.error("Error close connection patern: " + ex.getMessage());
+        }
+    }
+	
+	public void close() {
+        close(StatusCode.NORMAL, "JMeter closed session.");
+    }
+
+    public void close(int statusCode, String statusText) {
+        if (session != null) {
+            session.close(statusCode, statusText);
+        } else {
+        	log.error("Error closing connection, session wasn't started");
+        }
+
+        try {
+        	webSocketClient.stop();
+        } catch (Exception e) {
+        	log.error("Error closing connection: " + e.getMessage());
+        }
+    }
+	
+	public String getContentEncoding() {
+		return this.encoding;
+	}
+	
+	public boolean awaitOpen(int duration, TimeUnit unit) throws InterruptedException {
+        boolean res = this.openLatch.await(duration, unit);
+        return res;
+    }
+	
+	 public boolean awaitMessage(int duration, TimeUnit unit, String waitResponsePatter) throws InterruptedException {
+	 	this.waitResponsePatter = new CompoundVariable(waitResponsePatter).execute();
+        this.waitResponseExpresion = (this.waitResponsePatter != null || !this.waitResponsePatter.isEmpty()) ? Pattern.compile(this.waitResponsePatter) : null;
+        this.waitMessage = true;
+        boolean res = this.messageLatch.await(duration, unit);
+        return res;
+    }
+}
