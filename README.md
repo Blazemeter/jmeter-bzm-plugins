@@ -9,4 +9,4 @@ Contents:
 
 ## Licesnse
 
-The plugins are proudly controbuted to community as Open Source, under [Apache 2.0 License](LICENSE).
+The plugins are proudly contributed to community as Open Source, under [Apache 2.0 License](LICENSE).
