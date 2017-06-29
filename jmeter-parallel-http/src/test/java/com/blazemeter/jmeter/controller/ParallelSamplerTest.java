@@ -1,6 +1,7 @@
 package com.blazemeter.jmeter.controller;
 
 import kg.apc.emulators.TestJMeterUtils;
+import org.apache.jmeter.control.LoopController;
 import org.apache.jmeter.sampler.DebugSampler;
 import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
@@ -8,11 +9,13 @@ import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.threads.JMeterContextService;
 import org.apache.jmeter.threads.JMeterThread;
 import org.apache.jmeter.threads.TestCompiler;
+import org.apache.jorphan.collections.HashTree;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -28,13 +31,19 @@ public class ParallelSamplerTest {
     private static final Logger log = LoggerFactory.getLogger(ParallelSampler.class);
 
     @BeforeClass
-    public static void setUp() throws Exception {
+    public static void setUpClass() throws Exception {
         LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
         Configuration config = ctx.getConfiguration();
         LoggerConfig loggerConfig = config.getLoggerConfig(LogManager.ROOT_LOGGER_NAME);
         loggerConfig.setLevel(Level.DEBUG);
         ctx.updateLoggers();
         TestJMeterUtils.createJmeterEnv();
+    }
+
+    @Before
+    public void setUp() {
+        EmulSampler.instances = 0;
+        EmulSampler.count.set(0);
     }
 
     @Test
@@ -45,18 +54,32 @@ public class ParallelSamplerTest {
             EmulSampler.count.set(0);
             ParallelSampler obj = new ParallelSampler();
 
-            obj.addTestElement(getWrappedSampler());
-            obj.addTestElement(getWrappedSampler());
-            obj.addTestElement(getWrappedSampler());
-            obj.addTestElement(getWrappedSampler());
-            obj.addTestElement(getWrappedSampler());
+            obj.addTestElement(getContextedSampler());
+            obj.addTestElement(getContextedSampler());
+            obj.addTestElement(getContextedSampler());
+            obj.addTestElement(getContextedSampler());
+            obj.addTestElement(getContextedSampler());
 
             obj.sample(null);
             assertEquals(5, EmulSampler.count.get());
         }
     }
 
-    private TestElement getWrappedSampler() throws NoSuchFieldException, IllegalAccessException {
+    @Test
+    public void underLoop() throws Exception {
+        ParallelSampler sam = new ParallelSampler();
+        sam.addTestElement(getContextedSampler());
+        addToContext(sam);
+        LoopController ctl = new LoopController();
+        ctl.setLoops(5);
+        ctl.setContinueForever(false);
+        ctl.addTestElement(sam);
+        JMeterThreadParallel thr = new JMeterThreadParallel(new HashTree(ctl), sam, sam.notifier);
+        thr.run();
+        assertEquals(5, EmulSampler.count.get());
+    }
+
+    private TestElement getContextedSampler() throws NoSuchFieldException, IllegalAccessException {
         EmulSampler sam = new EmulSampler();
         sam.setName(String.valueOf(EmulSampler.instances));
         addToContext(sam);

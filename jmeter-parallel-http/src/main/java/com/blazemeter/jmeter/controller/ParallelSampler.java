@@ -12,15 +12,16 @@ import org.apache.jorphan.collections.HashTree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ParallelSampler extends AbstractSampler implements Sampler, Controller, Interruptible, JMeterThreadMonitor {
+public class ParallelSampler extends AbstractSampler implements Sampler, Controller, Interruptible, JMeterThreadMonitor, Serializable {
     private static final Logger log = LoggerFactory.getLogger(ParallelSampler.class);
     protected transient List<Controller> controllers = new ArrayList<>();
-    private final ListenerNotifier notifier = new ListenerNotifier();
+    protected final ListenerNotifier notifier = new ListenerNotifier();
     private Map<JMeterThread, Thread> threads = new HashMap<>();
 
     @Override
@@ -29,7 +30,7 @@ public class ParallelSampler extends AbstractSampler implements Sampler, Control
             LoopController wrapper = new LoopController();
             wrapper.setLoops(1);
             wrapper.addTestElement(te);
-            wrapper.setName("wrapped "+te.getName());
+            wrapper.setName("wrapped " + te.getName());
             controllers.add(wrapper);
         }
         log.debug("Added {}, list size: {}", te, controllers.size());
