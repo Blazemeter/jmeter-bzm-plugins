@@ -29,7 +29,7 @@ public class ParallelSampler extends AbstractSampler implements Sampler, Control
             LoopController wrapper = new LoopController();
             wrapper.setLoops(1);
             wrapper.addTestElement(te);
-            wrapper.setName(te.getName());
+            wrapper.setName("wrapped "+te.getName());
             controllers.add(wrapper);
         }
         log.debug("Added {}, list size: {}", te, controllers.size());
@@ -92,7 +92,7 @@ public class ParallelSampler extends AbstractSampler implements Sampler, Control
 
     @Override
     public boolean isDone() {
-        return false;
+        return true;
     }
 
     @Override

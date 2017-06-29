@@ -1,7 +1,6 @@
 package com.blazemeter.jmeter.controller;
 
 import kg.apc.emulators.TestJMeterUtils;
-import org.apache.jmeter.control.GenericController;
 import org.apache.jmeter.sampler.DebugSampler;
 import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
@@ -16,12 +15,18 @@ import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
 
 public class ParallelSamplerTest {
+    private static final Logger log = LoggerFactory.getLogger(ParallelSampler.class);
+
     @BeforeClass
     public static void setUp() throws Exception {
         LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
@@ -34,14 +39,28 @@ public class ParallelSamplerTest {
 
     @Test
     public void sample() throws Exception {
-        ParallelSampler obj = new ParallelSampler();
-        GenericController ctl = new GenericController();
+        for (int n = 0; n < 1000; n++) {// we're doing good check here because of multi-threads
+            log.debug("\n\n\nTry #" + n);
+            EmulSampler.instances = 0;
+            EmulSampler.count.set(0);
+            ParallelSampler obj = new ParallelSampler();
+
+            obj.addTestElement(getWrappedSampler());
+            obj.addTestElement(getWrappedSampler());
+            obj.addTestElement(getWrappedSampler());
+            obj.addTestElement(getWrappedSampler());
+            obj.addTestElement(getWrappedSampler());
+
+            obj.sample(null);
+            assertEquals(5, EmulSampler.count.get());
+        }
+    }
+
+    private TestElement getWrappedSampler() throws NoSuchFieldException, IllegalAccessException {
         EmulSampler sam = new EmulSampler();
+        sam.setName(String.valueOf(EmulSampler.instances));
         addToContext(sam);
-        ctl.addTestElement(sam);
-        obj.addTestElement(ctl);
-        obj.sample(null);
-        assertEquals(1, sam.count);
+        return sam;
     }
 
     public void addToContext(TestElement te) throws NoSuchFieldException, IllegalAccessException {
@@ -53,12 +72,19 @@ public class ParallelSamplerTest {
         parentCompiler.subtractNode();
     }
 
-    private class EmulSampler extends DebugSampler {
-        private int count = 0;
+    public static class EmulSampler extends DebugSampler {
+        private volatile transient static int instances = 0;
+        private volatile transient static AtomicInteger count = new AtomicInteger();
+
+        public EmulSampler() {
+            instances++;
+        }
 
         @Override
         public SampleResult sample(Entry e) {
-            count++;
+            count.addAndGet(1);
+            log.debug("Sample #" + count.get());
+            ThreadLocalRandom.current().nextInt(10);
             return super.sample(e);
         }
     }
