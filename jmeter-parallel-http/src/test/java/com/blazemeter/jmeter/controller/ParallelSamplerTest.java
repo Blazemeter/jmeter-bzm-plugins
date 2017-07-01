@@ -58,6 +58,7 @@ public class ParallelSamplerTest {
             EmulSampler.instances = 0;
             EmulSampler.count.set(0);
             ParallelSampler obj = new ParallelSampler();
+            obj.setGenerateParent(true);
 
             obj.addTestElement(getContextedSampler(thr));
             obj.addTestElement(getContextedSampler(thr));

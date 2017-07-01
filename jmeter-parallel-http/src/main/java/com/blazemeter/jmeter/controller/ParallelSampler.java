@@ -22,6 +22,7 @@ import java.util.Map;
 // we implement Controller only to enable GUI to add child elements into it
 public class ParallelSampler extends AbstractSampler implements Controller, Interruptible, JMeterThreadMonitor, Serializable {
     private static final Logger log = LoggerFactory.getLogger(ParallelSampler.class);
+    private static final String GENERATE_PARENT = "PARENT_SAMPLE";
     protected transient List<TestElement> controllers = new ArrayList<>();
     protected final ParallelListenerNotifier notifier = new ParallelListenerNotifier();
     private Map<JMeterThread, Thread> threads = new HashMap<>();
@@ -58,7 +59,7 @@ public class ParallelSampler extends AbstractSampler implements Controller, Inte
         StringBuilder reqText = new StringBuilder("Parallel items:\n");
         for (TestElement ctl : controllers) {
             reqText.append(ctl.getName()).append("\n");
-            JMeterThread jmThread = new JMeterThreadParallel(getTestTree(ctl), this, notifier);
+            JMeterThread jmThread = new JMeterThreadParallel(getTestTree(ctl), this, notifier, getGenerateParent());
             jmThread.setThreadName("parallel " + ctl.getName());
             jmThread.setThreadGroup(new DummyThreadGroup());
             Thread osThread = new Thread(jmThread, "jmeter-parallel " + ctl.getName());
@@ -83,7 +84,7 @@ public class ParallelSampler extends AbstractSampler implements Controller, Inte
         if (res.getEndTime() == 0) {
             res.sampleEnd();
         }
-        return res;
+        return getGenerateParent() ? res : null;
     }
 
     private HashTree getTestTree(TestElement te) {
@@ -151,9 +152,17 @@ public class ParallelSampler extends AbstractSampler implements Controller, Inte
 
     }
 
-
     @Override
     public void removeIterationListener(LoopIterationListener iterationListener) {
 
     }
+
+    public boolean getGenerateParent() {
+        return getPropertyAsBoolean(GENERATE_PARENT);
+    }
+
+    public void setGenerateParent(boolean value) {
+        setProperty(GENERATE_PARENT, value);
+    }
+
 }

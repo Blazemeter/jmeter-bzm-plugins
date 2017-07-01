@@ -10,17 +10,21 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class TestCompilerParallel extends TestCompiler {
+    private final boolean suppressListeners;
     private Set<Sampler> knownSamplers = new HashSet<>();
 
-    public TestCompilerParallel(HashTree hashTree) {
+    public TestCompilerParallel(HashTree hashTree, boolean suppressListeners) {
         super(hashTree);
+        this.suppressListeners = suppressListeners;
     }
 
     @Override
     public SamplePackage configureSampler(Sampler sampler) {
         knownSamplers.add(sampler);
         SamplePackage samplePackage = super.configureSampler(sampler);
-        samplePackage.getSampleListeners().clear();
+        if (suppressListeners) {
+            samplePackage.getSampleListeners().clear();
+        }
         return samplePackage;
     }
 
@@ -28,7 +32,9 @@ public class TestCompilerParallel extends TestCompiler {
     public SamplePackage configureTransactionSampler(TransactionSampler transactionSampler) {
         knownSamplers.add(transactionSampler);
         SamplePackage samplePackage = super.configureTransactionSampler(transactionSampler);
-        samplePackage.getSampleListeners().clear();
+        if (suppressListeners) {
+            samplePackage.getSampleListeners().clear();
+        }
         return samplePackage;
     }
 

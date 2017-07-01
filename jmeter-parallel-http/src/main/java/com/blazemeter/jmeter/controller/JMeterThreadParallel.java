@@ -11,9 +11,11 @@ import java.util.HashMap;
 public class JMeterThreadParallel extends JMeterThread {
     private static final Logger log = LoggerFactory.getLogger(ParallelSampler.class);
     private TestCompilerParallel parallelCompiler;
+    private boolean generateParent;
 
-    public JMeterThreadParallel(HashTree test, JMeterThreadMonitor monitor, ListenerNotifier notifier) {
+    public JMeterThreadParallel(HashTree test, JMeterThreadMonitor monitor, ListenerNotifier notifier, boolean generateParent) {
         super(test, monitor, notifier);
+        this.generateParent = generateParent;
         setThreadGroup(new DummyThreadGroup());
         try {
             copyCompilerFromParent();
@@ -35,7 +37,7 @@ public class JMeterThreadParallel extends JMeterThread {
     }
 
     private TestCompilerParallel cloneTestCompiler(TestCompiler parent) throws NoSuchFieldException, IllegalAccessException {
-        TestCompilerParallel cloned = new TestCompilerParallel(new HashTree());
+        TestCompilerParallel cloned = new TestCompilerParallel(new HashTree(), generateParent);
 
         Field samplerConfigMap = TestCompiler.class.getDeclaredField("samplerConfigMap");
         samplerConfigMap.setAccessible(true);
