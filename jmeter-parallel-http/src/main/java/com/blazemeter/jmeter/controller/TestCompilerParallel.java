@@ -19,13 +19,17 @@ public class TestCompilerParallel extends TestCompiler {
     @Override
     public SamplePackage configureSampler(Sampler sampler) {
         knownSamplers.add(sampler);
-        return super.configureSampler(sampler);
+        SamplePackage samplePackage = super.configureSampler(sampler);
+        samplePackage.getSampleListeners().clear();
+        return samplePackage;
     }
 
     @Override
     public SamplePackage configureTransactionSampler(TransactionSampler transactionSampler) {
         knownSamplers.add(transactionSampler);
-        return super.configureTransactionSampler(transactionSampler);
+        SamplePackage samplePackage = super.configureTransactionSampler(transactionSampler);
+        samplePackage.getSampleListeners().clear();
+        return samplePackage;
     }
 
     public Set<Sampler> getKnownSamplers() {

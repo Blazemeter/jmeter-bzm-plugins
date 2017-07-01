@@ -8,7 +8,6 @@ import org.apache.jmeter.testelement.AbstractTestElement;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.threads.JMeterThread;
 import org.apache.jmeter.threads.JMeterThreadMonitor;
-import org.apache.jmeter.threads.ListenerNotifier;
 import org.apache.jorphan.collections.HashTree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +23,7 @@ import java.util.Map;
 public class ParallelSampler extends AbstractSampler implements Controller, Interruptible, JMeterThreadMonitor, Serializable {
     private static final Logger log = LoggerFactory.getLogger(ParallelSampler.class);
     protected transient List<TestElement> controllers = new ArrayList<>();
-    protected final ListenerNotifier notifier = new ListenerNotifier();
+    protected final ParallelListenerNotifier notifier = new ParallelListenerNotifier();
     private Map<JMeterThread, Thread> threads = new HashMap<>();
 
     @Override
@@ -46,31 +45,30 @@ public class ParallelSampler extends AbstractSampler implements Controller, Inte
 
     @Override
     public SampleResult sample(Entry e) {
-        log.debug("Parallel controllers size: {}", controllers.size());
+        SampleResult res = new SampleResult();
+        res.setResponseCode("200");
+        res.setResponseMessage("OK");
+        res.setSuccessful(true);
+        res.setSampleLabel(getName());
+        res.setResponseData("".getBytes());
 
-        // TODO: make this use executor pool or whatever
+        notifier.setContainer(res);
+
         threads = new HashMap<>(controllers.size());
+        StringBuilder reqText = new StringBuilder("Parallel items:\n");
         for (TestElement ctl : controllers) {
+            reqText.append(ctl.getName()).append("\n");
             JMeterThread jmThread = new JMeterThreadParallel(getTestTree(ctl), this, notifier);
             jmThread.setThreadName("parallel " + ctl.getName());
             jmThread.setThreadGroup(new DummyThreadGroup());
             Thread osThread = new Thread(jmThread, "jmeter-parallel " + ctl.getName());
             threads.put(jmThread, osThread);
         }
-
+        res.setSamplerData(reqText.toString());
+        res.sampleStart();
         for (Thread thr : threads.values()) {
             log.debug("Starting thread {}", thr);
             thr.start();
-
-            if (false) {
-                // FIXME: debugging thing
-                try {
-                    thr.join();
-                    log.debug("Thread is done {}", thr);
-                } catch (InterruptedException e1) {
-                    log.debug("Interrupted");
-                }
-            }
         }
 
         for (Thread thr : threads.values()) {
@@ -82,7 +80,10 @@ public class ParallelSampler extends AbstractSampler implements Controller, Inte
             }
         }
 
-        return null;
+        if (res.getEndTime() == 0) {
+            res.sampleEnd();
+        }
+        return res;
     }
 
     private HashTree getTestTree(TestElement te) {

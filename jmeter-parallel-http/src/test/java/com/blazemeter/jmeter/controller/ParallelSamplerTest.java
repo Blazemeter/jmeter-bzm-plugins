@@ -65,8 +65,13 @@ public class ParallelSamplerTest {
             obj.addTestElement(getContextedSampler(thr));
             obj.addTestElement(getContextedSampler(thr));
 
-            obj.sample(null);
+            SampleResult res = obj.sample(null);
             assertEquals(5, EmulSampler.count.get());
+            if (res.getSubResults().length < 5) {
+                throw new AssertionError();
+            }
+
+            assertEquals(5, res.getSubResults().length);
         }
     }
 
