@@ -69,50 +69,38 @@ public class ParallelSamplerTest {
 
     @Test
     public void underLoop() throws Exception {
+        EmulSampler payload = new EmulSampler();
+        payload.setName("payload");
+
         ParallelSampler sam = new ParallelSampler();
         sam.setName("Parallel Sampler");
-        sam.addTestElement(getContextedSampler(JMeterContextService.getContext().getThread()));
-        sam.setRunningVersion(true);
+        sam.addTestElement(payload);
 
-        LoopController ctl = new LoopControllerTracked();
-        ctl.setName("Top Loop");
-        ctl.setLoops(5);
-        ctl.setContinueForever(false);
+        LoopController ctl = getLoopController(5);
         ctl.addTestElement(sam);
-        ctl.setRunningVersion(true);
 
         JMeterThread thr = new JMeterThread(new HashTree(ctl), sam, sam.notifier);
-        addToContext(sam, thr);
         thr.setThreadName("root");
         thr.setThreadGroup(new DummyThreadGroup());
+        JMeterContextService.getContext().setThread(thr);
+
+        addToContext(sam, thr);
+        addToContext(payload, thr);
+
+        sam.setRunningVersion(true);
+        ctl.setRunningVersion(true);
+        payload.setRunningVersion(true);
         thr.run();
         assertEquals(5, EmulSampler.count.get());
     }
 
-    /*
-    @Test
-    public void underLoopNoParallel() throws Exception {
-        LoopController sam = new LoopControllerTracked();
-        sam.setName("inner loop");
-        sam.setLoops(2);
-        sam.addTestElement(getContextedSampler());
-        sam.setRunningVersion(true);
-        //addToContext(sam);
-
+    private LoopController getLoopController(int loops) {
         LoopController ctl = new LoopControllerTracked();
         ctl.setName("Top Loop");
-        ctl.setLoops(5);
+        ctl.setLoops(loops);
         ctl.setContinueForever(false);
-        ctl.addTestElement(sam);
-        ctl.setRunningVersion(true);
-
-        ParallelSampler dummy = new ParallelSampler();
-        JMeterThreadParallel thr = new JMeterThreadParallel(new HashTree(ctl), dummy, dummy.notifier);
-        thr.setThreadName("root");
-        thr.run();
-        assertEquals(10, EmulSampler.count.get());
+        return ctl;
     }
-    */
 
     private TestElement getContextedSampler(JMeterThread thr) throws NoSuchFieldException, IllegalAccessException {
         EmulSampler sam = new EmulSampler();

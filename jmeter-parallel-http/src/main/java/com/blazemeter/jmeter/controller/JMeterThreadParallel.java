@@ -1,7 +1,5 @@
 package com.blazemeter.jmeter.controller;
 
-import org.apache.jmeter.samplers.Sampler;
-import org.apache.jmeter.testelement.AbstractTestElement;
 import org.apache.jmeter.threads.*;
 import org.apache.jorphan.collections.HashTree;
 import org.slf4j.Logger;
@@ -12,11 +10,10 @@ import java.util.HashMap;
 
 public class JMeterThreadParallel extends JMeterThread {
     private static final Logger log = LoggerFactory.getLogger(ParallelSampler.class);
-    private JMeterContext parentContext;
+    private TestCompilerParallel parallelCompiler;
 
-    public JMeterThreadParallel(HashTree test, JMeterThreadMonitor monitor, ListenerNotifier notifier, JMeterContext parentContext) {
+    public JMeterThreadParallel(HashTree test, JMeterThreadMonitor monitor, ListenerNotifier notifier) {
         super(test, monitor, notifier);
-        this.parentContext = parentContext;
         setThreadGroup(new DummyThreadGroup());
         try {
             copyCompilerFromParent();
@@ -25,23 +22,20 @@ public class JMeterThreadParallel extends JMeterThread {
         }
     }
 
-    @Override
-    public void run() {
-        JMeterContextService.replaceContext(parentContext);
-        super.run();
-    }
-
     protected void copyCompilerFromParent() throws IllegalAccessException, NoSuchFieldException {
         Field field = JMeterThread.class.getDeclaredField("compiler");
         field.setAccessible(true);
         JMeterThread parentThread = JMeterContextService.getContext().getThread();
+        if (parentThread == null) {
+            throw new NullPointerException();
+        }
         TestCompiler parentCompiler = (TestCompiler) field.get(parentThread);
-        TestCompiler cmp = cloneTestCompiler(parentCompiler);
-        field.set(this, cmp);
+        parallelCompiler = cloneTestCompiler(parentCompiler);
+        field.set(this, parallelCompiler);
     }
 
-    private TestCompiler cloneTestCompiler(TestCompiler parent) throws NoSuchFieldException, IllegalAccessException {
-        TestCompiler cloned = new TestCompiler(new HashTree());
+    private TestCompilerParallel cloneTestCompiler(TestCompiler parent) throws NoSuchFieldException, IllegalAccessException {
+        TestCompilerParallel cloned = new TestCompilerParallel(new HashTree());
 
         Field samplerConfigMap = TestCompiler.class.getDeclaredField("samplerConfigMap");
         samplerConfigMap.setAccessible(true);
@@ -52,5 +46,9 @@ public class JMeterThreadParallel extends JMeterThread {
         transactionControllerConfigMap.set(cloned, ((HashMap) (transactionControllerConfigMap.get(parent))).clone());
 
         return cloned;
+    }
+
+    public TestCompilerParallel getParallelCompiler() {
+        return parallelCompiler;
     }
 }

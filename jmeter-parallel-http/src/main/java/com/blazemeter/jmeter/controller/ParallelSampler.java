@@ -4,8 +4,8 @@ import org.apache.jmeter.control.Controller;
 import org.apache.jmeter.control.LoopController;
 import org.apache.jmeter.engine.event.LoopIterationListener;
 import org.apache.jmeter.samplers.*;
+import org.apache.jmeter.testelement.AbstractTestElement;
 import org.apache.jmeter.testelement.TestElement;
-import org.apache.jmeter.threads.JMeterContextService;
 import org.apache.jmeter.threads.JMeterThread;
 import org.apache.jmeter.threads.JMeterThreadMonitor;
 import org.apache.jmeter.threads.ListenerNotifier;
@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -50,7 +51,7 @@ public class ParallelSampler extends AbstractSampler implements Controller, Inte
         // TODO: make this use executor pool or whatever
         threads = new HashMap<>(controllers.size());
         for (TestElement ctl : controllers) {
-            JMeterThread jmThread = new JMeterThreadParallel(getTestTree(ctl), this, notifier, JMeterContextService.getContext());
+            JMeterThread jmThread = new JMeterThreadParallel(getTestTree(ctl), this, notifier);
             jmThread.setThreadName("parallel " + ctl.getName());
             jmThread.setThreadGroup(new DummyThreadGroup());
             Thread osThread = new Thread(jmThread, "jmeter-parallel " + ctl.getName());
@@ -85,11 +86,9 @@ public class ParallelSampler extends AbstractSampler implements Controller, Inte
     }
 
     private HashTree getTestTree(TestElement te) {
-        LoopController wrapper = new LoopController();
+        LoopController wrapper = new LoopController(); // can't use GenericController because of infinite looping
         wrapper.setLoops(1);
         wrapper.setContinueForever(false);
-
-        //GenericController wrapper = new GenericController();
 
         wrapper.addTestElement(te);
         wrapper.setName("wrapped " + te.getName());
@@ -132,7 +131,18 @@ public class ParallelSampler extends AbstractSampler implements Controller, Inte
 
     @Override
     public void threadFinished(JMeterThread thread) {
-        log.debug("Parallel thread finished: {}", thread);
+        try {
+            Field field = AbstractTestElement.class.getDeclaredField("threadContext");
+            field.setAccessible(true);
+            if (thread instanceof JMeterThreadParallel) {
+                JMeterThreadParallel pthr = (JMeterThreadParallel) thread;
+                for (TestElement te : pthr.getParallelCompiler().getKnownSamplers()) {
+                    field.set(te, null);
+                }
+            }
+        } catch (IllegalAccessException | NoSuchFieldException e) {
+            log.warn("Failed to reset context", e);
+        }
     }
 
     @Override
