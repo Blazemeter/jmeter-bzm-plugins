@@ -53,4 +53,10 @@ public class JMeterThreadParallel extends JMeterThread {
     public TestCompilerParallel getParallelCompiler() {
         return parallelCompiler;
     }
+
+    @Override
+    public void run() {
+        JMeterContextServiceAccessor.decrNumberOfThreads();
+        super.run();
+    }
 }

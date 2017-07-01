@@ -6,6 +6,8 @@ import org.apache.jmeter.engine.event.LoopIterationListener;
 import org.apache.jmeter.samplers.*;
 import org.apache.jmeter.testelement.AbstractTestElement;
 import org.apache.jmeter.testelement.TestElement;
+import org.apache.jmeter.threads.JMeterContextService;
+import org.apache.jmeter.threads.JMeterContextServiceAccessor;
 import org.apache.jmeter.threads.JMeterThread;
 import org.apache.jmeter.threads.JMeterThreadMonitor;
 import org.apache.jorphan.collections.HashTree;
@@ -133,6 +135,7 @@ public class ParallelSampler extends AbstractSampler implements Controller, Inte
 
     @Override
     public void threadFinished(JMeterThread thread) {
+        JMeterContextServiceAccessor.incrNumberOfThreads();
         try {
             Field field = AbstractTestElement.class.getDeclaredField("threadContext");
             field.setAccessible(true);
