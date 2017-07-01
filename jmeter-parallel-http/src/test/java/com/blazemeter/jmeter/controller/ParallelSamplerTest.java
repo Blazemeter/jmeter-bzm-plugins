@@ -2,6 +2,7 @@ package com.blazemeter.jmeter.controller;
 
 import kg.apc.emulators.TestJMeterUtils;
 import kg.apc.jmeter.samplers.DummySampler;
+import org.apache.jmeter.control.GenericController;
 import org.apache.jmeter.control.LoopController;
 import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
@@ -49,6 +50,8 @@ public class ParallelSamplerTest {
 
     @Test
     public void sample() throws Exception {
+        JMeterThread dummy = new JMeterThread(new HashTree(new GenericController()), null, null);
+        JMeterContextService.getContext().setThread(dummy);
         JMeterThread thr = JMeterContextService.getContext().getThread();
         for (int n = 0; n < 1000; n++) {// we're doing good check here because of multi-threads
             log.debug("\n\n\nTry #" + n);
