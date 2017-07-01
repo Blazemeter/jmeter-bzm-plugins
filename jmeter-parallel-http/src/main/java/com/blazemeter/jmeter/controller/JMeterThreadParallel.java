@@ -1,5 +1,7 @@
 package com.blazemeter.jmeter.controller;
 
+import org.apache.jmeter.samplers.Sampler;
+import org.apache.jmeter.testelement.AbstractTestElement;
 import org.apache.jmeter.threads.*;
 import org.apache.jorphan.collections.HashTree;
 import org.slf4j.Logger;
@@ -10,15 +12,23 @@ import java.util.HashMap;
 
 public class JMeterThreadParallel extends JMeterThread {
     private static final Logger log = LoggerFactory.getLogger(ParallelSampler.class);
+    private JMeterContext parentContext;
 
-    public JMeterThreadParallel(HashTree test, JMeterThreadMonitor monitor, ListenerNotifier notifier) {
+    public JMeterThreadParallel(HashTree test, JMeterThreadMonitor monitor, ListenerNotifier notifier, JMeterContext parentContext) {
         super(test, monitor, notifier);
+        this.parentContext = parentContext;
         setThreadGroup(new DummyThreadGroup());
         try {
             copyCompilerFromParent();
         } catch (IllegalAccessException | NoSuchFieldException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void run() {
+        JMeterContextService.replaceContext(parentContext);
+        super.run();
     }
 
     protected void copyCompilerFromParent() throws IllegalAccessException, NoSuchFieldException {
