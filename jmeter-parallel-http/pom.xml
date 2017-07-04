@@ -12,7 +12,7 @@
 
     <groupId>com.blazemeter.jmeter</groupId>
     <artifactId>http-parallel</artifactId>
-    <version>0.1</version>
+    <version>0.2</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -34,6 +34,12 @@
             <groupId>kg.apc</groupId>
             <artifactId>jmeter-plugins-emulators</artifactId>
             <version>0.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>kg.apc</groupId>
+            <artifactId>jmeter-plugins-dummy</artifactId>
+            <version>LATEST</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
