@@ -8,11 +8,8 @@ Step to use HTTP2plugin
 	
 2- On Windows at the start of jmeter.bat add the next line:
 		set JVM_ARGS= -Xbootclasspath/p:<path.to.jar>;
-<<<<<<< HEAD
+
 	On Linux and Mac at the start of jmeter.sh add the next line:
-=======
-	On Linux and MAC at the start of jmeter.sh add the next line:
->>>>>>> 1ce8a3b8ed0be48fe75ce2d222c406ac1443a72b
 		JVM_ARGS="-Xbootclasspath/p:<path.to.jar>"	
 
 3- Execute Jmeter with jmeter.bat or jmeter.sh
