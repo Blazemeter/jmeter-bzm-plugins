@@ -1,5 +1,6 @@
 package org.loadosophia.jmeter;
 
+import kg.apc.jmeter.reporters.StatusNotifierCallback;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.junit.Assert;

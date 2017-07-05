@@ -1,4 +1,4 @@
-package kg.apc.jmeter.reporters;
+package kg.apc.jmeter.reporters.sense;
 
 import kg.apc.jmeter.JMeterPluginsUtils;
 import kg.apc.jmeter.vizualizers.CorrectedResultCollector;
@@ -11,7 +11,7 @@ import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jmeter.visualizers.backend.BackendListener;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
-import org.loadosophia.jmeter.StatusNotifierCallback;
+import kg.apc.jmeter.reporters.StatusNotifierCallback;
 
 import java.io.File;
 import java.io.IOException;

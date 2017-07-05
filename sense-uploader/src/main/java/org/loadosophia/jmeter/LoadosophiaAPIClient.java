@@ -1,5 +1,6 @@
 package org.loadosophia.jmeter;
 
+import kg.apc.jmeter.reporters.StatusNotifierCallback;
 import net.sf.json.*;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.http.HttpEntity;

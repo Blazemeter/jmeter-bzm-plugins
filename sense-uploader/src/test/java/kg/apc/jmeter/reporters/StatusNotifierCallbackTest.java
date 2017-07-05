@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.loadosophia.jmeter;
+package kg.apc.jmeter.reporters;
 
+import kg.apc.jmeter.reporters.StatusNotifierCallback;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;

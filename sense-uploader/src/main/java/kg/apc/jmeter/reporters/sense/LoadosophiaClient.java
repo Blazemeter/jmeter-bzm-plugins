@@ -1,4 +1,4 @@
-package kg.apc.jmeter.reporters;
+package kg.apc.jmeter.reporters.sense;
 
 import kg.apc.jmeter.perfmon.PerfMonCollector;
 import net.sf.json.JSONArray;
@@ -13,7 +13,7 @@ import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 import org.loadosophia.jmeter.LoadosophiaAPIClient;
 import org.loadosophia.jmeter.LoadosophiaUploadResults;
-import org.loadosophia.jmeter.StatusNotifierCallback;
+import kg.apc.jmeter.reporters.StatusNotifierCallback;
 
 import java.io.File;
 import java.io.IOException;
