@@ -134,6 +134,8 @@ public class BlazemeterUploaderGui extends AbstractListenerGui implements Hyperl
         testTitle.setText("");
         projectKey.setText("Default project");
         uploadToken.setText(UPLOAD_TOKEN_PLACEHOLDER);
+        infoText = "";
+        infoArea.setText("");
     }
 
     private void addToPanel(JPanel panel, GridBagConstraints constraints, int col, int row, JComponent component) {
