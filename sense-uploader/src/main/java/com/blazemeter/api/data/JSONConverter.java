@@ -310,13 +310,15 @@ public class JSONConverter {
     }
 
     private static long getThreadsCount(List<SampleResult> list) {
-        Set<String> threads = new HashSet<>();
+        long maxThreadCount = 0;
+
         for (SampleResult res : list) {
-            if (!threads.contains(res.getThreadName())) {
-                threads.add(res.getThreadName());
+            if (maxThreadCount < res.getAllThreads()) {
+                maxThreadCount = res.getAllThreads();
             }
         }
-        return threads.size();
+
+        return maxThreadCount;
     }
 
     private static int getFails(List<SampleResult> list) {
