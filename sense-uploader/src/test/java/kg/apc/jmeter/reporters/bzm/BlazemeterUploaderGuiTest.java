@@ -20,7 +20,7 @@ public class BlazemeterUploaderGuiTest {
 //    @Test
     public void displayGUI() throws InterruptedException {
         if (!GraphicsEnvironment.isHeadless()) {
-            BlazemeterUploaderGui obj = new BlazemeterUploaderGui();
+            BlazeMeterUploaderGui obj = new BlazeMeterUploaderGui();
             TestElement te = obj.createTestElement();
             obj.configure(te);
             obj.clearGui();
@@ -40,13 +40,13 @@ public class BlazemeterUploaderGuiTest {
 
     @Test
     public void testGui() throws Exception {
-        BlazemeterUploaderGui gui = new BlazemeterUploaderGui();
+        BlazeMeterUploaderGui gui = new BlazeMeterUploaderGui();
 
-        assertEquals(BlazemeterUploaderGui.class.getCanonicalName(), gui.getLabelResource());
+        assertEquals(BlazeMeterUploaderGui.class.getCanonicalName(), gui.getLabelResource());
         assertEquals("bzm - BlazeMeter Uploader", gui.getStaticLabel());
 
-        BlazemeterUploader element1 = (BlazemeterUploader) gui.createTestElement();
-        BlazemeterUploader element2 = (BlazemeterUploader) gui.createTestElement();
+        BlazeMeterUploader element1 = (BlazeMeterUploader) gui.createTestElement();
+        BlazeMeterUploader element2 = (BlazeMeterUploader) gui.createTestElement();
 
         element1.setProject("test_project");
         element1.setTitle("test_title");
@@ -66,7 +66,7 @@ public class BlazemeterUploaderGuiTest {
 
         assertEquals("", element2.getTitle());
         assertEquals("Default project", element2.getProject());
-        assertEquals(BlazemeterUploaderGui.UPLOAD_TOKEN_PLACEHOLDER, element2.getUploadToken());
+        assertEquals(BlazeMeterUploaderGui.UPLOAD_TOKEN_PLACEHOLDER, element2.getUploadToken());
         assertEquals(false, element2.isShareTest());
     }
 }

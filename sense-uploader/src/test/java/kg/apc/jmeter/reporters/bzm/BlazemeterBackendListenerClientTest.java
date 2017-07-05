@@ -1,8 +1,9 @@
 package kg.apc.jmeter.reporters.bzm;
 
-import com.blazemeter.api.BlazemeterAPIClient;
+import com.blazemeter.api.BlazeMeterAPIClient;
 import com.blazemeter.api.BlazemeterAPIClientTest;
-import com.blazemeter.api.BlazemeterReport;
+import com.blazemeter.api.BlazeMeterReport;
+import kg.apc.jmeter.http.HttpUtils;
 import kg.apc.jmeter.reporters.StatusNotifierCallbackTest;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.visualizers.backend.BackendListenerContext;
@@ -17,18 +18,18 @@ public class BlazemeterBackendListenerClientTest {
 
     @Test
     public void testGetAndSet() throws Exception {
-        BlazemeterBackendListenerClient client = new BlazemeterBackendListenerClient();
+        BlazeMeterBackendListenerClient client = new BlazeMeterBackendListenerClient();
 
         StatusNotifierCallbackTest.StatusNotifierCallbackImpl informer = new StatusNotifierCallbackTest.StatusNotifierCallbackImpl();
         client.setInformer(informer);
         assertEquals(informer, client.getInformer());
-
-        BlazemeterReport report = new BlazemeterReport();
-        BlazemeterAPIClient apiClient = new BlazemeterAPIClient(null, "http://a.blazemeter.com", null, report);
+        HttpUtils httpUtils = new HttpUtils(informer, "http://a.blazemeter.com", "http://data.blazemeter.com");
+        BlazeMeterReport report = new BlazeMeterReport();
+        BlazeMeterAPIClient apiClient = new BlazeMeterAPIClient(httpUtils, informer, report);
         client.setApiClient(apiClient);
         assertEquals(apiClient, client.getApiClient());
 
-        BlazemeterReport report1 = new BlazemeterReport();
+        BlazeMeterReport report1 = new BlazeMeterReport();
         client.setReport(report1);
         assertEquals(report1, client.getReport());
 
@@ -39,11 +40,11 @@ public class BlazemeterBackendListenerClientTest {
     @Test
     public void testFlow() throws Exception {
         StatusNotifierCallbackTest.StatusNotifierCallbackImpl notifier = new StatusNotifierCallbackTest.StatusNotifierCallbackImpl();
-        BlazemeterBackendListenerClient client = new BlazemeterBackendListenerClient();
+        BlazeMeterBackendListenerClient client = new BlazeMeterBackendListenerClient();
         final Arguments arguments = new Arguments();
-        arguments.addArgument(BlazemeterUploader.SHARE_TEST, Boolean.toString(false));
-        arguments.addArgument(BlazemeterUploader.PROJECT, "project");
-        arguments.addArgument(BlazemeterUploader.TITLE, "title");
+        arguments.addArgument(BlazeMeterUploader.SHARE_TEST, Boolean.toString(false));
+        arguments.addArgument(BlazeMeterUploader.PROJECT, "project");
+        arguments.addArgument(BlazeMeterUploader.TITLE, "title");
         client.setupTest(new BackendListenerContext(arguments));
         client.setInformer(notifier);
         client.initiateOnline();

@@ -13,11 +13,15 @@ import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.NTCredentials;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.entity.mime.FormBodyPart;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.impl.client.AbstractHttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.CoreConnectionPNames;
@@ -29,7 +33,9 @@ import org.apache.log.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
+import java.util.LinkedList;
 
 /**
  * Class for working with HTTP requests
@@ -61,7 +67,7 @@ public class HttpUtils {
     }
 
     /**
-     * Create Post Request
+     * Create Post Request with json body
      */
     public HttpPost createPost(String uri, String data) {
         HttpPost httpPost = new HttpPost(uri);
@@ -69,6 +75,35 @@ public class HttpUtils {
         HttpEntity entity = new StringEntity(data, ContentType.APPLICATION_JSON);
         httpPost.setEntity(entity);
         return httpPost;
+    }
+
+    /**
+     * Create Post Request with FormBodyPart body
+     */
+    public HttpPost createPost(String uri, LinkedList<FormBodyPart> partsList) {
+        HttpPost postRequest = new HttpPost(uri);
+        MultipartEntity multipartRequest = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE);
+        for (FormBodyPart part : partsList) {
+            multipartRequest.addPart(part);
+        }
+        postRequest.setEntity(multipartRequest);
+        return postRequest;
+    }
+
+    /**
+     * Create Patch Request
+     */
+    public HttpPatch createPatch(String url, JSON data) {
+        HttpPatch patch = new HttpPatch(url);
+        patch.setHeader("Content-Type", "application/json");
+
+        String string = data.toString(1);
+        try {
+            patch.setEntity(new StringEntity(string, "UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+        return patch;
     }
 
     /**

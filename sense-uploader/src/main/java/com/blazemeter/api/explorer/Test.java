@@ -1,12 +1,12 @@
 package com.blazemeter.api.explorer;
 
 
-import com.blazemeter.api.explorer.base.HttpBaseEntity;
+import kg.apc.jmeter.http.HttpUtils;
 import net.sf.json.JSONObject;
 
 import java.io.IOException;
 
-public class Test extends HttpBaseEntity {
+public class Test extends BZAObject {
 
     public static final String DEFAULT_TEST = "Default test";
 
@@ -15,19 +15,19 @@ public class Test extends HttpBaseEntity {
     private String signature;
     private String reportURL;
 
-    public Test(HttpBaseEntity entity) {
-        super(entity, "", "");
+    public Test(HttpUtils httpUtils) {
+        super(httpUtils, "", "");
     }
 
-    public Test(HttpBaseEntity entity, String id, String name) {
-        super(entity, id, name);
+    public Test(HttpUtils httpUtils, String id, String name) {
+        super(httpUtils, id, name);
     }
 
     /**
      * Start External test for user token
      */
     public void startExternal() throws IOException {
-        JSONObject result = sendStartTest(address + String.format("/api/v4/tests/%s/start-external", getId()), 202);
+        JSONObject result = sendStartTest(httpUtils.getAddress() + String.format("/api/v4/tests/%s/start-external", getId()), 202);
         fillFields(result);
     }
 
@@ -36,7 +36,7 @@ public class Test extends HttpBaseEntity {
      * @return public link to the report
      */
     public String startAnonymousExternal() throws IOException {
-        JSONObject result = sendStartTest(address + "/api/v4/sessions", 201);
+        JSONObject result = sendStartTest(httpUtils.getAddress() + "/api/v4/sessions", 201);
         setTestFields(result.getJSONObject("test"));
         reportURL = result.getString("publicTokenUrl");
         fillFields(result);
@@ -44,14 +44,14 @@ public class Test extends HttpBaseEntity {
     }
 
     private JSONObject sendStartTest(String uri, int expectedRC) throws IOException {
-        JSONObject response = queryObject(createPost(uri, ""), expectedRC);
+        JSONObject response = httpUtils.queryObject(httpUtils.createPost(uri, ""), expectedRC);
         return response.getJSONObject("result");
     }
 
     private void fillFields(JSONObject result) {
         this.signature = result.getString("signature");
-        this.session = Session.fromJSON(this, getId(), signature, result.getJSONObject("session"));
-        this.master = Master.fromJSON(this, result.getJSONObject("master"));
+        this.session = Session.fromJSON(httpUtils, getId(), signature, result.getJSONObject("session"));
+        this.master = Master.fromJSON(httpUtils, result.getJSONObject("master"));
     }
 
     private void setTestFields(JSONObject obj) {
@@ -75,7 +75,7 @@ public class Test extends HttpBaseEntity {
         return reportURL;
     }
 
-    public static Test fromJSON(HttpBaseEntity entity, JSONObject obj) {
-        return new Test(entity, obj.getString("id"), obj.getString("name"));
+    public static Test fromJSON(HttpUtils httpUtils, JSONObject obj) {
+        return new Test(httpUtils, obj.getString("id"), obj.getString("name"));
     }
 }

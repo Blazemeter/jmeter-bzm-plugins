@@ -16,8 +16,8 @@ public class BlazemeterUploaderTest {
 
     @Test
     public void testFlow() throws Exception {
-        BlazemeterUploader uploader = new BlazemeterUploader();
-        uploader.setGui(new BlazemeterUploaderGui());
+        BlazeMeterUploader uploader = new BlazeMeterUploader();
+        uploader.setGui(new BlazeMeterUploaderGui());
         uploader.setShareTest(true);
         uploader.setProject("project");
         uploader.setTitle("title");
@@ -32,10 +32,10 @@ public class BlazemeterUploaderTest {
 
     @Test
     public void testClone() throws Exception {
-        BlazemeterUploader uploader = new BlazemeterUploader();
-        BlazemeterUploaderGui gui = new BlazemeterUploaderGui();
+        BlazeMeterUploader uploader = new BlazeMeterUploader();
+        BlazeMeterUploaderGui gui = new BlazeMeterUploaderGui();
         uploader.setGui(gui);
-        BlazemeterUploader clone = (BlazemeterUploader) uploader.clone();
+        BlazeMeterUploader clone = (BlazeMeterUploader) uploader.clone();
         assertEquals(gui, clone.gui);
     }
 }

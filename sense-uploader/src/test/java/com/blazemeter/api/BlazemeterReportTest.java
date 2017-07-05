@@ -9,7 +9,7 @@ public class BlazemeterReportTest {
 
     @Test
     public void test() throws Exception {
-        BlazemeterReport report = new BlazemeterReport();
+        BlazeMeterReport report = new BlazeMeterReport();
 
         String project = "project";
         report.setProject(project);
