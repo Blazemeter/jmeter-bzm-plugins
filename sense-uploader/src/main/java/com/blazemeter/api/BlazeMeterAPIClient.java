@@ -5,37 +5,43 @@ import com.blazemeter.api.explorer.Project;
 import com.blazemeter.api.explorer.Test;
 import com.blazemeter.api.explorer.User;
 import com.blazemeter.api.explorer.Workspace;
-import com.blazemeter.api.explorer.base.HttpBaseEntity;
+import kg.apc.jmeter.http.HttpUtils;
 import net.sf.json.JSONObject;
+import org.apache.jorphan.logging.LoggingManager;
 import org.apache.jorphan.util.JMeterStopTestException;
 import kg.apc.jmeter.reporters.StatusNotifierCallback;
+import org.apache.log.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BlazemeterAPIClient extends HttpBaseEntity {
+public class BlazeMeterAPIClient {
 
+    protected static final Logger log = LoggingManager.getLoggerForClass();
 
     private Test test;
     protected User user;
-    private BlazemeterReport report;
+    private BlazeMeterReport report;
+    private HttpUtils httpUtils;
+    private StatusNotifierCallback notifier;
 
-    public BlazemeterAPIClient(StatusNotifierCallback notifier, String address, String dataAddress, BlazemeterReport report) {
-        super(notifier, address, dataAddress, report.getToken(), report.isAnonymousTest());
+    public BlazeMeterAPIClient(HttpUtils httpUtils, StatusNotifierCallback notifier, BlazeMeterReport report) {
+        this.httpUtils = httpUtils;
+        this.notifier = notifier;
         this.report = report;
-        this.user = new User(this);
+        this.user = new User(httpUtils);
     }
 
     public String startOnline() throws IOException {
-        if (isAnonymousTest()) {
+        if (report.isAnonymousTest()) {
             notifier.notifyAbout("No BlazeMeter API key provided, will upload anonymously");
-            test = new Test(this);
+            test = new Test(httpUtils);
             return test.startAnonymousExternal();
         } else {
             test.startExternal();
             return (report.isShareTest()) ? test.getMaster().makeReportPublic() :
-                    (address + "/app/#/masters/" + test.getMaster().getId());
+                    (httpUtils.getAddress() + "/app/#/masters/" + test.getMaster().getId());
         }
     }
 
@@ -49,7 +55,7 @@ public class BlazemeterAPIClient extends HttpBaseEntity {
     }
 
     public void endOnline() throws IOException {
-        if (isAnonymousTest()) {
+        if (report.isAnonymousTest()) {
             test.getSession().stopAnonymous();
         } else {
             test.getSession().stop();
@@ -65,7 +71,7 @@ public class BlazemeterAPIClient extends HttpBaseEntity {
             return;
         }
 
-        if (!isAnonymousTest()) {
+        if (!report.isAnonymousTest()) {
             try {
                 prepareClient(user);
             } catch (IOException e) {
@@ -140,7 +146,7 @@ public class BlazemeterAPIClient extends HttpBaseEntity {
         return allWorkspaces;
     }
 
-    public BlazemeterReport getReport() {
+    public BlazeMeterReport getReport() {
         return report;
     }
 }

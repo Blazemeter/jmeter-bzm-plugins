@@ -1,14 +1,14 @@
 package com.blazemeter.api.explorer;
 
-import com.blazemeter.api.explorer.base.HttpBaseEntity;
+import kg.apc.jmeter.http.HttpUtils;
 import net.sf.json.JSONObject;
 
 import java.io.IOException;
 
-public class Master extends HttpBaseEntity {
+public class Master extends BZAObject {
 
-    public Master(HttpBaseEntity entity, String id, String name) {
-        super(entity, id, name);
+    public Master(HttpUtils httpUtils, String id, String name) {
+        super(httpUtils, id, name);
     }
 
     /**
@@ -16,12 +16,12 @@ public class Master extends HttpBaseEntity {
      * @return public link to the report
      */
     public String makeReportPublic() throws IOException {
-        String uri = address + String.format("/api/v4/masters/%s/public-token", getId());
+        String uri = httpUtils.getAddress() + String.format("/api/v4/masters/%s/public-token", getId());
         JSONObject obj = new JSONObject();
         obj.put("publicToken", "None");
-        JSONObject response = queryObject(createPost(uri, obj.toString()), 201);
+        JSONObject response = httpUtils.queryObject(httpUtils.createPost(uri, obj.toString()), 201);
 
-        return address + String.format("/app/?public-token=%s#/masters/%s/summary",
+        return httpUtils.getAddress() + String.format("/app/?public-token=%s#/masters/%s/summary",
                 extractPublicToken(response.getJSONObject("result")), getId());
     }
 
@@ -29,7 +29,7 @@ public class Master extends HttpBaseEntity {
         return result.getString("publicToken");
     }
 
-    public static Master fromJSON(HttpBaseEntity entity, JSONObject obj) {
-        return new Master(entity, obj.getString("id"), obj.getString("name"));
+    public static Master fromJSON(HttpUtils httpUtils, JSONObject obj) {
+        return new Master(httpUtils, obj.getString("id"), obj.getString("name"));
     }
 }

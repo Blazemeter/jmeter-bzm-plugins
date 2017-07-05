@@ -1,11 +1,11 @@
-package com.blazemeter.api.explorer.base;
+package kg.apc.jmeter.http;
 
+import kg.apc.jmeter.reporters.StatusNotifierCallback;
 import net.sf.json.JSON;
 import net.sf.json.JSONNull;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 import net.sf.json.JsonConfig;
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -26,16 +26,15 @@ import org.apache.jmeter.JMeter;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
-import kg.apc.jmeter.reporters.StatusNotifierCallback;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 
 /**
- * Base Entity with Http client
+ * Class for working with HTTP requests
  */
-public class HttpBaseEntity extends BaseEntity {
+public class HttpUtils {
 
     protected static final Logger log = LoggingManager.getLoggerForClass();
     protected final static int TIMEOUT = 5;
@@ -44,52 +43,18 @@ public class HttpBaseEntity extends BaseEntity {
     protected final StatusNotifierCallback notifier;
     protected final String address;
     protected final String dataAddress;
-    protected final String token;
-    protected final boolean isAnonymousTest;
 
-    /**
-     * Constructor that create new HTTP Client
-     */
-    public HttpBaseEntity(StatusNotifierCallback notifier, String address, String dataAddress, String token, boolean isAnonymousTest) {
-        super("", "");
+    public HttpUtils(StatusNotifierCallback notifier, String address, String dataAddress) {
         this.notifier = notifier;
         this.address = address;
         this.dataAddress = dataAddress;
-        this.token = token;
-        this.isAnonymousTest = isAnonymousTest;
         this.httpClient = createHTTPClient();
-    }
-
-    /**
-     * Constructor that clone only HttpBaseEntity.class fields
-     */
-    public HttpBaseEntity(HttpBaseEntity entity) {
-        super("", "");
-        this.notifier = entity.getNotifier();
-        this.address = entity.getAddress();
-        this.dataAddress = entity.getDataAddress();
-        this.token = entity.getToken();
-        this.isAnonymousTest = entity.isAnonymousTest();
-        this.httpClient = entity.getHttpClient();
-    }
-
-    /**
-     * Constructor that clone HttpBaseEntity.class fields
-     */
-    public HttpBaseEntity(HttpBaseEntity entity, String id, String name) {
-        super(id, name);
-        this.notifier = entity.getNotifier();
-        this.address = entity.getAddress();
-        this.dataAddress = entity.getDataAddress();
-        this.token = entity.getToken();
-        this.isAnonymousTest = entity.isAnonymousTest();
-        this.httpClient = entity.getHttpClient();
     }
 
     /**
      * Create Get Request
      */
-    protected HttpGet createGet(String uri) {
+    public HttpGet createGet(String uri) {
         HttpGet httpGet = new HttpGet(uri);
         httpGet.setHeader("Content-Type", "application/json");
         return httpGet;
@@ -98,7 +63,7 @@ public class HttpBaseEntity extends BaseEntity {
     /**
      * Create Post Request
      */
-    protected HttpPost createPost(String uri, String data) {
+    public HttpPost createPost(String uri, String data) {
         HttpPost httpPost = new HttpPost(uri);
         httpPost.setHeader("Content-Type", "application/json");
         HttpEntity entity = new StringEntity(data, ContentType.APPLICATION_JSON);
@@ -112,7 +77,7 @@ public class HttpBaseEntity extends BaseEntity {
      * @param expectedCode - expected response code
      * @return - response in JSONObject
      */
-    protected JSONObject queryObject(HttpRequestBase request, int expectedCode) throws IOException {
+    public JSONObject queryObject(HttpRequestBase request, int expectedCode) throws IOException {
         JSON res = query(request, expectedCode);
         if (!(res instanceof JSONObject)) {
             throw new IOException("Unexpected response: " + res);
@@ -126,9 +91,9 @@ public class HttpBaseEntity extends BaseEntity {
      * @param expectedCode - expected response code
      * @return - response in JSONObject
      */
-    protected JSON query(HttpRequestBase request, int expectedCode) throws IOException {
+    public JSON query(HttpRequestBase request, int expectedCode) throws IOException {
         log.info("Requesting: " + request);
-        setTokenToHeader(request);
+        addRequiredHeader(request);
 
         HttpParams requestParams = request.getParams();
         requestParams.setIntParameter(CoreConnectionPNames.SO_TIMEOUT, TIMEOUT * 1000);
@@ -162,28 +127,12 @@ public class HttpBaseEntity extends BaseEntity {
         }
     }
 
-    private String extractErrorMessage(String response) {
-        if (response != null && !response.isEmpty()) {
-            JSON jsonResponse = JSONSerializer.toJSON(response, new JsonConfig());
-            if (jsonResponse instanceof JSONObject) {
-                JSONObject object = (JSONObject) jsonResponse;
-                JSONObject errorObj = object.getJSONObject("error");
-                if (errorObj.containsKey("message")) {
-                    return errorObj.getString("message");
-                }
-            }
-        }
+    protected String extractErrorMessage(String response) {
         return response;
     }
 
-    private void setTokenToHeader(HttpRequestBase httpRequestBase) {
-        if (!isAnonymousTest) {
-            if (token != null && token.contains(":")) {
-                httpRequestBase.setHeader("Authorization", "Basic " + new String(Base64.encodeBase64(token.getBytes())));
-            } else {
-                httpRequestBase.setHeader("X-Api-Key", token);
-            }
-        }
+    protected void addRequiredHeader(HttpRequestBase httpRequestBase) {
+        // NOOP
     }
 
     private String getResponseEntity(HttpResponse result) throws IOException {
@@ -257,13 +206,5 @@ public class HttpBaseEntity extends BaseEntity {
 
     public String getDataAddress() {
         return dataAddress;
-    }
-
-    public String getToken() {
-        return token;
-    }
-
-    public boolean isAnonymousTest() {
-        return isAnonymousTest;
     }
 }

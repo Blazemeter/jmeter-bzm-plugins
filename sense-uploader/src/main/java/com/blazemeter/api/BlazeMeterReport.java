@@ -1,6 +1,6 @@
 package com.blazemeter.api;
 
-public class BlazemeterReport {
+public class BlazeMeterReport {
 
     protected boolean isShareTest;
     protected String project;
