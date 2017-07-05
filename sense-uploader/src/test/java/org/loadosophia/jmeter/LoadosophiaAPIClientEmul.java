@@ -24,7 +24,7 @@ public class LoadosophiaAPIClientEmul extends LoadosophiaAPIClient {
     }
 
     @Override
-    protected JSON query(HttpRequestBase request, int expectedCode) throws IOException {
+    public JSON query(HttpRequestBase request, int expectedCode) throws IOException {
         log.info("Simulating request: " + request);
         if (responses.size()>0) {
             JSON resp = responses.remove();
