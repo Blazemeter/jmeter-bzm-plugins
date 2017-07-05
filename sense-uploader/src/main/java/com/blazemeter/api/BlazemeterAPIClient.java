@@ -11,6 +11,7 @@ import org.apache.jorphan.util.JMeterStopTestException;
 import kg.apc.jmeter.reporters.StatusNotifierCallback;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class BlazemeterAPIClient extends HttpBaseEntity {
@@ -61,7 +62,6 @@ public class BlazemeterAPIClient extends HttpBaseEntity {
             user.ping();
         } catch (IOException e) {
             notifier.notifyAbout("Cannot reach online results storage, maybe the address/token is wrong");
-            log.error("Cannot reach online results storage, maybe the address/token is wrong");
             return;
         }
 
@@ -77,10 +77,13 @@ public class BlazemeterAPIClient extends HttpBaseEntity {
 
     protected void prepareClient(User user) throws IOException {
         List<Account> accounts = user.getAccounts();
-        Workspace workspace = findWorkspace(accounts);
-        if (workspace != null) {
-            Project project = findProject(workspace);
+        List<Workspace> workspaces = findWorkspaces(accounts);
+        if (!workspaces.isEmpty()) {
+            Project project = findProject(workspaces);
             test = findTest(project);
+        } else {
+            notifier.notifyAbout("Your account has no active workspaces, please contact BlazeMeter support");
+            // TODO: stop test?
         }
     }
 
@@ -94,58 +97,47 @@ public class BlazemeterAPIClient extends HttpBaseEntity {
         final List<Test> tests = project.getTests();
         for (Test test : tests) {
             if (testNameOrId.equals(test.getId()) || testNameOrId.equals(test.getName())) {
+                notifier.notifyAbout(String.format("Found BlazeMeter test: '%s' (id:%s)", test.getName(), test.getId()));
                 return test;
             }
         }
 
-        notifier.notifyAbout("Creating a test '" + testNameOrId + "' in '" + project.getName() +"' project (id:" + project.getId() + ")");
+        notifier.notifyAbout(String.format("Creating a test '%s' in '%s' project (id:%s)", testNameOrId, project.getName(), project.getId()));
         return project.createTest(testNameOrId);
     }
 
-    protected Project findProject(Workspace workspace) throws IOException {
+    protected Project findProject(List<Workspace> workspaces) throws IOException {
         String projectNameOrId = report.getProject();
         if (projectNameOrId == null || projectNameOrId.isEmpty()) {
             projectNameOrId = Project.DEFAULT_PROJECT;
-            log.warn("Empty project name. Will be used '" + Project.DEFAULT_PROJECT + "' as project name");
+            notifier.notifyAbout("Empty project name. Will be used '" + Project.DEFAULT_PROJECT + "' as project name");
         }
 
-        final List<Project> projects = workspace.getProjects();
-        for (Project project : projects) {
-            if (projectNameOrId.equals(project.getId()) || projectNameOrId.equals(project.getName())) {
-                return project;
-            }
-        }
 
-        notifier.notifyAbout("Creating a project '" + projectNameOrId + "' in '" + workspace.getName() +"' workspace (id:" + workspace.getId() + ")");
-        return workspace.createProject(projectNameOrId);
-    }
-
-    protected Workspace findWorkspace(List<Account> accounts) throws IOException {
-        String workspaceNameOrId = report.getWorkspace();
-        if (workspaceNameOrId == null || workspaceNameOrId.isEmpty()) {
-            workspaceNameOrId = Workspace.DEFAULT_WORKSPACE;
-            log.warn("Empty workspace name. Will be used '" + Workspace.DEFAULT_WORKSPACE + "' as workspace name");
-        }
-
-        for (Account account : accounts) {
-            final List<Workspace> workspaces = account.getWorkspaces();
-            for (Workspace workspace : workspaces) {
-                if (workspaceNameOrId.equals(workspace.getId()) || workspaceNameOrId.equals(workspace.getName())) {
-                    return workspace;
+        for (Workspace workspace : workspaces) {
+            final List<Project> projects = workspace.getProjects();
+            for (Project project : projects) {
+                if (projectNameOrId.equals(project.getId()) || projectNameOrId.equals(project.getName())) {
+                    notifier.notifyAbout(String.format("Found BlazeMeter project: '%s' (id:%s)", project.getName(), project.getId()));
+                    return project;
                 }
             }
         }
 
+        Workspace workspace = workspaces.get(0);
+        notifier.notifyAbout(String.format("Creating a project '%s' in '%s' workspace (id:%s)", projectNameOrId, workspace.getName(), workspace.getId()));
+        return workspace.createProject(projectNameOrId);
+    }
+
+    protected List<Workspace> findWorkspaces(List<Account> accounts) throws IOException {
+        final List<Workspace> allWorkspaces = new ArrayList<>();
         for (Account account : accounts) {
-            Workspace wsp = account.createWorkspace(workspaceNameOrId);
-            if (wsp != null) {
-                return wsp;
+            final List<Workspace> workspaces = account.getWorkspaces();
+            if (!workspaces.isEmpty()) {
+                allWorkspaces.addAll(workspaces);
             }
         }
-
-        log.error("Cannot find workspace or create it");
-        notifier.notifyAbout("Cannot find workspace or create it");
-        return null;
+        return allWorkspaces;
     }
 
     public BlazemeterReport getReport() {
