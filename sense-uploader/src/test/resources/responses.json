@@ -27,11 +27,6 @@
         "_comment" : "workspace #1",
         "id" : "10",
         "name" : "Default workspace"
-      },
-      {
-        "_comment" : "workspace #2",
-        "id" : "20",
-        "name" : "User workspace"
       }
     ]
   },
@@ -50,30 +45,52 @@
       }
     ]
   },
-  {
-    "_comment" : "create new workspace",
-    "result" : {
-      "id" : "33",
-      "name" : "New workspace"
-    }
-  },
 
   {
-    "_comment" : "list of projects",
+    "_comment" : "list of projects workspace #1",
     "result" : [
       {
         "_comment" : "project #1",
-        "id" : "100",
+        "id" : "101",
         "name" : "Default project"
       },
       {
         "_comment" : "project #2",
-        "id" : "200",
+        "id" : "201",
         "name" : "User project"
       }
     ]
   },
-
+  {
+    "_comment" : "list of projects workspace #2",
+    "result" : [
+      {
+        "_comment" : "project #1",
+        "id" : "102",
+        "name" : "Default project"
+      },
+      {
+        "_comment" : "project #2",
+        "id" : "202",
+        "name" : "Manager project"
+      }
+    ]
+  },
+  {
+    "_comment" : "list of projects workspace #3",
+    "result" : [
+      {
+        "_comment" : "project #1",
+        "id" : "103",
+        "name" : "Default project"
+      },
+      {
+        "_comment" : "project #2",
+        "id" : "203",
+        "name" : "User project"
+      }
+    ]
+  },
   {
     "_comment" : "create new project",
     "result" : {

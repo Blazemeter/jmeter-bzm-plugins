@@ -36,7 +36,6 @@ public class BlazemeterAPIClientTest {
     public void testStartAnonTest() throws Exception {
         StatusNotifierCallbackTest.StatusNotifierCallbackImpl callback = new StatusNotifierCallbackTest.StatusNotifierCallbackImpl();
         BlazemeterReport report = new BlazemeterReport();
-        report.setAnonymousTest(true);
         BlazemeterAPIClient apiClient = new BlazemeterAPIClient(callback, "https://a.blazemeter.com/", "https://data.blazemeter.com/", report);
         apiClient.prepare();
         assertEquals(report, apiClient.getReport());
@@ -82,9 +81,7 @@ public class BlazemeterAPIClientTest {
 
         StatusNotifierCallbackTest.StatusNotifierCallbackImpl notifier = new StatusNotifierCallbackTest.StatusNotifierCallbackImpl();
         BlazemeterReport report = new BlazemeterReport();
-        report.setAnonymousTest(false);
         report.setShareTest(true);
-        report.setWorkspace("New workspace");
         report.setProject("New project");
         report.setTitle("New test");
         report.setToken("123456");

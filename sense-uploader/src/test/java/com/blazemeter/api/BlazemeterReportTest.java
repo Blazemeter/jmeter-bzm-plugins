@@ -19,16 +19,9 @@ public class BlazemeterReportTest {
         report.setTitle(title);
         assertEquals(title, report.getTitle());
 
-        String workspace = "workspace";
-        report.setWorkspace(workspace);
-        assertEquals(workspace, report.getWorkspace());
-
         String token = "token";
         report.setToken(token);
         assertEquals(token, report.getToken());
-
-        report.setAnonymousTest(true);
-        assertTrue(report.isAnonymousTest());
 
         report.setShareTest(true);
         assertTrue(report.isShareTest());

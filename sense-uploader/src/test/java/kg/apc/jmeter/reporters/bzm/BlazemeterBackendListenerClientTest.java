@@ -24,7 +24,6 @@ public class BlazemeterBackendListenerClientTest {
         assertEquals(informer, client.getInformer());
 
         BlazemeterReport report = new BlazemeterReport();
-        report.setAnonymousTest(true);
         BlazemeterAPIClient apiClient = new BlazemeterAPIClient(null, "http://a.blazemeter.com", null, report);
         client.setApiClient(apiClient);
         assertEquals(apiClient, client.getApiClient());
@@ -42,12 +41,9 @@ public class BlazemeterBackendListenerClientTest {
         StatusNotifierCallbackTest.StatusNotifierCallbackImpl notifier = new StatusNotifierCallbackTest.StatusNotifierCallbackImpl();
         BlazemeterBackendListenerClient client = new BlazemeterBackendListenerClient();
         final Arguments arguments = new Arguments();
-        arguments.addArgument(BlazemeterUploader.ANONYMOUS_TEST, Boolean.toString(true));
         arguments.addArgument(BlazemeterUploader.SHARE_TEST, Boolean.toString(false));
-        arguments.addArgument(BlazemeterUploader.WORKSPACE, "workspace");
         arguments.addArgument(BlazemeterUploader.PROJECT, "project");
         arguments.addArgument(BlazemeterUploader.TITLE, "title");
-        arguments.addArgument(BlazemeterUploader.UPLOAD_TOKEN, "token");
         client.setupTest(new BackendListenerContext(arguments));
         client.setInformer(notifier);
         client.initiateOnline();

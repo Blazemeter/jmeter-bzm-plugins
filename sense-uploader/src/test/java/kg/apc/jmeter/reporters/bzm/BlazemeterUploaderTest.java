@@ -18,21 +18,16 @@ public class BlazemeterUploaderTest {
     public void testFlow() throws Exception {
         BlazemeterUploader uploader = new BlazemeterUploader();
         uploader.setGui(new BlazemeterUploaderGui());
-        uploader.setAnonymousTest(true);
         uploader.setShareTest(true);
-        uploader.setWorkspace("workspace");
         uploader.setProject("project");
         uploader.setTitle("title");
-        uploader.setUploadToken("token");
         uploader.testStarted();
         uploader.testEnded();
 
-        assertEquals(true, uploader.isAnonymousTest());
         assertEquals(true, uploader.isShareTest());
-        assertEquals("workspace", uploader.getWorkspace());
         assertEquals("project", uploader.getProject());
         assertEquals("title", uploader.getTitle());
-        assertEquals("token", uploader.getUploadToken());
+        assertEquals("", uploader.getUploadToken());
     }
 
     @Test
