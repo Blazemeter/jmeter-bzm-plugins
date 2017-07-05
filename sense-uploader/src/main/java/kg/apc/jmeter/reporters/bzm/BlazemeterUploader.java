@@ -17,9 +17,7 @@ public class BlazemeterUploader extends BackendListener implements StatusNotifie
 
     public static final String UPLOAD_TOKEN = "token";
     public static final String PROJECT = "project";
-    public static final String WORKSPACE = "workspace";
     public static final String TITLE = "title";
-    public static final String ANONYMOUS_TEST = "anonymous";
     public static final String SHARE_TEST = "share";
 
     protected BlazemeterUploaderGui gui;
@@ -44,9 +42,7 @@ public class BlazemeterUploader extends BackendListener implements StatusNotifie
 
     private Arguments createArguments() {
         final Arguments arguments = new Arguments();
-        arguments.addArgument(ANONYMOUS_TEST, Boolean.toString(isAnonymousTest()));
         arguments.addArgument(SHARE_TEST, Boolean.toString(isShareTest()));
-        arguments.addArgument(WORKSPACE, getWorkspace());
         arguments.addArgument(PROJECT, getProject());
         arguments.addArgument(TITLE, getTitle());
         arguments.addArgument(UPLOAD_TOKEN, getUploadToken());
@@ -79,28 +75,12 @@ public class BlazemeterUploader extends BackendListener implements StatusNotifie
         testEnded(MainFrame.LOCAL);
     }
 
-    public boolean isAnonymousTest() {
-        return getPropertyAsBoolean(ANONYMOUS_TEST);
-    }
-
-    public void setAnonymousTest(boolean selected) {
-        setProperty(ANONYMOUS_TEST, selected);
-    }
-
     public boolean isShareTest() {
         return getPropertyAsBoolean(SHARE_TEST);
     }
 
     public void setShareTest(boolean selected) {
         setProperty(SHARE_TEST, selected);
-    }
-
-    public void setWorkspace(String workspace) {
-        setProperty(WORKSPACE, workspace);
-    }
-
-    public String getWorkspace() {
-        return getPropertyAsString(WORKSPACE);
     }
 
     public void setProject(String proj) {

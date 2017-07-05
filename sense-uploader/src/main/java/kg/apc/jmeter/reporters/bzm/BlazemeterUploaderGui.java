@@ -15,12 +15,9 @@ import java.awt.event.ActionListener;
 public class BlazemeterUploaderGui extends AbstractListenerGui implements HyperlinkListener {
 
     public static final String WIKIPAGE = "BlazemeterUploader";
-    public static final String UPLOAD_TOKEN_PLACEHOLDER = "Replace this text with upload token received at a.blazemeter.com\nCan be used deprecated API keys or new improved keys.\nRemember that anyone who has this token can upload files to your account.\nPlease, treat your token as confidential data.\nSee plugin help for details.";
+    public static final String UPLOAD_TOKEN_PLACEHOLDER = "Replace this text with upload token received at a.blazemeter.com\nCan be used deprecated API keys or new improved keys.\nEmpty token means anonymous report without any other settings required.\nRemember that anyone who has this token can upload files to your account.\nPlease, treat your token as confidential data.\nSee plugin help for details.";
 
-    private JCheckBox anonymousTest;
-    private ActionListener actionListener;
     private JCheckBox shareTest;
-    private JTextField testWorkspace;
     private JTextField projectKey;
     private JTextField testTitle;
     private JTextArea uploadToken;
@@ -55,13 +52,10 @@ public class BlazemeterUploaderGui extends AbstractListenerGui implements Hyperl
     public void modifyTestElement(TestElement te) {
         if (te instanceof BlazemeterUploader) {
             BlazemeterUploader uploader = (BlazemeterUploader) te;
-            uploader.setAnonymousTest(anonymousTest.isSelected());
             uploader.setShareTest(shareTest.isSelected());
             uploader.setTitle(testTitle.getText());
-            uploader.setWorkspace(testWorkspace.getText());
             uploader.setProject(projectKey.getText());
-            String token = uploadToken.getText();
-            uploader.setUploadToken(UPLOAD_TOKEN_PLACEHOLDER.equals(token) ? "" : token);
+            uploader.setUploadToken(uploadToken.getText());
             uploader.setGui(this);
         }
     }
@@ -70,13 +64,10 @@ public class BlazemeterUploaderGui extends AbstractListenerGui implements Hyperl
     public void configure(TestElement element) {
         super.configure(element);
         BlazemeterUploader uploader = (BlazemeterUploader) element;
-        anonymousTest.setSelected(uploader.isAnonymousTest());
         shareTest.setSelected(uploader.isShareTest());
-        testWorkspace.setText(uploader.getWorkspace());
         projectKey.setText(uploader.getProject());
         testTitle.setText(uploader.getTitle());
         uploadToken.setText(uploader.getUploadToken());
-        actionListener.actionPerformed(new ActionEvent(anonymousTest, 0, "select"));
     }
 
     private void init() {
@@ -96,21 +87,8 @@ public class BlazemeterUploaderGui extends AbstractListenerGui implements Hyperl
         editConstraints.fill = GridBagConstraints.HORIZONTAL;
 
         int row = 0;
-        addToPanel(mainPanel, labelConstraints, 0, row, new JLabel("Anonymous test: ", JLabel.RIGHT));
-        addToPanel(mainPanel, editConstraints, 1, row, anonymousTest = new JCheckBox());
-
-        row++;
         addToPanel(mainPanel, labelConstraints, 0, row, new JLabel("Share test: ", JLabel.RIGHT));
         addToPanel(mainPanel, editConstraints, 1, row, shareTest = new JCheckBox());
-
-        row++;
-        addToPanel(mainPanel, labelConstraints, 0, row, new JLabel("Project Workspace: ", JLabel.RIGHT));
-        addToPanel(mainPanel, editConstraints, 1, row, testWorkspace = new JTextField(20));
-
-        editConstraints.fill = GridBagConstraints.BOTH;
-
-        editConstraints.insets = new Insets(4, 0, 0, 0);
-        labelConstraints.insets = new Insets(4, 0, 0, 0);
 
         row++;
         addToPanel(mainPanel, labelConstraints, 0, row, new JLabel("Upload to Project: ", JLabel.RIGHT));
@@ -149,32 +127,12 @@ public class BlazemeterUploaderGui extends AbstractListenerGui implements Hyperl
         JPanel container = new JPanel(new BorderLayout());
         container.add(mainPanel, BorderLayout.NORTH);
         add(container, BorderLayout.CENTER);
-
-        actionListener = new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                disableComponent(!anonymousTest.isSelected());
-            }
-
-            private void disableComponent(boolean enable) {
-                shareTest.setEnabled(enable);
-                testWorkspace.setEnabled(enable);
-                projectKey.setEnabled(enable);
-                testTitle.setEnabled(enable);
-                uploadToken.setEnabled(enable);
-            }
-        };
-        anonymousTest.addActionListener(actionListener);
     }
 
-
-
     private void initFields() {
-        anonymousTest.setSelected(false);
         shareTest.setSelected(false);
         testTitle.setText("");
         projectKey.setText("Default project");
-        testWorkspace.setText("Default workspace");
         uploadToken.setText(UPLOAD_TOKEN_PLACEHOLDER);
     }
 

@@ -46,9 +46,7 @@ public class BlazemeterBackendListenerClient implements BackendListenerClient {
 
     private void init(BackendListenerContext context) {
         report = new BlazemeterReport();
-        report.setAnonymousTest(Boolean.valueOf(context.getParameter(BlazemeterUploader.ANONYMOUS_TEST)));
         report.setShareTest(Boolean.valueOf(context.getParameter(BlazemeterUploader.SHARE_TEST)));
-        report.setWorkspace(context.getParameter(BlazemeterUploader.WORKSPACE));
         report.setProject(context.getParameter(BlazemeterUploader.PROJECT));
         report.setTitle(context.getParameter(BlazemeterUploader.TITLE));
         report.setToken(context.getParameter(BlazemeterUploader.UPLOAD_TOKEN));
