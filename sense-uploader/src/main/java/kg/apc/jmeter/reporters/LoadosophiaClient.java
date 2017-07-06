@@ -1,5 +1,6 @@
 package kg.apc.jmeter.reporters;
 
+import kg.apc.jmeter.notifier.StatusNotifierCallback;
 import kg.apc.jmeter.perfmon.PerfMonCollector;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -13,7 +14,6 @@ import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 import org.loadosophia.jmeter.LoadosophiaAPIClient;
 import org.loadosophia.jmeter.LoadosophiaUploadResults;
-import org.loadosophia.jmeter.StatusNotifierCallback;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,12 +22,11 @@ import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.SortedMap;
 import java.util.Stack;
+import java.util.TimeZone;
 import java.util.TreeMap;
 
 public class LoadosophiaClient implements BackendListenerClient {
@@ -85,6 +84,7 @@ public class LoadosophiaClient implements BackendListenerClient {
         if (list != null && isOnlineInitiated) {
             try {
                 JSONArray array = getDataToSend(list);
+                log.info(array.toString());
                 apiClient.sendOnlineData(array);
             } catch (IOException ex) {
                 log.warn("Failed to send active test data", ex);
@@ -170,7 +170,6 @@ public class LoadosophiaClient implements BackendListenerClient {
         return sortedResults;
     }
 
-
     private JSONObject getAggregateSecond(Long sec, List<SampleResult> raw) {
         /*
          "rc": item.http_codes,
@@ -181,17 +180,16 @@ public class LoadosophiaClient implements BackendListenerClient {
         log.debug("Aggregating " + sec);
         result.put("ts", format.format(ts));
 
-        Map<String, Integer> threads = new HashMap<>();
         int avg_rt = 0;
         Long[] rtimes = new Long[raw.size()];
         String[] rcodes = new String[raw.size()];
         int cnt = 0;
         int failedCount = 0;
+        long maxThreadCount = 0;
         for (SampleResult res : raw) {
-            if (!threads.containsKey(res.getThreadName())) {
-                threads.put(res.getThreadName(), 0);
+            if (maxThreadCount < res.getAllThreads()) {
+                maxThreadCount = res.getAllThreads();
             }
-            threads.put(res.getThreadName(), res.getAllThreads());
 
             avg_rt += res.getTime();
             rtimes[cnt] = res.getTime();
@@ -202,12 +200,8 @@ public class LoadosophiaClient implements BackendListenerClient {
             cnt++;
         }
 
-        long tsum = 0;
-        for (Integer tcount : threads.values()) {
-            tsum += tcount;
-        }
         result.put("rps", cnt);
-        result.put("threads", tsum);
+        result.put("threads", maxThreadCount);
         result.put("avg_rt", avg_rt / cnt);
         result.put("quantiles", getQuantilesJSON(rtimes));
         result.put("net", getNetJSON(failedCount, cnt - failedCount));

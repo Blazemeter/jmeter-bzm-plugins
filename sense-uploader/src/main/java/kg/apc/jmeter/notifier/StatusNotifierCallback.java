@@ -1,4 +1,4 @@
-package org.loadosophia.jmeter;
+package kg.apc.jmeter.notifier;
 
 public interface StatusNotifierCallback {
 

@@ -6,7 +6,7 @@
 
     <groupId>kg.apc</groupId>
     <artifactId>jmeter-plugins-senseuploader</artifactId>
-    <version>2.4</version>
+    <version>3.0</version>
 
     <name>BlazeMeter Sense Uploader</name>
     <description>BlazeMeter Sense Uploader</description>

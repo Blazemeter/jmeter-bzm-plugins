@@ -1,6 +1,8 @@
 package kg.apc.jmeter.reporters;
 
 import kg.apc.emulators.TestJMeterUtils;
+import kg.apc.jmeter.reporters.LoadosophiaUploader;
+import kg.apc.jmeter.reporters.LoadosophiaUploaderGui;
 import org.apache.jmeter.samplers.SampleEvent;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.util.JMeterUtils;

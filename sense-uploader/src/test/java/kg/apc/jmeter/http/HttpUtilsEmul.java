@@ -1,22 +1,20 @@
-package org.loadosophia.jmeter;
+package kg.apc.jmeter.http;
 
 import kg.apc.jmeter.notifier.StatusNotifierCallback;
 import net.sf.json.JSON;
+import net.sf.json.JSONObject;
 import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.jorphan.logging.LoggingManager;
-import org.apache.log.Logger;
 
 import java.io.IOException;
 import java.util.LinkedList;
 
-
-public class LoadosophiaAPIClientEmul extends LoadosophiaAPIClient {
-    private static final Logger log = LoggingManager.getLoggerForClass();
+public class HttpUtilsEmul extends HttpUtils {
 
     private LinkedList<JSON> responses = new LinkedList<>();
 
-    public LoadosophiaAPIClientEmul(StatusNotifierCallback aThis) {
-        super(aThis, "http://localhost/", "TEST", COLOR_NONE, "TEST", "TEST");
+
+    public HttpUtilsEmul(StatusNotifierCallback notifier, String address, String dataAddress) {
+        super(notifier, address, dataAddress);
     }
 
     public void addEmul(JSON response) {
@@ -25,8 +23,17 @@ public class LoadosophiaAPIClientEmul extends LoadosophiaAPIClient {
 
     @Override
     public JSON query(HttpRequestBase request, int expectedCode) throws IOException {
+        return getResponse(request);
+    }
+
+    @Override
+    public JSONObject queryObject(HttpRequestBase request, int expectedCode) throws IOException {
+        return (JSONObject) getResponse(request);
+    }
+
+    public JSON getResponse(HttpRequestBase request) throws IOException {
         log.info("Simulating request: " + request);
-        if (responses.size()>0) {
+        if (responses.size() > 0) {
             JSON resp = responses.remove();
             log.info("Response: " + resp);
             return resp;
