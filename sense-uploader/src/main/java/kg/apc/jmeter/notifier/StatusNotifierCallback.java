@@ -1,4 +1,4 @@
-package kg.apc.jmeter.reporters;
+package kg.apc.jmeter.notifier;
 
 public interface StatusNotifierCallback {
 

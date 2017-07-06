@@ -1,6 +1,6 @@
 package org.loadosophia.jmeter;
 
-import kg.apc.jmeter.reporters.StatusNotifierCallback;
+import kg.apc.jmeter.notifier.StatusNotifierCallback;
 import net.sf.json.JSON;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.jorphan.logging.LoggingManager;

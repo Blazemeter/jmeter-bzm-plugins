@@ -1,6 +1,8 @@
-package kg.apc.jmeter.reporters.sense;
+package kg.apc.jmeter.reporters;
 
 import kg.apc.emulators.TestJMeterUtils;
+import kg.apc.jmeter.reporters.LoadosophiaClient;
+import kg.apc.jmeter.reporters.LoadosophiaUploader;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.jmeter.reporters.ResultCollector;
@@ -10,7 +12,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.loadosophia.jmeter.LoadosophiaAPIClient;
 import org.loadosophia.jmeter.LoadosophiaAPIClientEmul;
-import kg.apc.jmeter.reporters.StatusNotifierCallbackTest;
+import kg.apc.jmeter.reporters.notifier.StatusNotifierCallbackTest;
 
 import java.util.LinkedList;
 import java.util.List;

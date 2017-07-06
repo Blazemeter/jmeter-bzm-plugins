@@ -7,7 +7,7 @@ import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jmeter.visualizers.backend.BackendListener;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
-import kg.apc.jmeter.reporters.StatusNotifierCallback;
+import kg.apc.jmeter.notifier.StatusNotifierCallback;
 
 import java.lang.reflect.Field;
 

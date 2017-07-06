@@ -1,7 +1,7 @@
 package org.loadosophia.jmeter;
 
 import kg.apc.jmeter.http.HttpUtils;
-import kg.apc.jmeter.reporters.StatusNotifierCallback;
+import kg.apc.jmeter.notifier.StatusNotifierCallback;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.http.client.methods.HttpGet;

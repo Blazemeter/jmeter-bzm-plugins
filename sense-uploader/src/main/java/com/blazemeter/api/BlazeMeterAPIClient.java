@@ -9,7 +9,7 @@ import kg.apc.jmeter.http.HttpUtils;
 import net.sf.json.JSONObject;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.jorphan.util.JMeterStopTestException;
-import kg.apc.jmeter.reporters.StatusNotifierCallback;
+import kg.apc.jmeter.notifier.StatusNotifierCallback;
 import org.apache.log.Logger;
 
 import java.io.IOException;

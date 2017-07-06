@@ -1,7 +1,7 @@
 package com.blazemeter.api.explorer;
 
 import kg.apc.jmeter.http.HttpUtils;
-import kg.apc.jmeter.reporters.StatusNotifierCallbackTest;
+import kg.apc.jmeter.reporters.notifier.StatusNotifierCallbackTest;
 
 import static org.junit.Assert.*;
 

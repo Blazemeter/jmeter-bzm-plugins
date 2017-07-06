@@ -1,8 +1,8 @@
-package kg.apc.jmeter.reporters.sense;
+package kg.apc.jmeter.reporters;
 
 import kg.apc.emulators.TestJMeterUtils;
-import kg.apc.jmeter.reporters.sense.LoadosophiaUploader;
-import kg.apc.jmeter.reporters.sense.LoadosophiaUploaderGui;
+import kg.apc.jmeter.reporters.LoadosophiaUploader;
+import kg.apc.jmeter.reporters.LoadosophiaUploaderGui;
 import org.apache.jmeter.testelement.TestElement;
 import org.junit.Assert;
 import org.junit.BeforeClass;

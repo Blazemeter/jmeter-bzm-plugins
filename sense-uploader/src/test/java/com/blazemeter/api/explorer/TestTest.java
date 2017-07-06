@@ -2,7 +2,7 @@ package com.blazemeter.api.explorer;
 
 import com.blazemeter.api.BlazeMeterReport;
 import com.blazemeter.api.http.BlazeMeterHttpUtilsEmul;
-import kg.apc.jmeter.reporters.StatusNotifierCallbackTest;
+import kg.apc.jmeter.reporters.notifier.StatusNotifierCallbackTest;
 import net.sf.json.JSONObject;
 
 import static org.junit.Assert.assertEquals;

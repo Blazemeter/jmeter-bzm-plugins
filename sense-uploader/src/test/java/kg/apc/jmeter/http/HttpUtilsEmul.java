@@ -1,6 +1,6 @@
 package kg.apc.jmeter.http;
 
-import kg.apc.jmeter.reporters.StatusNotifierCallback;
+import kg.apc.jmeter.notifier.StatusNotifierCallback;
 import net.sf.json.JSON;
 import net.sf.json.JSONObject;
 import org.apache.http.client.methods.HttpRequestBase;

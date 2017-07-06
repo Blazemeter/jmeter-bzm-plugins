@@ -15,7 +15,7 @@ import org.apache.jmeter.visualizers.backend.BackendListenerContext;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.jorphan.util.JMeterStopTestException;
 import org.apache.log.Logger;
-import kg.apc.jmeter.reporters.StatusNotifierCallback;
+import kg.apc.jmeter.notifier.StatusNotifierCallback;
 
 import java.io.IOException;
 import java.util.ArrayList;

@@ -3,7 +3,7 @@ package com.blazemeter.api;
 import com.blazemeter.api.data.JSONConverter;
 import com.blazemeter.api.http.BlazeMeterHttpUtilsEmul;
 import kg.apc.jmeter.http.HttpUtils;
-import kg.apc.jmeter.reporters.StatusNotifierCallbackTest;
+import kg.apc.jmeter.reporters.notifier.StatusNotifierCallbackTest;
 import net.sf.json.JSON;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONSerializer;

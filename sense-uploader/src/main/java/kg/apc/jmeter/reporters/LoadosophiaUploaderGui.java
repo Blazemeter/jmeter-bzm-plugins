@@ -1,4 +1,4 @@
-package kg.apc.jmeter.reporters.sense;
+package kg.apc.jmeter.reporters;
 
 import kg.apc.jmeter.JMeterPluginsUtils;
 import kg.apc.jmeter.gui.BrowseAction;

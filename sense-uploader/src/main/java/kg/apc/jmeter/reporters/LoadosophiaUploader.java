@@ -1,6 +1,7 @@
-package kg.apc.jmeter.reporters.sense;
+package kg.apc.jmeter.reporters;
 
 import kg.apc.jmeter.JMeterPluginsUtils;
+import kg.apc.jmeter.notifier.StatusNotifierCallback;
 import kg.apc.jmeter.vizualizers.CorrectedResultCollector;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.gui.MainFrame;
@@ -12,7 +13,6 @@ import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jmeter.visualizers.backend.BackendListener;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
-import kg.apc.jmeter.reporters.StatusNotifierCallback;
 
 import java.io.File;
 import java.io.IOException;

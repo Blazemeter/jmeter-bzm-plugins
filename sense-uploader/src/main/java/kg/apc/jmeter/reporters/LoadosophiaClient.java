@@ -1,5 +1,6 @@
-package kg.apc.jmeter.reporters.sense;
+package kg.apc.jmeter.reporters;
 
+import kg.apc.jmeter.notifier.StatusNotifierCallback;
 import kg.apc.jmeter.perfmon.PerfMonCollector;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -13,7 +14,6 @@ import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 import org.loadosophia.jmeter.LoadosophiaAPIClient;
 import org.loadosophia.jmeter.LoadosophiaUploadResults;
-import kg.apc.jmeter.reporters.StatusNotifierCallback;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,12 +22,11 @@ import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.SortedMap;
 import java.util.Stack;
+import java.util.TimeZone;
 import java.util.TreeMap;
 
 public class LoadosophiaClient implements BackendListenerClient {
@@ -85,6 +84,7 @@ public class LoadosophiaClient implements BackendListenerClient {
         if (list != null && isOnlineInitiated) {
             try {
                 JSONArray array = getDataToSend(list);
+                log.info(array.toString());
                 apiClient.sendOnlineData(array);
             } catch (IOException ex) {
                 log.warn("Failed to send active test data", ex);
@@ -169,7 +169,6 @@ public class LoadosophiaClient implements BackendListenerClient {
 
         return sortedResults;
     }
-
 
     private JSONObject getAggregateSecond(Long sec, List<SampleResult> raw) {
         /*

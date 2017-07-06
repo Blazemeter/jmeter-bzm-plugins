@@ -4,7 +4,7 @@ import com.blazemeter.api.BlazeMeterAPIClient;
 import com.blazemeter.api.BlazemeterAPIClientTest;
 import com.blazemeter.api.BlazeMeterReport;
 import kg.apc.jmeter.http.HttpUtils;
-import kg.apc.jmeter.reporters.StatusNotifierCallbackTest;
+import kg.apc.jmeter.reporters.notifier.StatusNotifierCallbackTest;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.visualizers.backend.BackendListenerContext;
 import org.junit.Test;
