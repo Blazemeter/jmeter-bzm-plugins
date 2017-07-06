@@ -4,6 +4,7 @@ import com.blazemeter.api.BlazeMeterReport;
 import kg.apc.jmeter.http.HttpUtils;
 import kg.apc.jmeter.notifier.StatusNotifierCallback;
 import net.sf.json.JSON;
+import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 import net.sf.json.JsonConfig;
@@ -35,13 +36,17 @@ public class BlazeMeterHttpUtils extends HttpUtils {
     @Override
     protected String extractErrorMessage(String response) {
         if (response != null && !response.isEmpty()) {
-            JSON jsonResponse = JSONSerializer.toJSON(response, new JsonConfig());
-            if (jsonResponse instanceof JSONObject) {
-                JSONObject object = (JSONObject) jsonResponse;
-                JSONObject errorObj = object.getJSONObject("error");
-                if (errorObj.containsKey("message")) {
-                    return errorObj.getString("message");
+            try {
+                JSON jsonResponse = JSONSerializer.toJSON(response, new JsonConfig());
+                if (jsonResponse instanceof JSONObject) {
+                    JSONObject object = (JSONObject) jsonResponse;
+                    JSONObject errorObj = object.getJSONObject("error");
+                    if (errorObj.containsKey("message")) {
+                        return errorObj.getString("message");
+                    }
                 }
+            } catch (JSONException ex) {
+                log.debug("Cannot parse JSON error response: " + response);
             }
         }
         return response;

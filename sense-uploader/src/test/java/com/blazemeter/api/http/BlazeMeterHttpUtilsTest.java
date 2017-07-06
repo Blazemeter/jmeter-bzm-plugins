@@ -38,4 +38,21 @@ public class BlazeMeterHttpUtilsTest {
         assertTrue(post.getHeaders("Authorization")[0].getValue().startsWith("Basic "));
         assertTrue(response.containsKey("ip"));
     }
+
+    @Test
+    public void extractErrorMessageTest() throws Exception {
+        final StatusNotifierCallbackTest.StatusNotifierCallbackImpl callbackTest = new StatusNotifierCallbackTest.StatusNotifierCallbackImpl();
+        final String address = "http://ip.jsontest.com/";
+        BlazeMeterReport report = new BlazeMeterReport();
+        report.setToken("test_token");
+        BlazeMeterHttpUtils entity = new BlazeMeterHttpUtils(callbackTest, address, address, report);
+
+        String errorResponse = "{\"error\":{\"message\":\"Please, try later!\"}}";
+        String message = entity.extractErrorMessage(errorResponse);
+
+        assertEquals("Please, try later!", message);
+
+        errorResponse = "Please, try later!";
+        assertEquals(errorResponse, entity.extractErrorMessage(errorResponse));
+    }
 }
