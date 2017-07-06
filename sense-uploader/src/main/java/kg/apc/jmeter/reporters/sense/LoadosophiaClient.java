@@ -181,17 +181,16 @@ public class LoadosophiaClient implements BackendListenerClient {
         log.debug("Aggregating " + sec);
         result.put("ts", format.format(ts));
 
-        Map<String, Integer> threads = new HashMap<>();
         int avg_rt = 0;
         Long[] rtimes = new Long[raw.size()];
         String[] rcodes = new String[raw.size()];
         int cnt = 0;
         int failedCount = 0;
+        long maxThreadCount = 0;
         for (SampleResult res : raw) {
-            if (!threads.containsKey(res.getThreadName())) {
-                threads.put(res.getThreadName(), 0);
+            if (maxThreadCount < res.getAllThreads()) {
+                maxThreadCount = res.getAllThreads();
             }
-            threads.put(res.getThreadName(), res.getAllThreads());
 
             avg_rt += res.getTime();
             rtimes[cnt] = res.getTime();
@@ -202,12 +201,8 @@ public class LoadosophiaClient implements BackendListenerClient {
             cnt++;
         }
 
-        long tsum = 0;
-        for (Integer tcount : threads.values()) {
-            tsum += tcount;
-        }
         result.put("rps", cnt);
-        result.put("threads", tsum);
+        result.put("threads", maxThreadCount);
         result.put("avg_rt", avg_rt / cnt);
         result.put("quantiles", getQuantilesJSON(rtimes));
         result.put("net", getNetJSON(failedCount, cnt - failedCount));
