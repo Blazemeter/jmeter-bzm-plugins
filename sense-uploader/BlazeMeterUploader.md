@@ -1,12 +1,12 @@
-= BlazeMeter Uploader =
+# BlazeMeter Uploader
 
 This is special plugin for uploading results to
-[https://a.blazemeter.com/ BlazeMeter]
+[BlazeMeter](https://a.blazemeter.com/)
 during the test running.
 
-[https://raw.githubusercontent.com/artem-fedorov/jmeter-bzm-plugins/fa136e9c077da3d2419cfa4a3b7cc947229408a1/sense-uploader/blazemeter_uploader.png]
+![](blazemeter_uploader.png)
 
-==Fields==
+## Fields
 
 _Anonymous test_ will enable result feeding to service without any other settings required. You will receive the link for your report in the Info Area, and the link will be automatically opened in your system browser. Anonymous reports are kept for 7 days.
 
@@ -18,17 +18,17 @@ _Upload to Project_ field specifies project name or Id in which you will upload 
 
 _Test Title_ may be used to customize test title displayed on report pages.
 
-You need to receive special string token at [https://a.blazemeter.com/ a.blazemeter.com]
-to use as your upload identifier with this plugin. You can find it under your [https://a.blazemeter.com/app/#/settings/api-keys Settings => API Keys].
+You need to receive special string token at [a.blazemeter.com](https://a.blazemeter.com/)
+to use as your upload identifier with this plugin. You can find it under your [Settings => API Keys](https://a.blazemeter.com/app/#/settings/api-keys).
 Please, treat the token as confidential, everyone who knows it
-may upload files to your projects. Join key ID and secret with single colon: {{{TDknBxu0hmVnJ7NrqtG1F:DFddfgdsljasdfkKSKSDDFKSDFJKSDJFKSDJFsdjfksjfjsSF}}}
+may upload files to your projects. Join key ID and secret with single colon: `TDknBxu0hmVnJ7NrqtG1F:DFddfgdsljasdfkKSKSDDFKSDFJKSDJFKSDJFsdjfksjfjsSF`
 
-==Usage==
+# Usage
 
-  # Go to a.blazemeter.com and [https://a.blazemeter.com/app/#/settings/api-keys issue an upload token]
-  # Copy & paste it into _Upload Token_ field of BlazeMeter Uploader
-  # Run your test, verify in _Info Area_ that results uploaded successfully
-  # Analyze performance report and organize your tests at a.blazemeter.com
+  1. Go to a.blazemeter.com and [issue an upload token](https://a.blazemeter.com/app/#/settings/api-keys)
+  2. Copy & paste it into _Upload Token_ field of BlazeMeter Uploader
+  3. Run your test, verify in _Info Area_ that results uploaded successfully
+  4. Analyze performance report and organize your tests at a.blazemeter.com
 
 Please copy the token carefully, don't miss any chars or add extra.
 
