@@ -27,13 +27,14 @@ public class HlsSampler extends AbstractSampler {
 	public static final String HEADER_MANAGER = "HLSRequest.header_manager"; // $NON-NLS-1$
 	public static final String COOKIE_MANAGER = "HLSRequest.cookie_manager"; // $NON-NLS-1$
 	public static final String CACHE_MANAGER = "HLSRequest.cache_manager"; // $NON-NLS-1$
+	private Parser parser;
 
 	private String playlist;
 
 	public HlsSampler() {
 		super();
 		setName("HLS Sampler");
-
+		parser = new Parser();
 	}
 
 	public HeaderManager getHeaderManager() {
@@ -133,7 +134,6 @@ public class HlsSampler extends AbstractSampler {
 		SampleResult masterResult = new SampleResult();
 		float currenTimeseconds = 0;
 		boolean isVod = getHlsVideoType().equals("vod");
-		Parser parser = new Parser();
 		boolean out = false;
 		boolean firstTime = true;
 		try {
@@ -447,6 +447,10 @@ public class HlsSampler extends AbstractSampler {
 		} else {
 			super.addTestElement(el);
 		}
+	}
+	
+	public void setParser (Parser p){
+		parser = p;
 	}
 
 }
