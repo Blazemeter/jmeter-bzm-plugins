@@ -206,7 +206,7 @@ public class Parser {
 
 	public String getResolutionUrl(String pattern, String bandwidthPattern, String resolutionPattern, String res,
 			String resolution, String bandwidth, String bandSelected, String resolSelected) {
-		String bandwidthMax = "100000000";
+		String bandwidthMax ="100000000";
 		String secBandwidth = " ";
 		String secResolution = " ";
 		String resolutionMin = "100x100";
@@ -314,15 +314,18 @@ public class Parser {
 				}
 			} else if (resolSelected.equalsIgnoreCase("maxResolution") && mResolution.find()) {
 				if (bandSelected.equalsIgnoreCase("customBandwidth")) {
-					if ((Integer.parseInt(mb.group(1)) == Integer.parseInt(bandwidth))
-							|| selectBandwidth(bandwidth, mb.group(1))) {
-						if ((secResolution.equals(" ") && smaller(resolutionMax, mreso.group(1)))
-								|| (!secResolution.equals(" ") && smaller(secResolution, mreso.group(1)))) {
-							secResolution = mreso.group(1);
-							uri = m.group(2);
 
-						}
-					}
+							if ((secResolution.equals(" ") && smaller(resolutionMax, mreso.group(1)))
+									|| (!secResolution.equals(" ") && (!smaller(secResolution, mreso.group(1))))) {
+								secResolution = mreso.group(1);
+								secBandwidth = mb.group(1);
+								uri = m.group(2);
+							} else if (secResolution.equals(mreso.group(1))) {
+								if ((Integer.parseInt(mb.group(1)) == Integer.parseInt(bandwidth))
+										|| selectBandwidth(mb.group(1), secBandwidth))
+									secBandwidth = mb.group(1);
+								uri = m.group(2);
+							}
 
 				} else if (bandSelected.equalsIgnoreCase("minBandwidth")) {
 					if ((secResolution.equals(" ") && smaller(resolutionMax, mreso.group(1)))
