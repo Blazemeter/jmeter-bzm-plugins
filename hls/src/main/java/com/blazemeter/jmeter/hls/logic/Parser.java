@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 import static org.apache.http.protocol.HTTP.USER_AGENT;
 
 public class Parser {
-	private float duration = -1;
+    private float duration = -1;
 	private float actualDuration = 0;
 	private static final Pattern PORT_PATTERN = Pattern.compile("\\d+");
 	private static final String USER_TOKEN = "__jmeter.USER_TOKEN__"; //$NON-NLS-1$
@@ -173,11 +173,18 @@ public class Parser {
 			Matcher mResolution = reso.matcher(m.toString());
 
 			mb.find();
-			if ((bandSelected.equalsIgnoreCase("customBandwidth"))
-					&& (Integer.parseInt(mb.group(1)) <= Integer.parseInt(bandwidth)) && mResolution.find()) {
-				if ((Integer.parseInt(mb.group(1)) == Integer.parseInt(bandwidth))
-						|| selectBandwidth(bandwidth, mb.group(1)))
+			if ((bandSelected.equalsIgnoreCase("customBandwidth"))	&& (Integer.parseInt(mb.group(1)) <= Integer.parseInt(bandwidth)) && mResolution.find()) {
+				if ((Integer.parseInt(mb.group(1)) == Integer.parseInt(bandwidth)))
+				{
 					urlCandidate = m.group(2);
+					break;
+				}
+				else if(selectBandwidth(bandwidth, mb.group(1)))
+				{
+					urlCandidate = m.group(2);
+				}
+
+
 			} else if ((bandSelected.equalsIgnoreCase("minBandwidth")) && mResolution.find()) {
 				if (secBandwidth.equals(" ") && selectBandwidth(mb.group(1), bandwidthMax)
 						|| (!secBandwidth.equals(" ") && selectBandwidth(mb.group(1), secBandwidth))) {
@@ -211,7 +218,7 @@ public class Parser {
 		Pattern reso = Pattern.compile(resolutionPattern);
 		Matcher m = r.matcher(res);
 		boolean out = false;
-		while (m.find() && !out) {
+		while (m.find()) {
 
 			Matcher mreso = reso.matcher(m.group(1));
 			mreso.find();
@@ -226,9 +233,8 @@ public class Parser {
 
 					if (mreso.group(1).equals(resolution)) {
 						uri = m.group(2);
-						out = true;
-					} else {
-						if ((findResolution(resolution, secResolution, mreso.group(1)))) {
+						break;
+					} else if ((findResolution(resolution, secResolution, mreso.group(1)))) {
 							secResolution = mreso.group(1);
 							uri = m.group(2);
 
@@ -239,7 +245,6 @@ public class Parser {
 							}
 						}
 
-					}
 
 				} else if (bandSelected.equalsIgnoreCase("minBandwidth")) {
 					if ((secResolution.equals(" ") && smaller(resolution, mreso.group(1)))
@@ -404,9 +409,11 @@ public class Parser {
 		return (!((difT11 < 0) || (difT12 < 0)));
 	}
 
+	
 	public boolean selectBandwidth(String target, String candidate) {
 		int minDiff = Integer.parseInt(candidate);
 		int diff = Integer.parseInt(target) - Integer.parseInt(candidate);
+		//int diff = Integer.parseInt(target);
 		return (diff < minDiff);
 	}
 
