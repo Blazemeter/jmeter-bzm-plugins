@@ -5,7 +5,7 @@
 
 	<groupId>com.blazemeter.jmeter</groupId>
 	<artifactId>hls</artifactId>
-	<version>0.7</version>
+	<version>1.0</version>
 
 	<build>
 		<plugins>
@@ -21,11 +21,6 @@
 	</build>
 
 	<dependencies>
-		<dependency>
-			<groupId>com.iheartradio.m3u8</groupId>
-			<artifactId>open-m3u8</artifactId>
-			<version>0.1.1</version>
-		</dependency>
 		<dependency>
 			<groupId>org.apache.jmeter</groupId>
 			<artifactId>ApacheJMeter_core</artifactId>
@@ -46,17 +41,6 @@
 			<artifactId>junit</artifactId>
 			<version>4.12</version>
 			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>kg.apc</groupId>
-			<artifactId>jmeter-plugins-emulators</artifactId>
-			<version>0.4</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>kg.apc</groupId>
-			<artifactId>jmeter-plugins-cmn-jmeter</artifactId>
-			<version>0.4</version>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>

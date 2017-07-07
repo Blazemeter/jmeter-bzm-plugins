@@ -17,16 +17,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import kg.apc.emulators.TestJMeterUtils;
 
 public class HlsSamplerTest {
 	
 	
-	private URL urlMock;
-	private HttpURLConnection httpURLConnectionMock;
-	private SampleResult sampleResultMock;
+
 	private HlsSampler sampler;
-	private Parser parser;
 	private Parser parserMock;
 	
 	@Before

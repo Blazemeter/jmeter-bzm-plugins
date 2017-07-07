@@ -10,7 +10,6 @@ import java.util.Map;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import kg.apc.emulators.TestJMeterUtils;
 
 public class DataRequestTest {
 
