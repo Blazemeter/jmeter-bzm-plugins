@@ -116,7 +116,7 @@ public class ParserTest {
 		System.out.println(result);
 		System.out.println(expected);
 		System.out.println("*********");
-//		assertEquals(expected, result);
+		assertEquals(expected, result);
 		
 		result = p.extractUriMaster(res, "640x360", "", "minBandwidth", "customResolution", "Bandwidth");
 		expected = "/videos/DianaLaufenberg_2010X/video/64k.m3u8?preroll=Thousands&uniqueId=4df94b1d";
@@ -124,7 +124,7 @@ public class ParserTest {
 		System.out.println(result);
 		System.out.println(expected);
 		System.out.println("*********");
-//		assertEquals(expected, result);
+		assertEquals(expected, result);
 		
 		result = p.extractUriMaster(res, "640x360", "", "maxBandwidth", "customResolution", "Bandwidth");
 		expected = "/videos/DianaLaufenberg_2010X/video/600k.m3u8?preroll=Thousands&uniqueId=4df94b1d";
@@ -140,15 +140,15 @@ public class ParserTest {
 		System.out.println(result);
 		System.out.println(expected);
 		System.out.println("*********");
-//		assertEquals(expected, result);
+		assertEquals(expected, result);
 		
 		result = p.extractUriMaster(res, "640x360", "", "minBandwidth", "customResolution", "");
-		expected = "/videos/DianaLaufenberg_2010X/video/600k.m3u8?preroll=Thousands&uniqueId=4df94b1d";
+		expected = "/videos/DianaLaufenberg_2010X/video/64k.m3u8?preroll=Thousands&uniqueId=4df94b1d";
 		
 		System.out.println(result);
 		System.out.println(expected);
 		System.out.println("*********");
-//		assertEquals(expected, result);
+		assertEquals(expected, result);
 		
 		result = p.extractUriMaster(res, "640x360", "", "maxBandwidth", "customResolution", "");
 		expected = "/videos/DianaLaufenberg_2010X/video/600k.m3u8?preroll=Thousands&uniqueId=4df94b1d";
@@ -156,7 +156,7 @@ public class ParserTest {
 		System.out.println(result);
 		System.out.println(expected);
 		System.out.println("*********");
-//		assertEquals(expected, result);
+		assertEquals(expected, result);
 		
 		result = p.extractUriMaster(res, "", "1395723", "customBandwidth", "maxResolution", "");
 		expected = "/videos/DianaLaufenberg_2010X/video/600k.m3u8?preroll=Thousands&uniqueId=4df94b1d";
@@ -164,15 +164,15 @@ public class ParserTest {
 		System.out.println(result);
 		System.out.println(expected);
 		System.out.println("*********");
-//		assertEquals(expected, result);
+		assertEquals(expected, result);
 		
 		result = p.extractUriMaster(res, "", "", "minBandwidth", "maxResolution", "");
-		expected = "/videos/DianaLaufenberg_2010X/video/600k.m3u8?preroll=Thousands&uniqueId=4df94b1d";
+		expected = "/videos/DianaLaufenberg_2010X/video/64k.m3u8?preroll=Thousands&uniqueId=4df94b1d";
 		
 		System.out.println(result);
 		System.out.println(expected);
 		System.out.println("*********");
-//		assertEquals(expected, result);
+		assertEquals(expected, result);
 		
 		result = p.extractUriMaster(res, "", "", "maxBandwidth", "maxResolution", "");
 		expected = "/videos/DianaLaufenberg_2010X/video/600k.m3u8?preroll=Thousands&uniqueId=4df94b1d";
@@ -180,7 +180,7 @@ public class ParserTest {
 		System.out.println(result);
 		System.out.println(expected);
 		System.out.println("*********");
-//		assertEquals(expected, result);
+		assertEquals(expected, result);
 		
 		result = p.extractUriMaster(res, "", "1395723", "customBandwidth", "minResolution", "");
 		expected = "/videos/DianaLaufenberg_2010X/video/64k.m3u8?preroll=Thousands&uniqueId=4df94b1d";
@@ -188,7 +188,7 @@ public class ParserTest {
 		System.out.println(result);
 		System.out.println(expected);
 		System.out.println("*********");
-//		assertEquals(expected, result);
+		assertEquals(expected, result);
 		
 		result = p.extractUriMaster(res, "", "", "minBandwidth", "minResolution", "");
 		expected = "/videos/DianaLaufenberg_2010X/video/64k.m3u8?preroll=Thousands&uniqueId=4df94b1d";
@@ -196,15 +196,15 @@ public class ParserTest {
 		System.out.println(result);
 		System.out.println(expected);
 		System.out.println("*********");
-//		assertEquals(expected, result);
+		assertEquals(expected, result);
 		
 		result = p.extractUriMaster(res, "", "", "maxBandwidth", "minResolution", "");
-		expected = "/videos/DianaLaufenberg_2010X/video/64k.m3u8?preroll=Thousands&uniqueId=4df94b1d";
+		expected = "/videos/DianaLaufenberg_2010X/video/600k.m3u8?preroll=Thousands&uniqueId=4df94b1d";
 		
 		System.out.println(result);
 		System.out.println(expected);
 		System.out.println("*********");
-//		assertEquals(expected, result);
+		assertEquals(expected, result);
 		
     }	
 }

@@ -264,8 +264,8 @@ public class Parser {
 									&& findResolution(resolution, secResolution, mreso.group(1)))) {
 						secResolution = mreso.group(1);
 					}
-					if (secBandwidth.equals(" ") && !selectBandwidth(bandwidthMax, mb.group(1))
-							|| (!secBandwidth.equals(" ") && selectBandwidth(secBandwidth, mb.group(1)))) {
+					if (secBandwidth.equals(" ") && !selectBandwidth( bandwidthMax, mb.group(1))
+							|| (!secBandwidth.equals(" ") && selectBandwidth( bandwidthMax, mb.group(1)))) {
 						secBandwidth = mb.group(1);
 						uri = m.group(2);
 					}
