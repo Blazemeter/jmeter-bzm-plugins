@@ -80,6 +80,10 @@ public class HTTP2Connection {
 	public Map<Integer, HTTP2SampleResult> getPendingResponses() {
 		return this.pendingResponses;
 	}
+	
+	public void setSession(Session session){
+		this.session = session;
+	}
 
 	public HTTP2Connection(String connectionId, boolean isSSL) throws Exception {
 		this.session = null;
@@ -120,7 +124,7 @@ public class HTTP2Connection {
 		FuturePromise<Session> sessionFuture = new FuturePromise<>();
 		this.client.connect(this.sslContextFactory, new InetSocketAddress(hostname, port), this.http2SettingsHandler,
 				sessionFuture);
-		this.session = sessionFuture.get(10, TimeUnit.SECONDS);
+		setSession(sessionFuture.get(10, TimeUnit.SECONDS));
 	}
 
 	public boolean isClosed() {
@@ -171,27 +175,16 @@ public class HTTP2Connection {
 					// TODO - what other headers are not allowed?
 					if (!HTTPConstants.HEADER_CONTENT_LENGTH.equalsIgnoreCase(n)) {
 						String v = header.getValue();
-						// if (HTTPConstants.HEADER_HOST.equalsIgnoreCase(n)) {
-						// int port = getPortFromHostHeader(v, url.getPort());
 						v = v.replaceFirst(":\\d+$", ""); // remove any port
 															// specification //
 															// $NON-NLS-1$
 															// $NON-NLS-2$
-
-						// request.getParams().setParameter(ClientPNames.VIRTUAL_HOST,
-						// new HttpHost(v, port));
 						requestFields.put(n, v);
 						headerString = headerString + n + ": " + v + "\n";
-						/*
-						 * } else { request.addHeader(n, v); }
-						 */
 					}
 				}
 			}
-			/*
-			 * if (cacheManager != null){ cacheManager.setHeaders(url, request);
-			 * }
-			 */
+			// TODO CacheManager
 		}
 
 		sampleResult.sampleStart();

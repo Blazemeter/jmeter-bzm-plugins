@@ -59,6 +59,7 @@ import org.apache.jorphan.gui.GuiUtils;
 import org.apache.jorphan.gui.ObjectTableModel;
 import org.apache.jorphan.gui.RendererUtils;
 import org.apache.jorphan.reflect.Functor;
+import org.apache.jmeter.visualizers.ResultRenderer;
 
 /**
  * Right side in View Results Tree
