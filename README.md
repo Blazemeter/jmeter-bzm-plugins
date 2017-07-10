@@ -6,7 +6,7 @@ Contents:
  - [Rotating JTL File Listener](rotating-listener/RotatingListener.md)
  - [Weighted Switch Controller](wsc/WeightedSwitchController.md)
  - [XMPP Connection](xmpp/XMPPConnection.md) and [XMPP Sampler](xmpp/XMPPSampler.md)  
- - [BM.Sense Uploader](sense-uploader/LoadosophiaUploader.md)
+ - [BlazeMeter Uploader](sense-uploader/BlazeMeterUploader.md) and [BM.Sense Uploader](sense-uploader/LoadosophiaUploader.md)
 
 ## Support
 
@@ -14,4 +14,4 @@ To get support on these plugins, please use regular [JMeter Plugins support foru
 
 ## License
 
-The plugins are proudly controbuted to community as Open Source, under [Apache 2.0 License](LICENSE).
+The plugins are proudly contributed to community as Open Source, under [Apache 2.0 License](LICENSE).
