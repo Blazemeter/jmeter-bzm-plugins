@@ -446,16 +446,15 @@ public class ResultCollector extends org.apache.jmeter.reporters.ResultCollector
 
 		SampleResult result = event.getResult();
 
-		// TODO Primero verifico si es un HTTP2SampleResult
+		//  Verify if it's an HTTPSampleResult
 		if (result instanceof HTTP2SampleResult) {
 			HTTP2SampleResult http2Result = (HTTP2SampleResult) result;
 
-			//TODO Si la respuesta no esta pendiente
 			if (!http2Result.isPendingResponse()) {						
 				
 				SampleResult[] subResults = result.getSubResults();
 				
-				//TODO Recorro los hijos para obtener la respuesta del pedido, y de los pedidos asincronicos
+				//Look into childs to get the response of the message and the response of the secondary requests
 				for (SampleResult child : subResults) {
 
 					if (child instanceof HTTP2SampleResult) {
@@ -463,7 +462,7 @@ public class ResultCollector extends org.apache.jmeter.reporters.ResultCollector
 						if (!http2Result.isSecondaryRequest()) {														
 							SampleEvent evtChild = new SampleEvent(child, event.getThreadGroup());	
 							
-							//TODO El metodo implementa la misma logica de guardar, que el sampleOcurred de jMeter
+							// The method implements the same logic to save as method SampleOcurred of JMeter.
 							saveLine(evtChild);
 						}
 					}
@@ -472,7 +471,7 @@ public class ResultCollector extends org.apache.jmeter.reporters.ResultCollector
 				saveLine(event);
 			}
 		} else {
-			// TODO Si no es un HTTP2SampleResult sigo el proceso normal
+			// If it's not an HTTP2SampleResult follow the normal flow
 			saveLine(event);
 		}
 	}

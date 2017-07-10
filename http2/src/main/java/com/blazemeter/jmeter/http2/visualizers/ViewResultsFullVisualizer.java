@@ -68,6 +68,7 @@ import org.apache.jmeter.visualizers.SearchableTreeNode;
 import org.apache.jmeter.visualizers.gui.AbstractVisualizer;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
+import org.apache.jmeter.visualizers.ResultRenderer;
 
 import com.blazemeter.jmeter.http2.sampler.HTTP2SampleResult;
 

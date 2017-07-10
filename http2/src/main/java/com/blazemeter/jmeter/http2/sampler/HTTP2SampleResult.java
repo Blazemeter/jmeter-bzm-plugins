@@ -39,398 +39,391 @@ import org.eclipse.jetty.http.HttpFields;
  */
 public class HTTP2SampleResult extends SampleResult {
 
-    
-	
 	private static final long serialVersionUID = 241L;
 
-    /** Set of all HTTP methods, that have no body */
-    private static final Set<String> METHODS_WITHOUT_BODY = new HashSet<>(
-            Arrays.asList(
-                    HTTPConstants.HEAD,
-                    HTTPConstants.OPTIONS,
-                    HTTPConstants.TRACE));
+	/** Set of all HTTP methods, that have no body */
+	private static final Set<String> METHODS_WITHOUT_BODY = new HashSet<>(
+			Arrays.asList(HTTPConstants.HEAD, HTTPConstants.OPTIONS, HTTPConstants.TRACE));
 
-    private String cookies = ""; // never null
+	private String cookies = ""; // never null
 
-    private static int idCount = 0;
+	private static int idCount = 0;
 
+	private int id;
 
-    private int id;
+	private int embebedResultsDepth;
+	private String method;
+	private HttpFields httpFieldsResponse;
+	private boolean embebedResults;
 
+	private boolean secondaryRequest;
 
+	private String embeddedUrlRE;
 
-    private int embebedResultsDepth;
-    private String method;
-    private HttpFields httpFieldsResponse;
-    private boolean embebedResults;
-    
-    private boolean secondaryRequest;
+	private boolean isPushed;
 
+	/**
+	 * The raw value of the Location: header; may be null. This is supposed to
+	 * be an absolute URL: <a href=
+	 * "http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.30">RFC2616
+	 * sec14.30</a> but is often relative.
+	 */
+	private String redirectLocation;
 
+	private String queryString = ""; // never null
 
-    private String embeddedUrlRE;
+	protected static final String NON_HTTP_RESPONSE_CODE = "Non HTTP response code";
+	protected static final String NON_HTTP_RESPONSE_MESSAGE = "Non HTTP response message";
+	private static final String HTTP_NO_CONTENT_CODE = Integer.toString(HttpURLConnection.HTTP_NO_CONTENT);
+	private static final String HTTP_NO_CONTENT_MSG = "No Content"; // $NON-NLS-1$
+	protected static final String HTTP2_PENDING_RESPONSE = "Pending";
+	protected static final String HTTP2_RESPONSE_RECEIVED = "Received";
+	protected static final String HTTP2_RESPONSE_CODE_4 = "Not Found";
 
+	private boolean pendingResponse;
 
+	private String requestId;
 
-    private boolean isPushed;
+	private byte[] responseBytes;
 
-    /**
-     * The raw value of the Location: header; may be null.
-     * This is supposed to be an absolute URL:
-     * <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.30">RFC2616 sec14.30</a>
-     * but is often relative.
-     */
-    private String redirectLocation;
+	public HTTP2SampleResult() {
+		super();
+	}
 
-    private String queryString = ""; // never null
+	public HTTP2SampleResult(URL url, String method) {
+		super();
 
-    protected static final String NON_HTTP_RESPONSE_CODE = "Non HTTP response code";
-    protected static final String NON_HTTP_RESPONSE_MESSAGE = "Non HTTP response message";
-    private static final String HTTP_NO_CONTENT_CODE = Integer.toString(HttpURLConnection.HTTP_NO_CONTENT);
-    private static final String HTTP_NO_CONTENT_MSG = "No Content"; // $NON-NLS-1$
-    protected static final String HTTP2_PENDING_RESPONSE= "Pending";
-    protected static final String HTTP2_RESPONSE_RECEIVED= "Received";
-    protected static final String HTTP2_RESPONSE_CODE_4="Not Found";
-    
-    private boolean pendingResponse;
-    
-    private String requestId;
-    
-    private byte[] responseBytes;
+		this.setSampleLabel(url.toString()); // May be replaced later
+		this.setHTTPMethod(method);
+		this.setURL(url);
+		this.setPendingResponse(true);
+		this.setId(HTTP2SampleResult.getNextId());
+		this.setPushed(false);
+		this.setEmbebedResultsDepth(1);
+		this.setEmbebedResults(false);
+		this.setResponseCode(HTTP2_PENDING_RESPONSE);
+		this.setResponseMessage(HTTP2_PENDING_RESPONSE);
+	}
 
-    public HTTP2SampleResult() {
-        super();
-    }
+	public HTTP2SampleResult(long elapsed) {
+		super(elapsed, true);
+	}
 
-    public HTTP2SampleResult(URL url, String method) {
-        super();
+	/**
+	 * Construct a 'parent' result for an already-existing result, essentially
+	 * cloning it
+	 *
+	 * @param res
+	 *            existing sample result
+	 */
+	public HTTP2SampleResult(HTTP2SampleResult res) {
+		super(res);
+		method = res.method;
+		cookies = res.cookies;
+		queryString = res.queryString;
+		redirectLocation = res.redirectLocation;
+	}
 
-        this.setSampleLabel(url.toString()); // May be replaced later
-        this.setHTTPMethod(method);
-        this.setURL(url);
-        this.setPendingResponse(true);
-        this.setId(HTTP2SampleResult.getNextId());
-        this.setPushed(false);
-        this.setEmbebedResultsDepth(1);
-        this.setEmbebedResults(false);
-        this.setResponseCode(HTTP2_PENDING_RESPONSE);
-        this.setResponseMessage(HTTP2_PENDING_RESPONSE);
-    }
+	/**
+	 * Populates the provided HTTPSampleResult with details from the Exception.
+	 * Does not create a new instance, so should not be used directly to add a
+	 * subsample.
+	 *
+	 * @param e
+	 *            Exception representing the error.
+	 * @param res
+	 *            SampleResult to be modified
+	 * @return the modified sampling result containing details of the Exception.
+	 */
+	protected static HTTP2SampleResult errorResult(Throwable e, HTTP2SampleResult res) {
+		res.setSampleLabel(res.getSampleLabel());
+		res.setDataType(SampleResult.TEXT);
+		ByteArrayOutputStream text = new ByteArrayOutputStream(200);
+		e.printStackTrace(new PrintStream(text));
+		res.setResponseData(text.toByteArray());
+		res.setResponseCode(NON_HTTP_RESPONSE_CODE + ": " + e.getClass().getName());
+		res.setResponseMessage(NON_HTTP_RESPONSE_MESSAGE + ": " + e.getMessage());
+		res.setSuccessful(false);
+		res.setPendingResponse(false);
+		// res.setMonitor(this.isMonitor()); // TODO see if applies to http2
+		return res;
+	}
 
-    public HTTP2SampleResult(long elapsed) {
-        super(elapsed, true);
-    }
+	public void setHTTPMethod(String method) {
+		this.method = method;
+	}
 
-    /**
-     * Construct a 'parent' result for an already-existing result, essentially
-     * cloning it
-     *
-     * @param res
-     *            existing sample result
-     */
-    public HTTP2SampleResult(HTTP2SampleResult res) {
-        super(res);
-        method=res.method;
-        cookies=res.cookies;
-        queryString=res.queryString;
-        redirectLocation=res.redirectLocation;
-    }
+	public String getHTTPMethod() {
+		return method;
+	}
 
-    /**
-     * Populates the provided HTTPSampleResult with details from the Exception.
-     * Does not create a new instance, so should not be used directly to add a subsample.
-     *
-     * @param e
-     *            Exception representing the error.
-     * @param res
-     *            SampleResult to be modified
-     * @return the modified sampling result containing details of the Exception.
-     */
-    protected static HTTP2SampleResult errorResult(Throwable e, HTTP2SampleResult res) {
-        res.setSampleLabel(res.getSampleLabel());
-        res.setDataType(SampleResult.TEXT);
-        ByteArrayOutputStream text = new ByteArrayOutputStream(200);
-        e.printStackTrace(new PrintStream(text));        
-        res.setResponseData(text.toByteArray());
-        res.setResponseCode(NON_HTTP_RESPONSE_CODE+": " + e.getClass().getName());
-        res.setResponseMessage(NON_HTTP_RESPONSE_MESSAGE+": " + e.getMessage());
-        res.setSuccessful(false);
-        res.setPendingResponse(false);
-        // res.setMonitor(this.isMonitor()); // TODO see if applies to http2
-        return res;
-    }
+	public static synchronized int getNextId() {
+		int ret = idCount;
+		idCount += 1;
+		return ret;
+	}
 
-    public void setHTTPMethod(String method) {
-        this.method = method;
-    }
+	public boolean isEmbebedResults() {
+		return embebedResults;
+	}
 
-    public String getHTTPMethod() {
-        return method;
-    }
+	public String getEmbeddedUrlRE() {
+		return embeddedUrlRE;
+	}
 
-    public static synchronized int getNextId() {
-        int ret = idCount;
-        idCount += 1;
-        return ret;
-    }
+	public void setEmbeddedUrlRE(String embeddedUrlRE) {
+		this.embeddedUrlRE = embeddedUrlRE;
+	}
 
-    public boolean isEmbebedResults() {
-        return embebedResults;
-    }
+	public void setEmbebedResults(boolean embebedResults) {
+		this.embebedResults = embebedResults;
+	}
 
-    public String getEmbeddedUrlRE() {
-        return embeddedUrlRE;
-    }
+	public int getEmbebedResultsDepth() {
+		return embebedResultsDepth;
+	}
 
-    public void setEmbeddedUrlRE(String embeddedUrlRE) {
-        this.embeddedUrlRE = embeddedUrlRE;
-    }
+	public void setEmbebedResultsDepth(int embebedResultsDepth) {
+		this.embebedResultsDepth = embebedResultsDepth;
+	}
 
-    public void setEmbebedResults(boolean embebedResults) {
-        this.embebedResults = embebedResults;
-    }
+	public int getId() {
+		return id;
+	}
 
-    public int getEmbebedResultsDepth() {
-        return embebedResultsDepth;
-    }
+	public void setId(int id) {
+		this.id = id;
+	}
 
-    public void setEmbebedResultsDepth(int embebedResultsDepth) {
-        this.embebedResultsDepth = embebedResultsDepth;
-    }
+	public boolean isPushed() {
+		return isPushed;
+	}
 
-    public int getId() {
-        return id;
-    }
+	public void setPushed(boolean pushed) {
+		isPushed = pushed;
+	}
 
-    public void setId(int id) {
-        this.id = id;
-    }
+	public HttpFields getHttpFieldsResponse() {
+		return httpFieldsResponse;
+	}
 
-    public boolean isPushed() {
-        return isPushed;
-    }
+	public void setHttpFieldsResponse(HttpFields httpFieldsResponse) {
+		this.httpFieldsResponse = new HttpFields(httpFieldsResponse);
+	}
 
-    public void setPushed(boolean pushed) {
-        isPushed = pushed;
-    }
+	public void setRedirectLocation(String redirectLocation) {
+		this.redirectLocation = redirectLocation;
+	}
 
-    public HttpFields getHttpFieldsResponse() {
-        return httpFieldsResponse;
-    }
+	public String getRedirectLocation() {
+		return redirectLocation;
+	}
 
-    public void setHttpFieldsResponse(HttpFields httpFieldsResponse) {
-        this.httpFieldsResponse = new HttpFields(httpFieldsResponse);
-    }
+	/**
+	 * Determine whether this result is a redirect. Returns true for:
+	 * 301,302,303 and 307(GET or HEAD)
+	 * 
+	 * @return true iff res is an HTTP redirect response
+	 */
+	public boolean isRedirect() {
+		/*
+		 * Don't redirect the following: 300 = Multiple choice 304 = Not
+		 * Modified 305 = Use Proxy 306 = (Unused)
+		 */
+		final String[] REDIRECT_CODES = { HTTPConstants.SC_MOVED_PERMANENTLY, HTTPConstants.SC_MOVED_TEMPORARILY,
+				HTTPConstants.SC_SEE_OTHER };
+		String code = getResponseCode();
+		for (String redirectCode : REDIRECT_CODES) {
+			if (redirectCode.equals(code)) {
+				return true;
+			}
+		}
+		// http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
+		// If the 307 status code is received in response to a request other
+		// than GET or HEAD,
+		// the user agent MUST NOT automatically redirect the request unless it
+		// can be confirmed by the user,
+		// since this might change the conditions under which the request was
+		// issued.
+		// See Bug 54119
+		if (HTTPConstants.SC_TEMPORARY_REDIRECT.equals(code)
+				&& (HTTPConstants.GET.equals(getHTTPMethod()) || HTTPConstants.HEAD.equals(getHTTPMethod()))) {
+			return true;
+		}
+		return false;
+	}
 
-    public void setRedirectLocation(String redirectLocation) {
-        this.redirectLocation = redirectLocation;
-    }
+	/**
+	 * Overrides version in Sampler data to provide more details
+	 * <p>
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String getSamplerData() {
+		StringBuilder sb = new StringBuilder();
+		sb.append(method);
+		URL u = super.getURL();
+		if (u != null) {
+			sb.append(' ');
+			sb.append(u.toString());
+			sb.append('\n');
+			// Include request body if it can have one
+			if (!METHODS_WITHOUT_BODY.contains(method)) {
+				sb.append("\n").append(method).append(" data:\n");
+				sb.append(queryString);
+				sb.append('\n');
+			}
+			if (cookies.length() > 0) {
+				sb.append("\nCookie Data:\n");
+				sb.append(cookies);
+			} else {
+				sb.append("\n[no cookies]");
+			}
+			sb.append('\n');
+		}
+		final String sampData = super.getSamplerData();
+		if (sampData != null) {
+			sb.append(sampData);
+		}
+		return sb.toString();
+	}
 
-    public String getRedirectLocation() {
-        return redirectLocation;
-    }
+	/**
+	 * @return cookies as a string
+	 */
+	public String getCookies() {
+		return cookies;
+	}
 
-    /**
-     * Determine whether this result is a redirect.
-     * Returns true for: 301,302,303 and 307(GET or HEAD)
-     * @return true iff res is an HTTP redirect response
-     */
-    public boolean isRedirect() {
-        /*
-         * Don't redirect the following:
-         * 300 = Multiple choice
-         * 304 = Not Modified
-         * 305 = Use Proxy
-         * 306 = (Unused)
-         */
-        final String[] REDIRECT_CODES = { HTTPConstants.SC_MOVED_PERMANENTLY,
-                HTTPConstants.SC_MOVED_TEMPORARILY,
-                HTTPConstants.SC_SEE_OTHER };
-        String code = getResponseCode();
-        for (String redirectCode : REDIRECT_CODES) {
-            if (redirectCode.equals(code)) {
-                return true;
-            }
-        }
-        // http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
-        // If the 307 status code is received in response to a request other than GET or HEAD, 
-        // the user agent MUST NOT automatically redirect the request unless it can be confirmed by the user,
-        // since this might change the conditions under which the request was issued.
-        // See Bug 54119
-        if (HTTPConstants.SC_TEMPORARY_REDIRECT.equals(code) && 
-                (HTTPConstants.GET.equals(getHTTPMethod()) || HTTPConstants.HEAD.equals(getHTTPMethod()))) {
-            return true;
-        }
-        return false;
-    }
+	/**
+	 * @param string
+	 *            representing the cookies
+	 */
+	public void setCookies(String string) {
+		if (string == null) {
+			cookies = "";// $NON-NLS-1$
+		} else {
+			cookies = string;
+		}
+	}
 
-    /**
-     * Overrides version in Sampler data to provide more details
-     * <p>
-     * {@inheritDoc}
-     */
-    @Override
-    public String getSamplerData() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(method);
-        URL u = super.getURL();
-        if (u != null) {
-            sb.append(' ');
-            sb.append(u.toString());
-            sb.append('\n');
-            // Include request body if it can have one
-            if (!METHODS_WITHOUT_BODY.contains(method)) {
-                sb.append("\n").append(method).append(" data:\n");
-                sb.append(queryString);
-                sb.append('\n');
-            }
-            if (cookies.length()>0){
-                sb.append("\nCookie Data:\n");
-                sb.append(cookies);
-            } else {
-                sb.append("\n[no cookies]");
-            }
-            sb.append('\n');
-        }
-        final String sampData = super.getSamplerData();
-        if (sampData != null){
-            sb.append(sampData);
-        }
-        return sb.toString();
-    }
+	/**
+	 * Fetch the query string
+	 *
+	 * @return the query string
+	 */
+	public String getQueryString() {
+		return queryString;
+	}
 
-    /**
-     * @return cookies as a string
-     */
-    public String getCookies() {
-        return cookies;
-    }
+	/**
+	 * Save the query string
+	 *
+	 * @param string
+	 *            the query string
+	 */
+	public void setQueryString(String string) {
+		if (string == null) {
+			queryString = "";// $NON-NLS-1$
+		} else {
+			queryString = string;
+		}
+	}
 
-    /**
-     * @param string
-     *            representing the cookies
-     */
-    public void setCookies(String string) {
-        if (string == null) {
-            cookies="";// $NON-NLS-1$
-        } else {
-            cookies = string;
-        }
-    }
+	/**
+	 * Overrides the method from SampleResult - so the encoding can be extracted
+	 * from the Meta content-type if necessary.
+	 *
+	 * Updates the dataEncoding field if the content-type is found.
+	 * 
+	 * @param defaultEncoding
+	 *            Default encoding used if there is no data encoding
+	 * @return the dataEncoding value as a String
+	 */
+	@Override
+	public String getDataEncodingWithDefault(String defaultEncoding) {
+		String dataEncodingNoDefault = getDataEncodingNoDefault();
+		if (dataEncodingNoDefault != null && dataEncodingNoDefault.length() > 0) {
+			return dataEncodingNoDefault;
+		}
+		return defaultEncoding;
+	}
 
-    /**
-     * Fetch the query string
-     *
-     * @return the query string
-     */
-    public String getQueryString() {
-        return queryString;
-    }
+	/**
+	 * Overrides the method from SampleResult - so the encoding can be extracted
+	 * from the Meta content-type if necessary.
+	 *
+	 * Updates the dataEncoding field if the content-type is found.
+	 *
+	 * @return the dataEncoding value as a String
+	 */
+	@Override
+	public String getDataEncodingNoDefault() {
+		if (super.getDataEncodingNoDefault() == null && getContentType().startsWith("text/html")) { // $NON-NLS-1$
+			byte[] bytes = getResponseData();
+			// get the start of the file
+			String prefix = new String(bytes, 0, Math.min(bytes.length, 2000), Charset.forName(DEFAULT_HTTP_ENCODING));
+			// Preserve original case
+			String matchAgainst = prefix.toLowerCase(java.util.Locale.ENGLISH);
+			// Extract the content-type if present
+			final String METATAG = "<meta http-equiv=\"content-type\" content=\""; // $NON-NLS-1$
+			int tagstart = matchAgainst.indexOf(METATAG);
+			if (tagstart != -1) {
+				tagstart += METATAG.length();
+				int tagend = prefix.indexOf('\"', tagstart); // $NON-NLS-1$
+				if (tagend != -1) {
+					final String ct = prefix.substring(tagstart, tagend);
+					setEncodingAndType(ct);// Update the dataEncoding
+				}
+			}
+		}
+		return super.getDataEncodingNoDefault();
+	}
 
-    /**
-     * Save the query string
-     *
-     * @param string
-     *            the query string
-     */
-    public void setQueryString(String string) {
-        if (string == null ) {
-            queryString="";// $NON-NLS-1$
-        } else {
-            queryString = string;
-        }
-    }
+	public void setResponseNoContent() {
+		setResponseCode(HTTP_NO_CONTENT_CODE);
+		setResponseMessage(HTTP_NO_CONTENT_MSG);
+	}
 
-    /**
-     * Overrides the method from SampleResult - so the encoding can be extracted from
-     * the Meta content-type if necessary.
-     *
-     * Updates the dataEncoding field if the content-type is found.
-     * @param defaultEncoding Default encoding used if there is no data encoding
-     * @return the dataEncoding value as a String
-     */
-    @Override
-    public String getDataEncodingWithDefault(String defaultEncoding) {
-        String dataEncodingNoDefault = getDataEncodingNoDefault();
-        if(dataEncodingNoDefault != null && dataEncodingNoDefault.length()> 0) {
-            return dataEncodingNoDefault;
-        }
-        return defaultEncoding;
-    }
-    
-    /**
-     * Overrides the method from SampleResult - so the encoding can be extracted from
-     * the Meta content-type if necessary.
-     *
-     * Updates the dataEncoding field if the content-type is found.
-     *
-     * @return the dataEncoding value as a String
-     */
-    @Override
-    public String getDataEncodingNoDefault() {
-        if (super.getDataEncodingNoDefault() == null && getContentType().startsWith("text/html")){ // $NON-NLS-1$
-            byte[] bytes=getResponseData();
-            // get the start of the file
-            String prefix = new String(bytes, 0, Math.min(bytes.length, 2000), Charset.forName(DEFAULT_HTTP_ENCODING));
-            // Preserve original case
-            String matchAgainst = prefix.toLowerCase(java.util.Locale.ENGLISH);
-            // Extract the content-type if present
-            final String METATAG = "<meta http-equiv=\"content-type\" content=\""; // $NON-NLS-1$
-            int tagstart=matchAgainst.indexOf(METATAG);
-            if (tagstart!=-1){
-                tagstart += METATAG.length();
-                int tagend = prefix.indexOf('\"', tagstart); // $NON-NLS-1$
-                if (tagend!=-1){
-                    final String ct = prefix.substring(tagstart,tagend);
-                    setEncodingAndType(ct);// Update the dataEncoding
-                }
-            }
-        }
-        return super.getDataEncodingNoDefault();
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.apache.jmeter.samplers.SampleResult#getSearchableTokens()
+	 */
+	@Override
+	public List<String> getSearchableTokens() throws Exception {
+		List<String> list = new ArrayList<>(super.getSearchableTokens());
+		list.add(getQueryString());
+		list.add(getCookies());
+		return list;
+	}
 
-    public void setResponseNoContent(){
-        setResponseCode(HTTP_NO_CONTENT_CODE);
-        setResponseMessage(HTTP_NO_CONTENT_MSG);
-    }
+	public void setPendingResponse(boolean pendingResp) {
+		pendingResponse = pendingResp;
+	}
 
-    /* (non-Javadoc)
-     * @see org.apache.jmeter.samplers.SampleResult#getSearchableTokens()
-     */
-    @Override
-    public List<String> getSearchableTokens() throws Exception {
-        List<String> list = new ArrayList<>(super.getSearchableTokens());
-        list.add(getQueryString());
-        list.add(getCookies());
-        return list;
-    }
-    
-    public void setPendingResponse(boolean pendingResp){
-    	pendingResponse=pendingResp;
-    }
-    
-    public boolean isPendingResponse(){
-        boolean ret = pendingResponse;
-        SampleResult[] sons = this.getSubResults();
-        int i = 0;
-        if (sons.length != 0){
-            while( (i < sons.length) && (!ret)){
-                HTTP2SampleResult h = (HTTP2SampleResult)sons[i];
-                i++;
-                if (h.isSecondaryRequest())
-                	ret = ret || (h.isPendingResponse());
-            }
-        }
-        return ret;
-    }
-    
-    public void setRequestId(String id){
-    	requestId=id;
-    }
-    
-    public String getRequestId(){
-    	return requestId;
-    }
+	public boolean isPendingResponse() {
+		boolean ret = pendingResponse;
+		SampleResult[] sons = this.getSubResults();
+		int i = 0;
+		if (sons.length != 0) {
+			while ((i < sons.length) && (!ret)) {
+				HTTP2SampleResult h = (HTTP2SampleResult) sons[i];
+				i++;
+				if (h.isSecondaryRequest())
+					ret = ret || (h.isPendingResponse());
+			}
+		}
+		return ret;
+	}
+
+	public void setRequestId(String id) {
+		requestId = id;
+	}
+
+	public String getRequestId() {
+		return requestId;
+	}
 
 	public byte[] getResponseBytes() {
 		return responseBytes;
