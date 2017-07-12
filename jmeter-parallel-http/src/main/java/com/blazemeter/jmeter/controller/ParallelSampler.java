@@ -3,10 +3,13 @@ package com.blazemeter.jmeter.controller;
 import org.apache.jmeter.control.Controller;
 import org.apache.jmeter.control.LoopController;
 import org.apache.jmeter.engine.event.LoopIterationListener;
-import org.apache.jmeter.samplers.*;
+import org.apache.jmeter.samplers.AbstractSampler;
+import org.apache.jmeter.samplers.Entry;
+import org.apache.jmeter.samplers.Interruptible;
+import org.apache.jmeter.samplers.SampleResult;
+import org.apache.jmeter.samplers.Sampler;
 import org.apache.jmeter.testelement.AbstractTestElement;
 import org.apache.jmeter.testelement.TestElement;
-import org.apache.jmeter.threads.JMeterContextService;
 import org.apache.jmeter.threads.JMeterContextServiceAccessor;
 import org.apache.jmeter.threads.JMeterThread;
 import org.apache.jmeter.threads.JMeterThreadMonitor;
@@ -62,9 +65,9 @@ public class ParallelSampler extends AbstractSampler implements Controller, Inte
         for (TestElement ctl : controllers) {
             reqText.append(ctl.getName()).append("\n");
             JMeterThread jmThread = new JMeterThreadParallel(getTestTree(ctl), this, notifier, getGenerateParent());
-            jmThread.setThreadName("parallel " + ctl.getName());
+            jmThread.setThreadName("parallel " + this.getThreadName());
             jmThread.setThreadGroup(new DummyThreadGroup());
-            Thread osThread = new Thread(jmThread, "jmeter-parallel " + ctl.getName());
+            Thread osThread = new Thread(jmThread, "parallel " + this.getThreadName());
             threads.put(jmThread, osThread);
         }
         res.setSamplerData(reqText.toString());
