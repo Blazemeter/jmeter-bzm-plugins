@@ -103,6 +103,14 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
 		this.headerManager = headerManager;
 	}
 
+	public HTTP2SampleResult getResult() {
+		return result;
+	}
+
+	public void setResult(HTTP2SampleResult result) {
+		this.result = result;
+	}
+
 	public CompletableFuture<Void> getCompletedFuture() {
 		return completedFuture;
 	}
