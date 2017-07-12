@@ -10,9 +10,11 @@ import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.samplers.Sampler;
 import org.apache.jmeter.testelement.AbstractTestElement;
 import org.apache.jmeter.testelement.TestElement;
+import org.apache.jmeter.threads.JMeterContext;
 import org.apache.jmeter.threads.JMeterContextServiceAccessor;
 import org.apache.jmeter.threads.JMeterThread;
 import org.apache.jmeter.threads.JMeterThreadMonitor;
+import org.apache.jmeter.threads.JMeterVariables;
 import org.apache.jorphan.collections.HashTree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 // we implement Controller only to enable GUI to add child elements into it
 public class ParallelSampler extends AbstractSampler implements Controller, Interruptible, JMeterThreadMonitor, Serializable {
@@ -31,6 +34,7 @@ public class ParallelSampler extends AbstractSampler implements Controller, Inte
     protected transient List<TestElement> controllers = new ArrayList<>();
     protected final ParallelListenerNotifier notifier = new ParallelListenerNotifier();
     private Map<JMeterThread, Thread> threads = new HashMap<>();
+    private transient boolean isMapChanged = false;
 
     @Override
     public void addTestElement(TestElement te) {
@@ -60,6 +64,11 @@ public class ParallelSampler extends AbstractSampler implements Controller, Inte
 
         notifier.setContainer(res);
 
+        if (!isMapChanged) {
+            changeVariablesMap();
+            isMapChanged = true;
+        }
+
         threads = new HashMap<>(controllers.size());
         StringBuilder reqText = new StringBuilder("Parallel items:\n");
         for (TestElement ctl : controllers) {
@@ -67,6 +76,7 @@ public class ParallelSampler extends AbstractSampler implements Controller, Inte
             JMeterThread jmThread = new JMeterThreadParallel(getTestTree(ctl), this, notifier, getGenerateParent());
             jmThread.setThreadName("parallel " + this.getThreadName());
             jmThread.setThreadGroup(new DummyThreadGroup());
+            injectVariables(jmThread, this.getThreadContext());
             Thread osThread = new Thread(jmThread, "parallel " + this.getThreadName());
             threads.put(jmThread, osThread);
         }
@@ -108,6 +118,7 @@ public class ParallelSampler extends AbstractSampler implements Controller, Inte
 
     @Override
     public boolean interrupt() {
+        isMapChanged = false;
         boolean interrupted = true;
         for (JMeterThread thr : threads.keySet()) {
             log.debug("Interrupting thread {}", thr);
@@ -138,6 +149,7 @@ public class ParallelSampler extends AbstractSampler implements Controller, Inte
 
     @Override
     public void threadFinished(JMeterThread thread) {
+        isMapChanged = false;
         JMeterContextServiceAccessor.incrNumberOfThreads();
         try {
             Field field = AbstractTestElement.class.getDeclaredField("threadContext");
@@ -169,6 +181,44 @@ public class ParallelSampler extends AbstractSampler implements Controller, Inte
 
     public void setGenerateParent(boolean value) {
         setProperty(GENERATE_PARENT, value);
+    }
+
+    private void injectVariables(JMeterThread jmThread, JMeterContext threadContext) {
+        if (threadContext != null && threadContext.getVariables() != null) {
+            try {
+                Class<JMeterThread> cls = JMeterThread.class;
+                Field vars = cls.getDeclaredField("threadVars");
+                vars.setAccessible(true);
+                vars.set(jmThread, threadContext.getVariables());
+            } catch (Throwable ex) {
+                log.warn("Cannot inject variables into parallel thread ", ex);
+            }
+        }
+    }
+
+    private void changeVariablesMap() {
+        try {
+            JMeterContext context = this.getThreadContext();
+            if (context != null && context.getVariables() != null) {
+                JMeterVariables jMeterVariables = context.getVariables();
+                Class<JMeterVariables> cls = JMeterVariables.class;
+                Field variablesField = cls.getDeclaredField("variables");
+                variablesField.setAccessible(true);
+                Object obj = variablesField.get(jMeterVariables);
+                synchronized (obj) {
+                    if (obj instanceof Map) {
+                        Map variables = (Map) obj;
+                        if (!(variables instanceof ConcurrentHashMap)) {
+                            variablesField.set(jMeterVariables, new ConcurrentHashMap(variables));
+                        }
+                    } else {
+                        log.warn("Unexpected variables map type " + obj.getClass().getName());
+                    }
+                }
+            }
+        } catch (Throwable ex) {
+            log.warn("Cannot change variables map ", ex);
+        }
     }
 
 }
