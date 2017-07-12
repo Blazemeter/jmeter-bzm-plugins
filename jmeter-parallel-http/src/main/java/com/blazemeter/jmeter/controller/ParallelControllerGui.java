@@ -1,18 +1,43 @@
 package com.blazemeter.jmeter.controller;
 
+import kg.apc.jmeter.JMeterPluginsUtils;
 import org.apache.jmeter.control.gui.LogicControllerGui;
+import org.apache.jmeter.gui.util.HorizontalPanel;
 import org.apache.jmeter.testelement.TestElement;
 
+import javax.swing.*;
 import java.awt.*;
 
 public class ParallelControllerGui extends LogicControllerGui {
     private static final String MSG = "All direct child elements of this controller" +
             " will be executed as parallel.";
 
+    private JCheckBox generateParentSamples;
+
     public ParallelControllerGui() {
         super();
-        Label lbl = new Label(MSG, Label.CENTER);
-        add(lbl);
+        init();
+    }
+
+
+    private void init() {
+        setLayout(new BorderLayout(0, 5));
+        setBorder(makeBorder());
+
+        Container topPanel = makeTitlePanel();
+
+        add(topPanel, BorderLayout.NORTH);
+
+        JPanel mainPanel = new HorizontalPanel();
+
+        JLabel lbl = new JLabel(MSG, JLabel.CENTER);
+        topPanel.add(lbl);
+
+        generateParentSamples = new JCheckBox();
+        mainPanel.add(generateParentSamples);
+        mainPanel.add(new JLabel("Generate parent sample", JLabel.RIGHT));
+
+        topPanel.add(mainPanel);
     }
 
     @Override
@@ -35,5 +60,18 @@ public class ParallelControllerGui extends LogicControllerGui {
     @Override
     public void modifyTestElement(TestElement te) {
         super.configureTestElement(te);
+        if (te instanceof ParallelSampler) {
+            ParallelSampler parallelSampler = (ParallelSampler) te;
+            parallelSampler.setGenerateParent(this.generateParentSamples.isSelected());
+        }
+    }
+
+    @Override
+    public void configure(TestElement element) {
+        super.configure(element);
+
+        if (element instanceof ParallelSampler) {
+            generateParentSamples.setSelected(((ParallelSampler) element).getGenerateParent());
+        }
     }
 }
