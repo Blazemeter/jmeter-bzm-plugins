@@ -10,6 +10,7 @@ import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.samplers.Sampler;
 import org.apache.jmeter.testelement.AbstractTestElement;
 import org.apache.jmeter.testelement.TestElement;
+import org.apache.jmeter.testelement.ThreadListener;
 import org.apache.jmeter.threads.JMeterContext;
 import org.apache.jmeter.threads.JMeterContextServiceAccessor;
 import org.apache.jmeter.threads.JMeterThread;
@@ -28,13 +29,12 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 // we implement Controller only to enable GUI to add child elements into it
-public class ParallelSampler extends AbstractSampler implements Controller, Interruptible, JMeterThreadMonitor, Serializable {
+public class ParallelSampler extends AbstractSampler implements Controller, ThreadListener, Interruptible, JMeterThreadMonitor, Serializable {
     private static final Logger log = LoggerFactory.getLogger(ParallelSampler.class);
     private static final String GENERATE_PARENT = "PARENT_SAMPLE";
     protected transient List<TestElement> controllers = new ArrayList<>();
     protected final ParallelListenerNotifier notifier = new ParallelListenerNotifier();
     private Map<JMeterThread, Thread> threads = new HashMap<>();
-    private transient boolean isMapChanged = false;
 
     @Override
     public void addTestElement(TestElement te) {
@@ -63,11 +63,6 @@ public class ParallelSampler extends AbstractSampler implements Controller, Inte
         res.setResponseData("".getBytes());
 
         notifier.setContainer(res);
-
-        if (!isMapChanged) {
-            changeVariablesMap();
-            isMapChanged = true;
-        }
 
         threads = new HashMap<>(controllers.size());
         StringBuilder reqText = new StringBuilder("Parallel items:\n");
@@ -118,7 +113,6 @@ public class ParallelSampler extends AbstractSampler implements Controller, Inte
 
     @Override
     public boolean interrupt() {
-        isMapChanged = false;
         boolean interrupted = true;
         for (JMeterThread thr : threads.keySet()) {
             log.debug("Interrupting thread {}", thr);
@@ -149,7 +143,6 @@ public class ParallelSampler extends AbstractSampler implements Controller, Inte
 
     @Override
     public void threadFinished(JMeterThread thread) {
-        isMapChanged = false;
         JMeterContextServiceAccessor.incrNumberOfThreads();
         try {
             Field field = AbstractTestElement.class.getDeclaredField("threadContext");
@@ -221,4 +214,13 @@ public class ParallelSampler extends AbstractSampler implements Controller, Inte
         }
     }
 
+    @Override
+    public void threadStarted() {
+        changeVariablesMap();
+    }
+
+    @Override
+    public void threadFinished() {
+
+    }
 }
