@@ -9,6 +9,11 @@ Can be used to simulate a load using AJAX, download resources and many other dif
 
 Use option _Generate parent sample_ to generate one parent sample that unite all child elements
 
+### Limitations
+
+Parallel Controller does **not** support work with **Transaction Controller** so if used you can get an unexpected results.
+If you decide to use these controllers together familiarize yourself with already known problems that described in [roadmap](#roadmap)
+
 [Download Example Test Plan](ParallelController.jmx)
 
 ## Parallel Sampler
@@ -23,6 +28,8 @@ Click `Add Row` for added new row in URL list and then enter the URL into row.
 
 ## Roadmap
 
-- test, test, test
-- How to optimize resource usage and not spawn threads all the time?
-- transaction samplers work or not?
+* test, test, test
+* Known issues with Transaction Controller:
+    1. 
+    2. 
+    3.
