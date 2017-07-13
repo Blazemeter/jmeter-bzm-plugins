@@ -12,7 +12,7 @@
 
     <modules>
         <module>directory-listing</module>
-        <module>jmeter-parallel-http</module>
+        <module>parallel</module>
         <module>rotating-listener</module>
         <module>sense-uploader</module>
         <module>wsc</module>
