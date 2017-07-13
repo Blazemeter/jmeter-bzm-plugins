@@ -11,7 +11,7 @@ import java.awt.*;
 public class ParallelControllerGui extends LogicControllerGui {
     private static final String MSG = "All direct child elements of this controller" +
             " will be executed as parallel.";
-    public static final String WIKIPAGE = "";
+    public static final String WIKIPAGE = "https://github.com/Blazemeter/jmeter-bzm-plugins/tree/master/jmeter-parallel-http/Parallel.md#parallel-controller";
 
     private JCheckBox generateParentSamples;
 
