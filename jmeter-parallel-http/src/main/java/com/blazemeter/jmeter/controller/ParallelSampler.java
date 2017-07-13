@@ -24,7 +24,6 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +32,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
 
 // we implement Controller only to enable GUI to add child elements into it
 public class ParallelSampler extends AbstractSampler implements Controller, ThreadListener, Interruptible, JMeterThreadMonitor, Serializable {
@@ -40,8 +40,7 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
     private static final String GENERATE_PARENT = "PARENT_SAMPLE";
     protected transient List<TestElement> controllers = new ArrayList<>();
     protected final ParallelListenerNotifier notifier = new ParallelListenerNotifier();
-//    private Map<JMeterThread, Thread> threads = new HashMap<>();
-    private final ExecutorService executorService = Executors.newCachedThreadPool();
+    private ExecutorService executorService;
 
     @Override
     public void addTestElement(TestElement te) {
@@ -71,19 +70,16 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
 
         notifier.setContainer(res);
 
-//        threads = new HashMap<>(controllers.size());
         final List<JMeterThread> jMeterThreads = new LinkedList<>();
 
         StringBuilder reqText = new StringBuilder("Parallel items:\n");
         for (TestElement ctl : controllers) {
             reqText.append(ctl.getName()).append("\n");
             JMeterThread jmThread = new JMeterThreadParallel(getTestTree(ctl), this, notifier, getGenerateParent());
-            jmThread.setThreadName("parallel " + this.getThreadName());
+            jmThread.setThreadName("parallel " + this.getName());
             jmThread.setThreadGroup(new DummyThreadGroup());
             injectVariables(jmThread, this.getThreadContext());
             jMeterThreads.add(jmThread);
-//            Thread osThread = new Thread(jmThread, "parallel " + this.getThreadName());
-//            threads.put(jmThread, osThread);
         }
 
 
@@ -98,24 +94,11 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
         for (Future<?> future : futures) {
             try {
                 future.get();
-                log.debug("Thread is done {}", future);
+                log.debug("Thread is done {}", future.isDone());
             } catch (InterruptedException | ExecutionException e1) {
-                log.debug("Interrupted {}", future);
+                log.debug("Interrupted {}", future.isCancelled());
             }
         }
-//        for (Thread thr : threads.values()) {
-//            log.debug("Starting thread {}", thr);
-//            thr.start();
-//        }
-
-//        for (Thread thr : threads.values()) {
-//            try {
-//                thr.join();
-//                log.debug("Thread is done {}", thr);
-//            } catch (InterruptedException e1) {
-//                log.debug("Interrupted {}", thr);
-//            }
-//        }
 
         if (res.getEndTime() == 0) {
             res.sampleEnd();
@@ -139,12 +122,8 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
 
     @Override
     public boolean interrupt() {
-        boolean interrupted = true;
-//        for (JMeterThread thr : threads.keySet()) {
-//            log.debug("Interrupting thread {}", thr);
-//            interrupted &= thr.interrupt();
-//        }
-        return interrupted;
+        executorService.shutdown();
+        return true;
     }
 
     @Override
@@ -243,10 +222,36 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
     @Override
     public void threadStarted() {
         changeVariablesMap();
+        executorService = Executors.newCachedThreadPool(new ParallelThreadFactory(this.getName()));
     }
 
     @Override
     public void threadFinished() {
-
+        executorService.shutdown();
     }
+
+    public static class ParallelThreadFactory implements ThreadFactory {
+        private final ThreadGroup group;
+        private final String namePrefix;
+
+        public ParallelThreadFactory(String controllerName) {
+            SecurityManager s = System.getSecurityManager();
+            group = (s != null) ? s.getThreadGroup() :
+                    Thread.currentThread().getThreadGroup();
+            namePrefix = "parallel " + controllerName;
+        }
+
+        public Thread newThread(Runnable r) {
+            Thread t = new Thread(group, r, namePrefix, 0);
+            if (t.isDaemon()) {
+                t.setDaemon(false);
+            }
+            if (t.getPriority() != Thread.NORM_PRIORITY) {
+                t.setPriority(Thread.NORM_PRIORITY);
+            }
+            return t;
+        }
+    }
+
+
 }
