@@ -30,6 +30,9 @@ Click `Add Row` for added new row in URL list and then enter the URL into row.
 
 * test, test, test
 * Known issues with Transaction Controller:
-    1. 
-    2. 
-    3.
+    1. If Transaction Controller put in Parallel Controller and option `Generate parent sample` is enabled in two controllers 
+    than you'll see parent sample of Transaction Controller and sub-sampler of this parent in parent sample of Parallel Controller ([fix]())
+    2. If Transaction Controller put in Parallel Controller and option `Generate parent sample` is enabled in Parallel Controller and disable in Transaction Controller 
+    than you'll not see the result sample of transaction (_with number of samples and fails in transaction_) in parent sample of Parallel Controller
+    3. If Parallel Controller put in Transaction Controller and option `Generate parent sample` is disable in Parallel Controller and enabled in Transaction Controller 
+    than you'll see that samples from Parallel Controller will have the same nesting as parent sample of Transaction Controller, and parent sample will be empty
