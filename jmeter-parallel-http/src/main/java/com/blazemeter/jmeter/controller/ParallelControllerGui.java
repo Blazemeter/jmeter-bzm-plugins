@@ -11,6 +11,7 @@ import java.awt.*;
 public class ParallelControllerGui extends LogicControllerGui {
     private static final String MSG = "All direct child elements of this controller" +
             " will be executed as parallel.";
+    public static final String WIKIPAGE = "https://github.com/Blazemeter/jmeter-bzm-plugins/tree/master/jmeter-parallel-http/Parallel.md#parallel-controller";
 
     private JCheckBox generateParentSamples;
 
@@ -23,6 +24,7 @@ public class ParallelControllerGui extends LogicControllerGui {
     private void init() {
         setLayout(new BorderLayout(0, 5));
         setBorder(makeBorder());
+        add(JMeterPluginsUtils.addHelpLinkToPanel(makeTitlePanel(), WIKIPAGE), BorderLayout.NORTH);
 
         Container topPanel = makeTitlePanel();
 

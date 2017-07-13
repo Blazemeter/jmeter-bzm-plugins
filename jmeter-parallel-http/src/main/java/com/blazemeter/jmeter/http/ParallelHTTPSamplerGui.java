@@ -21,7 +21,7 @@ import java.awt.*;
 
 public class ParallelHTTPSamplerGui extends AbstractSamplerGui implements TableModelListener, CellEditorListener {
 
-    public static final String WIKIPAGE = "";
+    public static final String WIKIPAGE = "https://github.com/Blazemeter/jmeter-bzm-plugins/tree/master/jmeter-parallel-http/Parallel.md#parallel-sampler";
     private static final Logger log = LoggingManager.getLoggerForClass();
     private static String[] defaultValues = new String[]{
             "",
