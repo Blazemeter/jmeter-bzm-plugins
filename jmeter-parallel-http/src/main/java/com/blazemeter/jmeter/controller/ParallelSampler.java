@@ -37,6 +37,7 @@ import java.util.concurrent.ThreadFactory;
 // we implement Controller only to enable GUI to add child elements into it
 public class ParallelSampler extends AbstractSampler implements Controller, ThreadListener, Interruptible, JMeterThreadMonitor, Serializable {
     private static final Logger log = LoggerFactory.getLogger(ParallelSampler.class);
+    private static final String TRANSACTION_SAMPLE_PREFIX = "Number of samples in transaction : ";
     private static final String GENERATE_PARENT = "PARENT_SAMPLE";
     protected transient List<TestElement> controllers = new ArrayList<>();
     protected final ParallelListenerNotifier notifier = new ParallelListenerNotifier();
@@ -103,7 +104,28 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
         if (res.getEndTime() == 0) {
             res.sampleEnd();
         }
-        return getGenerateParent() ? res : null;
+        return getGenerateParent() ? cleanupTransactionSubSamples(res) : null;
+    }
+
+    private SampleResult cleanupTransactionSubSamples(SampleResult res) {
+        SampleResult[] sampleSubResults = res.getSubResults();
+        res.removeSubResults();
+        for (SampleResult subResult : sampleSubResults) {
+            if (!isTransactionSubSampler(subResult)) {
+                res.storeSubResult(subResult);
+            }
+        }
+        return res;
+    }
+
+    private boolean isTransactionSubSampler(SampleResult res) {
+        SampleResult parent = res.getParent();
+        if (parent == null) {
+            return false;
+        } else if (parent.getResponseMessage().startsWith(TRANSACTION_SAMPLE_PREFIX)) {
+            return true;
+        }
+        return isTransactionSubSampler(parent);
     }
 
     private HashTree getTestTree(TestElement te) {
