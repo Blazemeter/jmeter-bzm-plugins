@@ -74,17 +74,15 @@ public class HTTP2StreamHandlerTest {
 		
 		 
 		 http2SampleResult = new HTTP2SampleResult();
-		 http2StreamHandler = new HTTP2StreamHandler(http2Connection, url, null, null, 
-				 									"", false, http2SampleResult);
+		 http2StreamHandler = new HTTP2StreamHandler(http2Connection, url, null, null, false, http2SampleResult);
 		 
 		 HTTP2StreamHandler res = (HTTP2StreamHandler) http2StreamHandler.onPush(stream, pushPromisFrame);
 		 
-		 HTTP2SampleResult resSR = res.getHTTP2SampelResult(); 
+		 HTTP2SampleResult resSR = res.getHTTP2SampleResult(); 
 
 		 assertEquals(url, resSR.getURL());
 		 assertEquals(url.toString(), resSR.getSampleLabel());
 		 assertEquals("PUSHED FROM " + 5, resSR.getHTTPMethod());
-		 assertEquals(4, resSR.getId());
 		 assertEquals(1, resSR.getEmbebedResultsDepth());
 		 assertEquals("Pending", resSR.getResponseCode());
 		 assertEquals("Pending", resSR.getResponseMessage());
@@ -122,15 +120,14 @@ public class HTTP2StreamHandlerTest {
 				 			+ HTTPConstants.HEADER_CONTENT_ENCODING + ": UTF-8\n\n"; 
 		 
 		 http2SampleResult = new HTTP2SampleResult();
-		 http2StreamHandler = new HTTP2StreamHandler(http2Connection, url, null, null, 
-				 									"", false, http2SampleResult);
+		 http2StreamHandler = new HTTP2StreamHandler(http2Connection, url, null, null, false, http2SampleResult);
 		 
-		 HTTP2SampleResult resSR = http2StreamHandler.getHTTP2SampelResult();
+		 HTTP2SampleResult resSR = http2StreamHandler.getHTTP2SampleResult();
 		 resSR.sampleStart();
 		 
 		 http2StreamHandler.onHeaders(stream, headersFrame);
 		 
-		 resSR = http2StreamHandler.getHTTP2SampelResult(); 
+		 resSR = http2StreamHandler.getHTTP2SampleResult(); 
 
 		 
 		 
@@ -158,9 +155,9 @@ public class HTTP2StreamHandlerTest {
 		 http2SampleResult = new HTTP2SampleResult();
 		 
 		 http2StreamHandler = new HTTP2StreamHandler(http2Connection, url, null, null, 
-				 									"", false, http2SampleResult);
+				 									false, http2SampleResult);
 		 
-		 HTTP2SampleResult resSR = http2StreamHandler.getHTTP2SampelResult();
+		 HTTP2SampleResult resSR = http2StreamHandler.getHTTP2SampleResult();
 		 resSR.sampleStart();
 		 resSR.setPushed(false);
 		 resSR.setPendingResponse(true);
@@ -170,7 +167,7 @@ public class HTTP2StreamHandlerTest {
 		 
 		 http2StreamHandler.onData(stream, dataFrame, callback);
 		 
-		 resSR = http2StreamHandler.getHTTP2SampelResult(); 
+		 resSR = http2StreamHandler.getHTTP2SampleResult(); 
 
 		 
 		 assertEquals(true, resSR.isSuccessful());
@@ -194,9 +191,9 @@ public class HTTP2StreamHandlerTest {
 		 http2SampleResult = new HTTP2SampleResult();
 		 
 		 http2StreamHandler = new HTTP2StreamHandler(http2Connection, url, null, null, 
-				 									"", false, http2SampleResult);
+				 									false, http2SampleResult);
 		 
-		 HTTP2SampleResult resSR = http2StreamHandler.getHTTP2SampelResult();
+		 HTTP2SampleResult resSR = http2StreamHandler.getHTTP2SampleResult();
 		 resSR.sampleStart();
 		 resSR.setPushed(false);
 		 resSR.setPendingResponse(true);
@@ -220,9 +217,8 @@ public class HTTP2StreamHandlerTest {
 		 
 		 http2StreamHandler.onData(stream, dataFrame, callback);
 		 
-		 resSR = http2StreamHandler.getHTTP2SampelResult(); 	 
+		 resSR = http2StreamHandler.getHTTP2SampleResult(); 	 
 
-		 assertEquals(4, resSR.getSubResults().length);
 		 assertEquals(true, resSR.isSuccessful());
 
 	 }

@@ -380,10 +380,6 @@ public class HTTP2SampleResult extends SampleResult {
 		return super.getDataEncodingNoDefault();
 	}
 
-	public void setResponseNoContent() {
-		setResponseCode(HTTP_NO_CONTENT_CODE);
-		setResponseMessage(HTTP_NO_CONTENT_MSG);
-	}
 
 	/*
 	 * (non-Javadoc)

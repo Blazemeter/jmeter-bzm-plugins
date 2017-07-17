@@ -94,8 +94,7 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
 	private boolean first = true;
 	private int timeout = 0;
 
-	public HTTP2StreamHandler(HTTP2Connection parent, URL url, HeaderManager headerManager, CookieManager cookieManager,
-			String request, boolean isPushed, HTTP2SampleResult sampleResult) {
+	public HTTP2StreamHandler(HTTP2Connection parent, URL url, HeaderManager headerManager, CookieManager cookieManager, boolean isPushed, HTTP2SampleResult sampleResult) {
 		this.result = sampleResult;
 		this.parent = parent;
 		this.url = url;
@@ -121,8 +120,7 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
 		sampleResult.setRequestHeaders(frame.toString());
 		sampleResult.setPushed(true);
 		sampleResult.setEmbebedResults(false);
-		HTTP2StreamHandler hTTP2StreamHandler = new HTTP2StreamHandler(this.parent, null, headerManager, cookieManager,
-				"", true, sampleResult);
+		HTTP2StreamHandler hTTP2StreamHandler = new HTTP2StreamHandler(this.parent, null, headerManager, cookieManager, true, sampleResult);
 		this.parent.addPendingResponses(sampleResult, hTTP2StreamHandler, false);
 		return hTTP2StreamHandler;
 	}
@@ -482,7 +480,7 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
 		return code >= 200 && code <= 399;
 	}
 
-	protected HTTP2SampleResult getHTTP2SampelResult() {
+	protected HTTP2SampleResult getHTTP2SampleResult() {
 		return this.result;
 	}
 
