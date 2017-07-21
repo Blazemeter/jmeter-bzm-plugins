@@ -373,7 +373,6 @@ public class HTTP2SampleResult extends SampleResult {
 		return super.getDataEncodingNoDefault();
 	}
 
-
 	/*
 	 * (non-Javadoc)
 	 * 
