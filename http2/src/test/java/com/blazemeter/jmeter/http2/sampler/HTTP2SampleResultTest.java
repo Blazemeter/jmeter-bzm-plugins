@@ -1,17 +1,15 @@
 package com.blazemeter.jmeter.http2.sampler;
 
-import com.blazemeter.jmeter.http2.sampler.HTTP2Request;
+
 
 import static org.junit.Assert.*;
 
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.apache.jmeter.samplers.SampleResult;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 public class HTTP2SampleResultTest {
 	
@@ -68,4 +66,61 @@ public class HTTP2SampleResultTest {
 		 assertEquals("id", sampleRes.getRequestId());
 		 
 	 }
+	 
+	 @Test
+	 public void setQueryStringTest(){
+		 http2SampleResult.setQueryString(null);
+		 assertEquals("", http2SampleResult.getQueryString());
+		 
+		 String queryString = "refURL=someRef";
+		 http2SampleResult.setQueryString(queryString);
+		 assertEquals(queryString, http2SampleResult.getQueryString());
+		 
+	 }
+	 
+	 @Test
+	 public void setCookiesTest() {
+		 http2SampleResult.setCookies(null);
+		 assertEquals("", http2SampleResult.getCookies());
+		 
+		 String cookie="TLTSID=845E08626E1F106E011D82F69326AFDB; TLTUID=845E08626E1F106E011D82F69326AFDB";
+		 http2SampleResult.setCookies(cookie);
+		 
+		 assertEquals(cookie, http2SampleResult.getCookies());
+		 
+	 }
+	 
+	 @Test
+	 public void getSampleDataTest() throws MalformedURLException {
+		 URL url = new URL("https", "www.sprint.com", 443, "/");
+		 http2SampleResult.setURL(url);
+		 http2SampleResult.setHTTPMethod("GET");
+		 String cookies="TLTSID=845E08626E1F106E011D82F69326AFDB; TLTUID=845E08626E1F106E011D82F69326AFDB";
+		 http2SampleResult.setCookies(cookies);
+		 String queryString = "refURL=someRef";
+		 http2SampleResult.setQueryString(queryString);
+		 String samplerDataRes= http2SampleResult.getSamplerData();
+		 String samplerDataExp = "GET https://www.sprint.com:443/" + "\n\n" + "GET data:" + "\n" + queryString + "\n\n" + "Cookie Data:" + "\n" + cookies + "\n";
+		 
+		 assertEquals(samplerDataExp, samplerDataRes);
+		 
+	 }
+	 
+	 @Test
+	 public void ColeHTTP2SampleResultTest(){
+		 http2SampleResult.setHTTPMethod("GET");
+		 String cookies="TLTSID=845E08626E1F106E011D82F69326AFDB; TLTUID=845E08626E1F106E011D82F69326AFDB";
+		 http2SampleResult.setCookies(cookies);
+		 String queryString = "refURL=someRef";
+		 http2SampleResult.setQueryString(queryString);
+		 String redirectLocation = "www.sprint.com/apiservices/framework/initSession";
+		 http2SampleResult.setRedirectLocation(redirectLocation);
+		 HTTP2SampleResult sampleResultRes = new HTTP2SampleResult(http2SampleResult);
+		 
+		 assertEquals(http2SampleResult.getHTTPMethod(), sampleResultRes.getHTTPMethod() );
+		 assertEquals(http2SampleResult.getQueryString(), sampleResultRes.getQueryString() );
+		 assertEquals(http2SampleResult.getCookies(), sampleResultRes.getCookies() );
+		 assertEquals(http2SampleResult.getRedirectLocation(), sampleResultRes.getRedirectLocation() );
+	 }
+	 
 }

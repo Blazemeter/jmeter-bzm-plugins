@@ -74,8 +74,6 @@ public class HTTP2SampleResult extends SampleResult {
 
 	protected static final String NON_HTTP_RESPONSE_CODE = "Non HTTP response code";
 	protected static final String NON_HTTP_RESPONSE_MESSAGE = "Non HTTP response message";
-	private static final String HTTP_NO_CONTENT_CODE = Integer.toString(HttpURLConnection.HTTP_NO_CONTENT);
-	private static final String HTTP_NO_CONTENT_MSG = "No Content"; // $NON-NLS-1$
 	protected static final String HTTP2_PENDING_RESPONSE = "Pending";
 	protected static final String HTTP2_RESPONSE_RECEIVED = "Received";
 	protected static final String HTTP2_RESPONSE_CODE_4 = "Not Found";
@@ -84,7 +82,6 @@ public class HTTP2SampleResult extends SampleResult {
 
 	private String requestId;
 
-	private byte[] responseBytes;
 
 	public HTTP2SampleResult() {
 		super();
@@ -103,10 +100,6 @@ public class HTTP2SampleResult extends SampleResult {
 		this.setEmbebedResults(false);
 		this.setResponseCode(HTTP2_PENDING_RESPONSE);
 		this.setResponseMessage(HTTP2_PENDING_RESPONSE);
-	}
-
-	public HTTP2SampleResult(long elapsed) {
-		super(elapsed, true);
 	}
 
 	/**
@@ -421,13 +414,6 @@ public class HTTP2SampleResult extends SampleResult {
 		return requestId;
 	}
 
-	public byte[] getResponseBytes() {
-		return responseBytes;
-	}
-
-	public void setResponseBytes(byte[] responseBytes) {
-		this.responseBytes = responseBytes;
-	}
 
 	public boolean isSecondaryRequest() {
 		return secondaryRequest;

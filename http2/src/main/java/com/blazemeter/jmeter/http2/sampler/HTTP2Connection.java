@@ -41,26 +41,11 @@ public class HTTP2Connection {
 	private Map<Integer, HTTP2StreamHandler> streamHandlers = new ConcurrentHashMap<>();
 	private List<DataCallBack> callbackHandler = new ArrayList<DataCallBack>();
 	private int frameSize = 1024;
-	//private boolean clean;
 
 	public synchronized Collection<HTTP2StreamHandler> addPendingResponses(HTTP2SampleResult pendingResponse,
 			HTTP2StreamHandler streamHandler, boolean isSec) {
 		if (!((pendingResponse == null) && (streamHandler == null))) {
 			if (!isSec) {
-				/*if (this.clean) {
-					List<Integer> deleted = new ArrayList<>();
-					pendingResponses.forEach((integer, http2SampleResult) -> {
-						System.out.println("Entro");
-						if (!http2SampleResult.isPendingResponse()) {
-							streamHandlers.remove(integer);
-							deleted.add(integer);
-						}
-					});
-					for (Integer i : deleted) {
-						pendingResponses.remove(i);
-					}
-					this.setClean(false);
-				}*/
 				this.pendingResponses.put(pendingResponse.getId(), pendingResponse);
 			}
 			this.streamHandlers.put(pendingResponse.getId(), streamHandler);
@@ -86,7 +71,6 @@ public class HTTP2Connection {
 	public HTTP2Connection(String connectionId, boolean isSSL) throws Exception {
 		this.session = null;
 		this.connectionId = connectionId;
-		//this.clean = false;
 		this.isSSL = isSSL;
 		this.http2SettingsHandler = new HTTP2SettingsHandler(this);
 		this.client = new HTTP2Client();
@@ -101,15 +85,6 @@ public class HTTP2Connection {
 	public String getConnectionId() {
 		return connectionId;
 	}
-
-
-/*	public boolean isClean() {
-		return clean;
-	} 
-
-	public void setClean(boolean clean) {
-		this.clean = clean;
-	} */
 
 	public void connect(String hostname, int port) throws InterruptedException, ExecutionException, TimeoutException {
 		FuturePromise<Session> sessionFuture = new FuturePromise<>();

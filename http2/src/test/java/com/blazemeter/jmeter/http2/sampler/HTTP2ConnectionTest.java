@@ -25,7 +25,6 @@ public class HTTP2ConnectionTest {
 	private CookieManager cookieManagerMock;
 	private URL urlMock;
 	private Session sessionMock;
-	private DataCallBack dataCallBackMock;
 	
 	
 	@Before
@@ -34,7 +33,6 @@ public class HTTP2ConnectionTest {
 		urlMock = Mockito.mock(URL.class);
 		cookieManagerMock = Mockito.mock(CookieManager.class);
 		sessionMock = Mockito.mock(Session.class);
-		dataCallBackMock = Mockito.mock(DataCallBack.class);
         try {
 			http2Connection = new HTTP2Connection("1", true);
 		} catch (Exception e) {
@@ -56,16 +54,12 @@ public class HTTP2ConnectionTest {
 		 Mockito.when(headerManagerMock.getHeaders()).thenReturn(collProp);
 		 Mockito.when(cookieManagerMock.getCookieHeaderForURL(urlMock)).thenReturn("TLTSID=F1F77E38627810620014CC0EAD1EEEB4; Path=/; Domain=.sprint.com");
 		 Mockito.when(urlMock.toString()).thenReturn("https://www.spring.com");
-		 //Mockito.doNothing().when(http2Connection).sendMutExc();
 		
 		 
 		 HTTP2SampleResult sampleResult1 = new HTTP2SampleResult();
 		 
 		 http2Connection.setSession(sessionMock);
-		 http2Connection.send("GET", urlMock, headerManagerMock, cookieManagerMock, null, sampleResult1, true, 0);
-		 //HTTP2SampleResult sampleResult2 = new HTTP2SampleResult();
-		 //http2Connection.send("POST", urlMock, headerManagerMock, cookieManagerMock, null, sampleResult2, true, 0);
-		 		 
+		 http2Connection.send("GET", urlMock, headerManagerMock, cookieManagerMock, null, sampleResult1, true, 0);		 		 
 	 }
 	 
 	 @Test
@@ -88,9 +82,6 @@ public class HTTP2ConnectionTest {
 	 
 	 @Test
 	 public void syncTest() throws InterruptedException{
-		 //DataCallBack dataCallbackMock = new DataCallBack();
-		 //Mockito.doNothing().when(dataCallbackMock).getCompletedFuture();
-		 //http2Connection.addDataCallbackHandler(dataCallbackMock);
 		 http2Connection.sync();
 		 
 	 }

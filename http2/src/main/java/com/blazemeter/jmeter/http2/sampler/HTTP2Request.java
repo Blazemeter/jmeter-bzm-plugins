@@ -53,8 +53,6 @@ public class HTTP2Request extends AbstractSampler implements TestStateListener, 
 
     public static final String DO_MULTIPART_POST = "HTTPSampler.DO_MULTIPART_POST"; // $NON-NLS-1$
 
-    private static final String ARG_VAL_SEP = "="; // $NON-NLS-1$
-    private static final String QRY_SEP = "&"; // $NON-NLS-1$
 
     public static final String DEFAULT_METHOD = "GET";
     public static final String RETURN_NO_SAMPLE = "RETURN_NO_SAMPLE";
@@ -212,18 +210,6 @@ public class HTTP2Request extends AbstractSampler implements TestStateListener, 
             dpc.setPayload(valor.getBytes());
             
             // TODO Code to send a file, need to figure out where is goes
-            /*String pathToData = dataPostContent.getDataPath();   
-            //create and send the data frames
-			File file = new File(pathToData);
-			FileInputStream fileStream = new FileInputStream(file);
-			byte[] payload =  new byte[frameSize];
-			int i = fileStream.read(payload);
-
-			while ((i == frameSize) && (i != -1)){
-				DataFrame data = new DataFrame(streamID, ByteBuffer.wrap(payload,0,i), false);
-				actualStream.data(data, new DataCallBack());
-				i = fileStream.read(payload);
-			}*/
 
             dpc.setDataPath(getProperty(HTTP2Request.PATH).getStringValue());
         }
@@ -272,8 +258,6 @@ public class HTTP2Request extends AbstractSampler implements TestStateListener, 
                     		saveConnectionCookies(r.getHttpFieldsResponse(), r.getURL(), getCookieManager());
                     		
                         }
-                        //Quita los pedidos que estaban pendientes de respuesta.
-                        //h.setClean(true);
                     }
                 }
             } else {
@@ -372,21 +356,6 @@ public class HTTP2Request extends AbstractSampler implements TestStateListener, 
         }
         pathAndQuery.append(path);
 
-        // Add the query string if it is a HTTP GET
-        /*if (HTTPConstants.GET.equals(getMethod())) {
-            // Get the query string encoded in specified encoding
-            // If no encoding is specified by user, we will get it
-            // encoded in UTF-8, which is what the HTTP spec says
-            String queryString = getQueryString(getContentEncoding());
-            if (queryString.length() > 0) {
-                if (path.contains(QRY_PFX)) {// Already contains a prefix
-                    pathAndQuery.append(QRY_SEP);
-                } else {
-                    pathAndQuery.append(QRY_PFX);
-                }
-                pathAndQuery.append(queryString);
-            }
-        }*/
         // If default port for protocol is used, we do not include port in URL
         if (isProtocolDefaultPort()) {
             return new URL(protocol, domain, pathAndQuery.toString());
@@ -566,12 +535,6 @@ public class HTTP2Request extends AbstractSampler implements TestStateListener, 
 
     @Override
     public void testStarted(String host) {
-        /*try {
-            setProperty(RESPONSE_TIMEOUT, Integer.parseInt(getResponseTimeout()));
-        } catch (NumberFormatException ex) {
-            log.warn("Response timeout is not a number; using the default response timeout of " + DEFAULT_RESPONSE_TIMEOUT + " ms");
-            setProperty(RESPONSE_TIMEOUT, DEFAULT_RESPONSE_TIMEOUT);
-        }*/
        connectionList = new ConcurrentHashMap<String, HTTP2Connection>();
     }
 
