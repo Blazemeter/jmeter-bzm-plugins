@@ -140,10 +140,21 @@ implements ActionListener, TreeSelectionListener, Clearable, ItemListener {
 
     /**
      * Constructor
+     * @throws ClassNotFoundException 
+     * @throws IllegalAccessException 
+     * @throws InstantiationException 
      */
     public ViewResultsFullVisualizer() {
         super();
         init();
+    }
+    
+    public DefaultMutableTreeNode getRoot(){
+    	return root;
+    }
+    
+    public DefaultTreeModel getTreeModel() {
+    	return treeModel;
     }
 
     /** {@inheritDoc} */
@@ -155,6 +166,10 @@ implements ActionListener, TreeSelectionListener, Clearable, ItemListener {
                 updateGui(sample);
             }
         });
+    }
+    
+    public JComboBox<ResultRenderer> getSelectRenderPanel(){
+    	return selectRenderPanel;
     }
 
     /**
@@ -184,7 +199,7 @@ implements ActionListener, TreeSelectionListener, Clearable, ItemListener {
         }
     }
 
-    private void addSubResults(DefaultMutableTreeNode currNode, SampleResult res) {
+    public void addSubResults(DefaultMutableTreeNode currNode, SampleResult res) {
         SampleResult[] subResults = res.getSubResults();
 		 
         int leafIndex = 0;
@@ -269,6 +284,9 @@ implements ActionListener, TreeSelectionListener, Clearable, ItemListener {
 
     /**
      * Initialize this visualizer
+     * @throws ClassNotFoundException 
+     * @throws IllegalAccessException 
+     * @throws InstantiationException 
      */
     private void init() {  // WARNING: called from ctor so must not be overridden (i.e. must be private or final)
         log.debug("init() - pass");
@@ -375,6 +393,9 @@ implements ActionListener, TreeSelectionListener, Clearable, ItemListener {
         List<String> classesToAdd = Collections.<String>emptyList();
         try {
             classesToAdd = JMeterUtils.findClassesThatExtend(ResultRenderer.class);
+            if (classesToAdd.isEmpty()){
+            	classesToAdd.add("org.apache.jmeter.visualizers.RenderAsText");
+            }
         } catch (IOException e1) {
             // ignored
         }
@@ -533,7 +554,7 @@ implements ActionListener, TreeSelectionListener, Clearable, ItemListener {
     }
     
     
-    private DefaultMutableTreeNode findNode(DefaultMutableTreeNode root, int id) {
+    public DefaultMutableTreeNode findNode(DefaultMutableTreeNode root, int id) {
         Enumeration<DefaultMutableTreeNode> e = root.depthFirstEnumeration();
         while (e.hasMoreElements()) {
             DefaultMutableTreeNode node = e.nextElement();

@@ -1,12 +1,13 @@
 package com.blazemeter.jmeter.http2.sampler;
 
-import com.blazemeter.jmeter.http2.sampler.HTTP2Request;
 
 import static org.junit.Assert.*;
 
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
+import java.util.List;
+import java.util.Map;
+
 
 import org.junit.Before;
 import org.junit.Test;
@@ -14,7 +15,6 @@ import org.mockito.Mockito;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.testelement.property.CollectionProperty;
 import org.eclipse.jetty.http2.api.Session;
-import org.eclipse.jetty.util.FuturePromise;
 import org.apache.jmeter.protocol.http.control.Header;
 import org.apache.jmeter.protocol.http.control.CookieManager;
 
@@ -32,7 +32,7 @@ public class HTTP2ConnectionTest {
 		headerManagerMock = Mockito.mock(HeaderManager.class);
 		urlMock = Mockito.mock(URL.class);
 		cookieManagerMock = Mockito.mock(CookieManager.class);
-		sessionMock=Mockito.mock(Session.class);
+		sessionMock = Mockito.mock(Session.class);
         try {
 			http2Connection = new HTTP2Connection("1", true);
 		} catch (Exception e) {
@@ -54,21 +54,36 @@ public class HTTP2ConnectionTest {
 		 Mockito.when(headerManagerMock.getHeaders()).thenReturn(collProp);
 		 Mockito.when(cookieManagerMock.getCookieHeaderForURL(urlMock)).thenReturn("TLTSID=F1F77E38627810620014CC0EAD1EEEB4; Path=/; Domain=.sprint.com");
 		 Mockito.when(urlMock.toString()).thenReturn("https://www.spring.com");
-		 //Mockito.doNothing().when(http2Connection).sendMutExc();
 		
 		 
-		 HTTP2SampleResult sampleResult = new HTTP2SampleResult();
+		 HTTP2SampleResult sampleResult1 = new HTTP2SampleResult();
 		 
 		 http2Connection.setSession(sessionMock);
-		 http2Connection.send("GET", urlMock, headerManagerMock, cookieManagerMock, null, sampleResult, true, 0);
-		 // http2Connection.send("POST", urlMock, HeaderManager headerManager, CookieManager cookieManager,
-		 //			DataPostContent dataPostContent, HTTP2SampleResult sampleResult, boolean secondaryRequest, int timeout));
-		 
+		 http2Connection.send("GET", urlMock, headerManagerMock, cookieManagerMock, null, sampleResult1, true, 0);		 		 
 	 }
 	 
 	 @Test
-	 public void connectTest(){
-		 //connect.get
+	 public void addPendingResponsesTest(){
+		 
+		 String request= "Request Example";
+		 HTTP2SampleResult pendingResponse = new HTTP2SampleResult();
+		 pendingResponse.setPendingResponse(false);
+		 pendingResponse.setId(10);
+		 HTTP2StreamHandler streamHandler = new HTTP2StreamHandler(http2Connection, urlMock, headerManagerMock, cookieManagerMock, false, pendingResponse);
+		 HTTP2SampleResult pendingResponse2 = new HTTP2SampleResult();
+		 pendingResponse2.setPendingResponse(true);
+		 pendingResponse2.setId(11);		 
+		 http2Connection.addPendingResponses(pendingResponse, streamHandler, false);
+		 Map<Integer, HTTP2SampleResult> pendings=http2Connection.getPendingResponses();
+		 boolean isthere=pendings.containsKey(10);
+		 assertEquals(true, isthere);
+		 		 
+	 }
+	 
+	 @Test
+	 public void syncTest() throws InterruptedException{
+		 http2Connection.sync();
+		 
 	 }
 
 }

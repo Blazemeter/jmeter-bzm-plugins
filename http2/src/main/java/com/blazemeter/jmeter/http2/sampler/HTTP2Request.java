@@ -53,8 +53,6 @@ public class HTTP2Request extends AbstractSampler implements TestStateListener, 
 
     public static final String DO_MULTIPART_POST = "HTTPSampler.DO_MULTIPART_POST"; // $NON-NLS-1$
 
-    private static final String ARG_VAL_SEP = "="; // $NON-NLS-1$
-    private static final String QRY_SEP = "&"; // $NON-NLS-1$
 
     public static final String DEFAULT_METHOD = "GET";
     public static final String RETURN_NO_SAMPLE = "RETURN_NO_SAMPLE";
@@ -71,7 +69,6 @@ public class HTTP2Request extends AbstractSampler implements TestStateListener, 
     private static final String HTTPS_PREFIX = HTTPConstants.PROTOCOL_HTTPS+"://"; // $NON-NLS-1$
     private static final String DEFAULT_PROTOCOL = HTTPConstants.PROTOCOL_HTTPS;
     
-    private static final String QRY_PFX = "?"; // $NON-NLS-1$
     
     /** A number to indicate that the port has not been set. */
     public static final int UNSPECIFIED_PORT = 0;
@@ -122,18 +119,11 @@ public class HTTP2Request extends AbstractSampler implements TestStateListener, 
     
     protected static final int MAX_FRAME_DEPTH = JMeterUtils.getPropDefault("httpsampler.max_frame_depth", 5); // $NON-NLS-1$
     
-    // Bug 51939
-    private static final boolean SEPARATE_CONTAINER =
-            JMeterUtils.getPropDefault("httpsampler.separate.container", true); // $NON-NLS-1$
-
-
-    private static final boolean IGNORE_FAILED_EMBEDDED_RESOURCES =
-            JMeterUtils.getPropDefault("httpsampler.ignore_failed_embedded_resources", false); // $NON-NLS-1$ // default value: false
-    
-    
-    
+ 
     
     private static Map<String, HTTP2Connection> connectionList;
+    
+    private HTTP2Connection http2Connection;
     
 
     public HTTP2Request() {
@@ -167,7 +157,11 @@ public class HTTP2Request extends AbstractSampler implements TestStateListener, 
     public SampleResult sample() {
         SampleResult res = null;
         try {
-            res = sample(getUrl(), getMethod(), false, 0);
+        	URL url= getUrl();
+        	// Create Sample Result
+        	HTTP2SampleResult sampleResult =new HTTP2SampleResult(url, getMethod());
+        	setConnection(url, sampleResult);
+            res = sample(url, getMethod(), false, 0, getConnection(), sampleResult);
             if (res != null) {
                 res.setSampleLabel(getName());
             }
@@ -203,30 +197,19 @@ public class HTTP2Request extends AbstractSampler implements TestStateListener, 
 
     /** Retorna el cuerpo que sera enviado en el post, de acuerdo a los parametros que obtenga */
 
-    private DataPostContent createPostContent(String method){
+    public DataPostContent createPostContent(String method){
         DataPostContent dpc = null;
         if (method.equals("POST")) {
             dpc = new DataPostContent();
-            //TODO setear cosas.
+            //TODO set things
             Arguments fafa = getArguments();
             String valor = "";
             for (JMeterProperty jmp : fafa) {
                 valor = ((HTTPArgument) jmp.getObjectValue()).getEncodedValue();
             }
             dpc.setPayload(valor.getBytes());
-
-            //String pathToData = dataPostContent.getDataPath();   TODO CODIGO PARA MANDAR UN ARCHIVO, HAY QUE VER DONDE SE COLOCA Y CUANDO
-            // create and send the data frames
-//			File file = new File(pathToData);
-//			FileInputStream fileStream = new FileInputStream(file);
-//			byte[] payload =  new byte[frameSize];
-//			int i = fileStream.read(payload);
-//
-//			while ((i == frameSize) && (i != -1)){
-//				DataFrame data = new DataFrame(streamID, ByteBuffer.wrap(payload,0,i), false);
-//				actualStream.data(data, new DataCallBack());
-//				i = fileStream.read(payload);
-//			}
+            
+            // TODO Code to send a file, need to figure out where is goes
 
             dpc.setDataPath(getProperty(HTTP2Request.PATH).getStringValue());
         }
@@ -238,12 +221,8 @@ public class HTTP2Request extends AbstractSampler implements TestStateListener, 
         return getThreadName() + getRequestId();
     }
 
-    protected HTTP2SampleResult sample(URL url, String method, boolean followRedirects, int depth) {
+    protected HTTP2SampleResult sample(URL url, String method, boolean followRedirects, int depth, HTTP2Connection http2Connection, HTTP2SampleResult sampleResult) {
     	
-        // Create Sample Result
-        HTTP2Connection http2Connection = null;
-        HTTP2SampleResult sampleResult =new HTTP2SampleResult(url, method);
-        http2Connection = getConnection(url, sampleResult);
         sampleResult.setEmbebedResults(isEmbeddedResources());
         sampleResult.setEmbeddedUrlRE(getEmbeddedUrlRE());
         
@@ -257,10 +236,8 @@ public class HTTP2Request extends AbstractSampler implements TestStateListener, 
 
             final CacheManager cacheManager = getCacheManager();
             if (cacheManager != null && HTTPConstants.GET.equalsIgnoreCase(method)) {
-               if (cacheManager.inCache(url)) {
-                   // TODO implement cache Manager
-                   //return updateSampleResultForResourceInCache(sampleResult);
-               }
+            	// TODO implement cache Manager
+               
             }
             if (isSyncRequest()){
                 for (HTTP2Connection h : this.connectionList.values()){
@@ -281,8 +258,6 @@ public class HTTP2Request extends AbstractSampler implements TestStateListener, 
                     		saveConnectionCookies(r.getHttpFieldsResponse(), r.getURL(), getCookieManager());
                     		
                         }
-                        //Quita los pedidos que estaban pendientes de respuesta.
-                        h.setClean(true);
                     }
                 }
             } else {
@@ -291,27 +266,30 @@ public class HTTP2Request extends AbstractSampler implements TestStateListener, 
             }
         } catch (Exception e) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
             return errorResult(e, sampleResult);
         }
 
         return sampleResult;
     }
     
+    public HTTP2Connection getConnection(){
+    	return http2Connection;
+    }
 
-	private HTTP2Connection getConnection(URL url, HTTP2SampleResult sampleResult) {
+    public void addConnection(String id, HTTP2Connection connection){
+    	connectionList.put(id, connection);
+    }
+    
+	public void setConnection(URL url, HTTP2SampleResult sampleResult) {
 
     	String host = url.getHost().replaceAll("\\[", "").replaceAll("\\]", "");
     	int port = url.getPort();
     	
     	if (port == -1)
     		port = url.getDefaultPort();
-    
-    	
+        	
     	String connectionId = getThreadName() + host + port;
 
-    	
-    	HTTP2Connection http2Connection = null;
     	long connectTime=0;
     	if (connectionList.containsKey(connectionId)){
     		http2Connection = connectionList.get(connectionId);
@@ -325,25 +303,22 @@ public class HTTP2Request extends AbstractSampler implements TestStateListener, 
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-    		return http2Connection;
+    	} else {
+    		try {
+        		//TODO manejar cuando no es SSL
+    			http2Connection = new HTTP2Connection(connectionId,true);
+    			long startConnectTime= sampleResult.currentTimeInMillis();
+    			http2Connection.connect(host, port);
+    			long endConnectTime=sampleResult.currentTimeInMillis();
+    			connectTime= endConnectTime - startConnectTime;
+    			this.connectionList.put(connectionId, http2Connection);
+    		} catch (Exception e) {
+    			// TODO Auto-generated catch block
+    			http2Connection = null;
+    			e.printStackTrace();
+    		}
+        	sampleResult.setConnectTime(connectTime);
     	}
-    	
-    	
-    	try {
-    		//TODO manejar cuando no es SSL
-			http2Connection = new HTTP2Connection(connectionId,true);
-			long startConnectTime= sampleResult.currentTimeInMillis();
-			http2Connection.connect(host, port);
-			long endConnectTime=sampleResult.currentTimeInMillis();
-			connectTime= endConnectTime - startConnectTime;
-			this.connectionList.put(connectionId, http2Connection);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			http2Connection = null;
-			e.printStackTrace();
-		}
-    	sampleResult.setConnectTime(connectTime);
-    	return http2Connection;
 
 	}
 
@@ -381,21 +356,6 @@ public class HTTP2Request extends AbstractSampler implements TestStateListener, 
         }
         pathAndQuery.append(path);
 
-        // Add the query string if it is a HTTP GET
-        /*if (HTTPConstants.GET.equals(getMethod())) {
-            // Get the query string encoded in specified encoding
-            // If no encoding is specified by user, we will get it
-            // encoded in UTF-8, which is what the HTTP spec says
-            String queryString = getQueryString(getContentEncoding());
-            if (queryString.length() > 0) {
-                if (path.contains(QRY_PFX)) {// Already contains a prefix
-                    pathAndQuery.append(QRY_SEP);
-                } else {
-                    pathAndQuery.append(QRY_PFX);
-                }
-                pathAndQuery.append(queryString);
-            }
-        }*/
         // If default port for protocol is used, we do not include port in URL
         if (isProtocolDefaultPort()) {
             return new URL(protocol, domain, pathAndQuery.toString());
@@ -470,64 +430,6 @@ public class HTTP2Request extends AbstractSampler implements TestStateListener, 
     }
     
     /**
-     * Gets the QueryString attribute of the UrlConfig object, using the
-     * specified encoding to encode the parameter values put into the URL
-     *
-     * @param contentEncoding the encoding to use for encoding parameter values
-     * @return the QueryString value
-     */
-    public String getQueryString(String contentEncoding) {
-        // Check if the sampler has a specified content encoding
-        if (JOrphanUtils.isBlank(contentEncoding)) {
-            // We use the encoding which should be used according to the HTTP spec, which is UTF-8
-            contentEncoding = EncoderCache.URL_ARGUMENT_ENCODING;
-        }
-        StringBuilder buf = new StringBuilder();
-        PropertyIterator iter = getArguments().iterator();
-        boolean first = true;
-        while (iter.hasNext()) {
-            HTTPArgument item = null;
-            /*
-             * N.B. Revision 323346 introduced the ClassCast check, but then used iter.next()
-             * to fetch the item to be cast, thus skipping the element that did not cast.
-             * Reverted to work more like the original code, but with the check in place.
-             * Added a warning message so can track whether it is necessary
-             */
-            Object objectValue = iter.next().getObjectValue();
-            try {
-                item = (HTTPArgument) objectValue;
-            } catch (ClassCastException e) {
-                log.warn("Unexpected argument type: " + objectValue.getClass().getName());
-                item = new HTTPArgument((Argument) objectValue);
-            }
-            final String encodedName = item.getEncodedName();
-            if (encodedName.length() == 0) {
-                continue; // Skip parameters with a blank name (allows use of optional variables in parameter lists)
-            }
-            if (!first) {
-                buf.append(QRY_SEP);
-            } else {
-                first = false;
-            }
-            buf.append(encodedName);
-            if (item.getMetaData() == null) {
-                buf.append(ARG_VAL_SEP);
-            } else {
-                buf.append(item.getMetaData());
-            }
-
-            // Encode the parameter value in the specified content encoding
-            try {
-                buf.append(item.getEncodedValue(contentEncoding));
-            } catch(UnsupportedEncodingException e) {
-                log.warn("Unable to encode parameter in encoding " + contentEncoding + ", parameter value not included in query string");
-            }
-        }
-        return buf.toString();
-    }
-
-
-    /**
      * Determine if the file should be sent as the entire Content body,
      * i.e. without any additional wrapping.
      *
@@ -592,14 +494,6 @@ public class HTTP2Request extends AbstractSampler implements TestStateListener, 
         return getPropertyAsString(REQUEST_ID);
     }
 
-    private String getContentEncodingOrNull() {
-        String ce = getContentEncoding();
-        if ((ce == null) || (ce == "")) {
-            return null;
-        } else {
-            return ce;
-        }
-    }
 
     public String getContentEncoding() {
         return getPropertyAsString(CONTENT_ENCODING, "UTF-8");
@@ -621,7 +515,7 @@ public class HTTP2Request extends AbstractSampler implements TestStateListener, 
         return getPropertyAsBoolean(SYNCREQUEST);
     }
 
-    private HeaderManager getHeaderManager() {
+    public HeaderManager getHeaderManager() {
         return (HeaderManager) getProperty(HTTP2Request.HEADER_MANAGER).getObjectValue();
     }
 
@@ -641,12 +535,6 @@ public class HTTP2Request extends AbstractSampler implements TestStateListener, 
 
     @Override
     public void testStarted(String host) {
-        /*try {
-            setProperty(RESPONSE_TIMEOUT, Integer.parseInt(getResponseTimeout()));
-        } catch (NumberFormatException ex) {
-            log.warn("Response timeout is not a number; using the default response timeout of " + DEFAULT_RESPONSE_TIMEOUT + " ms");
-            setProperty(RESPONSE_TIMEOUT, DEFAULT_RESPONSE_TIMEOUT);
-        }*/
        connectionList = new ConcurrentHashMap<String, HTTP2Connection>();
     }
 
@@ -740,32 +628,16 @@ public class HTTP2Request extends AbstractSampler implements TestStateListener, 
 
     }
     
-    private void saveConnectionCookies(HttpFields hdrsResponse, URL url, CookieManager cookieManager) {
+    public void saveConnectionCookies(HttpFields hdrsResponse, URL url, CookieManager cookieManager) {
         if (cookieManager != null) {
         	List<String> hdrs = hdrsResponse.getValuesList(HTTPConstants.HEADER_SET_COOKIE);
         	Iterator iter=hdrs.iterator();
         	while (iter.hasNext())
-        		cookieManager.addCookieFromHeader((String) iter.next(),url);
+        		cookieManager.addCookieFromHeader((String) iter.next(), url);
         }
 
     }
 
-    private DataPostContent buildPostContent(){
-        // Buffer to hold the post body, except file content
-        StringBuilder postedBody = new StringBuilder(1000);
-        HTTPFileArg[] files = getHTTPFiles();
-
-        final String contentEncoding = getContentEncodingOrNull();
-        final boolean haveContentEncoding = contentEncoding != null;
-
-        if(getUseMultipartForPost()) {
-            //TODO Resolver que hacer con multipart
-        }else{
-
-        }
-        return null;
-
-    }
     
 
     public void setEmbeddedResources(boolean embeddedResources) {

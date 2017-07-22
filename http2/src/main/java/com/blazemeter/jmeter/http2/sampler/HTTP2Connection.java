@@ -41,25 +41,11 @@ public class HTTP2Connection {
 	private Map<Integer, HTTP2StreamHandler> streamHandlers = new ConcurrentHashMap<>();
 	private List<DataCallBack> callbackHandler = new ArrayList<DataCallBack>();
 	private int frameSize = 1024;
-	private boolean clean;
 
 	public synchronized Collection<HTTP2StreamHandler> addPendingResponses(HTTP2SampleResult pendingResponse,
 			HTTP2StreamHandler streamHandler, boolean isSec) {
 		if (!((pendingResponse == null) && (streamHandler == null))) {
 			if (!isSec) {
-				if (this.clean) {
-					List<Integer> deleted = new ArrayList<>();
-					pendingResponses.forEach((integer, http2SampleResult) -> {
-						if (!http2SampleResult.isPendingResponse()) {
-							streamHandlers.remove(integer);
-							deleted.add(integer);
-						}
-					});
-					for (Integer i : deleted) {
-						pendingResponses.remove(i);
-					}
-					this.setClean(false);
-				}
 				this.pendingResponses.put(pendingResponse.getId(), pendingResponse);
 			}
 			this.streamHandlers.put(pendingResponse.getId(), streamHandler);
@@ -69,9 +55,6 @@ public class HTTP2Connection {
 		}
 	}
 
-	public int getFrameSize() {
-		return frameSize;
-	}
 
 	public void setFrameSize(int frameSize) {
 		this.frameSize = frameSize;
@@ -88,7 +71,6 @@ public class HTTP2Connection {
 	public HTTP2Connection(String connectionId, boolean isSSL) throws Exception {
 		this.session = null;
 		this.connectionId = connectionId;
-		this.clean = false;
 		this.isSSL = isSSL;
 		this.http2SettingsHandler = new HTTP2SettingsHandler(this);
 		this.client = new HTTP2Client();
@@ -102,22 +84,6 @@ public class HTTP2Connection {
 
 	public String getConnectionId() {
 		return connectionId;
-	}
-
-	public void setConnectionId(String connectionId) {
-		this.connectionId = connectionId;
-	}
-
-	public void setSettings(List<String> settings) {
-
-	}
-
-	public boolean isClean() {
-		return clean;
-	}
-
-	public void setClean(boolean clean) {
-		this.clean = clean;
 	}
 
 	public void connect(String hostname, int port) throws InterruptedException, ExecutionException, TimeoutException {
@@ -142,18 +108,18 @@ public class HTTP2Connection {
 			DataFrame data = new DataFrame(streamID,
 					ByteBuffer.wrap(dataPostContent.getPayload(), 0, dataPostContent.getPayload().length), true);
 			actualStream.data(data, dataCallback);
-			callbackHandler.add(dataCallback);
-			sampleResult.setQueryString(data.toString());// TODO revisar si es
-															// este metodo
-			sampleResult.setBytes(sampleResult.getBytesAsLong() + (long) sampleResult.getQueryString().length()); // add
-																													// byte
-																													// size
-																													// of
-																													// the
-																													// queryString
+			this.addDataCallbackHandler(dataCallback);
+			sampleResult.setQueryString(data.toString());// TODO revisar si es este metodo
+			// add byte size of the queryString
+			sampleResult.setBytes(sampleResult.getBytesAsLong() + (long) sampleResult.getQueryString().length()); 
 		}
 
 	}
+
+	public void addDataCallbackHandler(DataCallBack dataCallback) {
+		callbackHandler.add(dataCallback);
+	}
+
 
 	public void send(String method, URL url, HeaderManager headerManager, CookieManager cookieManager,
 			DataPostContent dataPostContent, HTTP2SampleResult sampleResult, boolean secondaryRequest, int timeout)
@@ -162,7 +128,6 @@ public class HTTP2Connection {
 		HttpFields requestFields = new HttpFields();
 
 		String headerString = "";
-		String requestString = "";
 
 		if (headerManager != null) {
 			CollectionProperty headers = headerManager.getHeaders();
@@ -202,43 +167,38 @@ public class HTTP2Connection {
 		MetaData.Request metaData = null;
 		boolean endOfStream = true;
 		switch (method) {
-		case "GET":
-			metaData = new MetaData.Request("GET", new HttpURI(url.toString()), HttpVersion.HTTP_2, requestFields);
-			break;
-		case "HEAD":
-			break;
-		case "POST":
-			metaData = new MetaData.Request("POST", new HttpURI(url.toString()), HttpVersion.HTTP_2, requestFields);
-			endOfStream = false;
-			break;
-		case "PUT":
-			break;
-		case "DELETE":
-			break;
-		case "CONNECT":
-			break;
-		case "OPTIONS":
-			break;
-		case "TRACE":
-			break;
-		case "PATCH":
-			break;
-		default:
-			break;
+			case "GET":
+				metaData = new MetaData.Request("GET", new HttpURI(url.toString()), HttpVersion.HTTP_2, requestFields);
+				break;
+			case "HEAD":
+				break;
+			case "POST":
+				metaData = new MetaData.Request("POST", new HttpURI(url.toString()), HttpVersion.HTTP_2, requestFields);
+				endOfStream = false;
+				break;
+			case "PUT":
+				break;
+			case "DELETE":
+				break;
+			case "CONNECT":
+				break;
+			case "OPTIONS":
+				break;
+			case "TRACE":
+				break;
+			case "PATCH":
+				break;
+			default:
+				break;
 		}
 
 		HeadersFrame headersFrame = new HeadersFrame(metaData, null, endOfStream);
 		sampleResult.setRequestHeaders(headerString);
-		sampleResult.setBytes(sampleResult.getBytesAsLong() + (long) headerString.length()); // add
-																								// byte
-																								// size
-																								// of
-																								// headerRequest
+		sampleResult.setBytes(sampleResult.getBytesAsLong() + (long) headerString.length());
 
 		FuturePromise<Stream> streamPromise = new FuturePromise<>();
 
-		HTTP2StreamHandler http2StreamHandler = new HTTP2StreamHandler(this, url, headerManager, cookieManager,
-				requestString, false, sampleResult);
+		HTTP2StreamHandler http2StreamHandler = new HTTP2StreamHandler(this, url, headerManager, cookieManager, false, sampleResult);
 		http2StreamHandler.setTimeout(timeout);
 		sampleResult.setCookies(cookieHeader);
 		addPendingResponses(sampleResult, http2StreamHandler, secondaryRequest);
@@ -270,11 +230,9 @@ public class HTTP2Connection {
 					h.getCompletedFuture().get(h.getTimeout(), TimeUnit.MILLISECONDS);
 				} catch (ExecutionException | TimeoutException e) {
 					// TODO Auto-generated catch block
-					HTTP2SampleResult sample = h.getHTTP2SampelResult();
-					pendingResponses.remove(sample.getId()); // remove the
-																// request that
-																// received
-																// timeout
+					HTTP2SampleResult sample = h.getHTTP2SampleResult();
+					// remove the request that received timeout
+					pendingResponses.remove(sample.getId());  
 					streamHandlers.remove(sample.getId());
 					if (e instanceof TimeoutException) {
 						sample = HTTP2SampleResult.errorResult(e, sample);

@@ -153,7 +153,7 @@ public class ResultCollector extends org.apache.jmeter.reporters.ResultCollector
 		summariser = summer;
 	}
 
-	private void setFilenameProperty(String f) {
+	public void setFilenameProperty(String f) {
 		setProperty(FILENAME, f);
 	}
 
