@@ -3,6 +3,7 @@ Consolidated repository with all CA BlazeMeter's plugins for JMeter. All of the 
 
 Contents:
  - [Directory Listing Data Source](directory-listing/DirectoryListing.md)
+ - [Parallel Controller](parallel/Parallel.md)
  - [Rotating JTL File Listener](rotating-listener/RotatingListener.md)
  - [Weighted Switch Controller](wsc/WeightedSwitchController.md)
  - [XMPP Connection](xmpp/XMPPConnection.md) and [XMPP Sampler](xmpp/XMPPSampler.md)  
