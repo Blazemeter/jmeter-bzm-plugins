@@ -19,6 +19,9 @@ public class ParallelListenerNotifier extends ListenerNotifier {
         log.debug("Adding subresult " + res.getResult());
         synchronized (this) {
             container.addSubResult(res.getResult());
+            if (!res.getResult().isSuccessful()) {
+                container.setSuccessful(false);
+            }
         }
         super.notifyListeners(res, listeners);
         log.debug("Added subresult " + res.getResult());

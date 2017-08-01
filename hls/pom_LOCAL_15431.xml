@@ -4,11 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.blazemeter.jmeter</groupId>
-<<<<<<< HEAD
 	<artifactId>hls</artifactId>
-=======
-	<artifactId>jmeter-hls</artifactId>
->>>>>>> 6af3e14d715fa8bb953849161e914ae9e04f7300
 	<version>1.0</version>
 
 	<build>
