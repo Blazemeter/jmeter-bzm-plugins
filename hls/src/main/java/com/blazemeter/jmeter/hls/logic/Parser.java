@@ -1,13 +1,22 @@
 package com.blazemeter.jmeter.hls.logic;
 
+<<<<<<< HEAD
+//import org.apache.http.protocol.BasicHttpContext;
+//import org.apache.http.protocol.HttpContext;
+=======
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
+>>>>>>> 6af3e14d715fa8bb953849161e914ae9e04f7300
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+<<<<<<< HEAD
+import java.io.Serializable;
+=======
+>>>>>>> 6af3e14d715fa8bb953849161e914ae9e04f7300
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -20,7 +29,11 @@ import java.util.regex.Pattern;
 
 import static org.apache.http.protocol.HTTP.USER_AGENT;
 
+<<<<<<< HEAD
+public class Parser implements Serializable {
+=======
 public class Parser {
+>>>>>>> 6af3e14d715fa8bb953849161e914ae9e04f7300
     private float duration = -1;
 	private float actualDuration = 0;
 	private static final Pattern PORT_PATTERN = Pattern.compile("\\d+");
@@ -29,7 +42,11 @@ public class Parser {
 	private static final String PROXY_CONNECTION = "proxy-connection"; // $NON-NLS-1$
 	private final Map<String, String> headers = new HashMap<>();
 
+<<<<<<< HEAD
+
+=======
 	HttpContext localContext = new BasicHttpContext();
+>>>>>>> 6af3e14d715fa8bb953849161e914ae9e04f7300
 
 	public Parser() {
 	}
