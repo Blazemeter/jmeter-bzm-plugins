@@ -13,7 +13,7 @@ import org.apache.jmeter.testelement.property.TestElementProperty;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 
-import blazemeter.jmeter.plugins.websocket.sampler.WebSocketConnectionSampler;
+//import blazemeter.jmeter.plugins.websocket.sampler.WebSocketConnectionSampler;
 
 
 public class WebSocketConnectionConfigGui extends AbstractConfigGui {
@@ -34,7 +34,7 @@ public class WebSocketConnectionConfigGui extends AbstractConfigGui {
 
     @Override
     public String getStaticLabel() {
-        return "WebSocket Connection Config";
+        return "WebSocket/MQTT Connection Config";
     }
     
     @Override
@@ -52,10 +52,13 @@ public class WebSocketConnectionConfigGui extends AbstractConfigGui {
             webSocketConnectionConfigPanel.setConnectionTimeout(configTestElement.getPropertyAsString("WebSocketConnectionConfig.ConnectionTimeout"));
             webSocketConnectionConfigPanel.setProtocol(configTestElement.getPropertyAsString("WebSocketConnectionConfig.Protocol"));
             webSocketConnectionConfigPanel.setPath(configTestElement.getPropertyAsString("WebSocketConnectionConfig.Path"));
+            webSocketConnectionConfigPanel.setTopic(configTestElement.getPropertyAsString("WebSocketConnectionConfig.Topic"));
             webSocketConnectionConfigPanel.setContentEncoding(configTestElement.getPropertyAsString("WebSocketConnectionConfig.Encoding"));
             webSocketConnectionConfigPanel.setImplementation(configTestElement.getPropertyAsString("WebSocketConnectionConfig.Implementation"));
             webSocketConnectionConfigPanel.setCloseConnectionPattern(configTestElement.getPropertyAsString("WebSocketConnectionConfig.CloseConnectionPattern"));
-
+            webSocketConnectionConfigPanel.setProtocolWSMQTTComboBox(configTestElement.getPropertyAsString("WebSocketConnectionConfig.ProtocolWSMQTTComboBox"));
+            webSocketConnectionConfigPanel.setLogLevel(configTestElement.getPropertyAsString("WebSocketConnectionConfig.LogLevel"));
+           
             Arguments queryStringParameters = (Arguments) configTestElement.getProperty("WebSocketConnectionConfig.HTTPRequest.ARGUMENTS").getObjectValue();
             if (queryStringParameters != null) {
                 webSocketConnectionConfigPanel.getAttributePanel().configure(queryStringParameters);
@@ -86,13 +89,16 @@ public class WebSocketConnectionConfigGui extends AbstractConfigGui {
         	configTestElement.setProperty("WebSocketConnectionConfig.Server", webSocketConnectionConfigPanel.getServer());
         	configTestElement.setProperty("WebSocketConnectionConfig.Port", webSocketConnectionConfigPanel.getPort());
         	configTestElement.setProperty("WebSocketConnectionConfig.ConnectionTimeout", webSocketConnectionConfigPanel.getConnectionTimeout());
-        	configTestElement.setProperty("WebSocketConnectionConfig.Protocol", webSocketConnectionConfigPanel.getProtocol());
+        	configTestElement.setProperty("WebSocketConnectionConfig.Protocol", webSocketConnectionConfigPanel.getProtocolSelected());
         	configTestElement.setProperty("WebSocketConnectionConfig.Path", webSocketConnectionConfigPanel.getPath());
+        	configTestElement.setProperty("WebSocketConnectionConfig.Topic", webSocketConnectionConfigPanel.getTopic());
         	configTestElement.setProperty("WebSocketConnectionConfig.Encoding", webSocketConnectionConfigPanel.getContentEncoding());
         	configTestElement.setProperty("WebSocketConnectionConfig.Implementation", webSocketConnectionConfigPanel.getImplementation());
             configTestElement.setProperty("WebSocketConnectionConfig.CloseConnectionPattern", webSocketConnectionConfigPanel.getCloseConnectionPattern());
-
-
+            configTestElement.setProperty("WebSocketConnectionConfig.ProtocolWSMQTTComboBox", webSocketConnectionConfigPanel.getProtocolWSMQTTComboBox());
+            configTestElement.setProperty("WebSocketConnectionConfig.LogLevel", webSocketConnectionConfigPanel.getLogLevel());
+            
+            
             HTTPArgumentsPanel queryStringParameters = webSocketConnectionConfigPanel.getAttributePanel();
             if (queryStringParameters != null) {
             	configTestElement.setProperty(new TestElementProperty("WebSocketConnectionConfig.HTTPRequest.ARGUMENTS", (Arguments)queryStringParameters.createTestElement()));
