@@ -4,21 +4,14 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.blazemeter.jmeter</groupId>
-<<<<<<< HEAD
-	<artifactId>http2</artifactId>
-=======
 	<artifactId>jmeter-bzm-http2</artifactId>
->>>>>>> 6af3e14d715fa8bb953849161e914ae9e04f7300
 	<packaging>jar</packaging>
 	<version>1.0</version>
 	<name>HTTP/2 Sampler as JMeter Plugin</name>
 
 	<properties>
 		<version.org.apache.jmeter.all>3.2</version.org.apache.jmeter.all>
-<<<<<<< HEAD
-=======
 		<netty.version>9.4.0.v20161208</netty.version>
->>>>>>> 6af3e14d715fa8bb953849161e914ae9e04f7300
 	</properties>
 
 	<dependencies>
@@ -39,91 +32,55 @@
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-client</artifactId>
-<<<<<<< HEAD
-			<version>9.4.0.v20161208</version>
-=======
 			<version>${netty.version}</version>
->>>>>>> 6af3e14d715fa8bb953849161e914ae9e04f7300
 		</dependency>
 
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-util</artifactId>
-<<<<<<< HEAD
-			<version>9.4.0.v20161208</version>
-=======
 			<version>${netty.version}</version>
->>>>>>> 6af3e14d715fa8bb953849161e914ae9e04f7300
 		</dependency>
 
 		<dependency>
 			<groupId>org.eclipse.jetty.http2</groupId>
 			<artifactId>http2-client</artifactId>
-<<<<<<< HEAD
-			<version>9.4.0.v20161208</version>
-=======
 			<version>${netty.version}</version>
->>>>>>> 6af3e14d715fa8bb953849161e914ae9e04f7300
 		</dependency>
 
 		<dependency>
 			<groupId>org.eclipse.jetty.http2</groupId>
 			<artifactId>http2-common</artifactId>
-<<<<<<< HEAD
-			<version>9.4.0.v20161208</version>
-=======
 			<version>${netty.version}</version>
->>>>>>> 6af3e14d715fa8bb953849161e914ae9e04f7300
 		</dependency>
 
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-http</artifactId>
-<<<<<<< HEAD
-			<version>9.4.0.v20161208</version>
-=======
 			<version>${netty.version}</version>
->>>>>>> 6af3e14d715fa8bb953849161e914ae9e04f7300
 		</dependency>
 
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-io</artifactId>
-<<<<<<< HEAD
-			<version>9.4.0.v20161208</version>
-=======
 			<version>${netty.version}</version>
->>>>>>> 6af3e14d715fa8bb953849161e914ae9e04f7300
 		</dependency>
 
 		<dependency>
 			<groupId>org.eclipse.jetty.http2</groupId>
 			<artifactId>http2-hpack</artifactId>
-<<<<<<< HEAD
-			<version>9.4.0.v20161208</version>
-=======
 			<version>${netty.version}</version>
->>>>>>> 6af3e14d715fa8bb953849161e914ae9e04f7300
 		</dependency>
 
 		<dependency>
 			<groupId>org.eclipse.jetty.osgi</groupId>
 			<artifactId>jetty-osgi-alpn</artifactId>
-<<<<<<< HEAD
-			<version>9.4.0.v20161208</version>
-=======
 			<version>${netty.version}</version>
->>>>>>> 6af3e14d715fa8bb953849161e914ae9e04f7300
 		</dependency>
 
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-alpn-client</artifactId>
-<<<<<<< HEAD
-			<version>9.4.0.v20161208</version>
-=======
 			<version>${netty.version}</version>
->>>>>>> 6af3e14d715fa8bb953849161e914ae9e04f7300
 		</dependency>
 		
 		<dependency>
@@ -132,10 +89,6 @@
 			<version>2.8.47</version>
 			<scope>test</scope>
 		</dependency>
-<<<<<<< HEAD
-		
-=======
->>>>>>> 6af3e14d715fa8bb953849161e914ae9e04f7300
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -146,14 +99,9 @@
 		<dependency>
             <groupId>kg.apc</groupId>
             <artifactId>jmeter-plugins-cmn-jmeter</artifactId>
-<<<<<<< HEAD
-            <version>0.3</version>
-        </dependency>
-=======
             <version>0.5</version>
         </dependency>
 
->>>>>>> 6af3e14d715fa8bb953849161e914ae9e04f7300
         <dependency>
             <groupId>kg.apc</groupId>
             <artifactId>jmeter-plugins-emulators</artifactId>
