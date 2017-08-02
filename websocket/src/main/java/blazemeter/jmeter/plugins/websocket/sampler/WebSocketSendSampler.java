@@ -70,9 +70,9 @@ public class WebSocketSendSampler extends WebSocketAbstractSampler {
     	
     	sampleResult.sampleStart();
     	
-    	WebSocketConnection webSocketConnection;
+    	Handler handler;
 		try {
-			webSocketConnection = getConnection (connectionId);
+			handler = getConnection (connectionId);
 		} catch (Exception e) {
 			sampleResult.setSuccessful(false);
 			sampleResult.setResponseMessage(e.getMessage());
@@ -81,56 +81,55 @@ public class WebSocketSendSampler extends WebSocketAbstractSampler {
 	    	return sampleResult;
 		}
 		
-		if (webSocketConnection == null){
+		if (handler == null){
 			sampleResult.setSuccessful(false);
 			sampleResult.setResponseMessage("Connection error");
 	    	sampleResult.sampleEnd();
 	    	return sampleResult;
 		}
     	
-    	sampleResult.setDataEncoding(webSocketConnection.getContentEncoding());
+    	sampleResult.setDataEncoding(handler.getContentEncoding());
     	
-    	webSocketConnection.initialize();
+    	handler.initialize();
     	
     	String payload = getPayloadContent();
     	try {
     	
 	    	if (!payload.isEmpty()){	
-		    		if (!webSocketConnection.isConnected()){
-		    			sampleResult.setSuccessful(false);
-			    		sampleResult.setResponseMessage("Connection is closed");
-			    		sampleResult.sampleEnd();
-			    		return sampleResult;
-		    		}
-		    		
-		    		int responseTimeout;
-		    		
-		    		try {
-		    			responseTimeout = Integer.parseInt(getResponseTimeout());
-		    		}catch(NumberFormatException e){
-		    			log.warn("Request timeout is not a number; using the default request timeout of " + DEFAULT_RESPONSE_TIMEOUT + "ms");
-		                responseTimeout = DEFAULT_RESPONSE_TIMEOUT;
-		    		}
-		    		
-		    		webSocketConnection.sendMessage(payload);
-		    		
-		    		if (getWaitUntilResponse()){
-	    				if (!webSocketConnection.awaitMessage(responseTimeout, TimeUnit.MILLISECONDS, getResponsePattern())){
-	    					sampleResult.setSuccessful(false);
-	    		    		sampleResult.setResponseMessage("Response timeout");
-	    		    		sampleResult.sampleEnd();
-	    		    		return sampleResult;
-	    				}
-	    				sampleResult.setResponseData(webSocketConnection.getMessages(), webSocketConnection.getContentEncoding());
-		    		} 
-		    	} 
-			}catch (Exception e) {
-				sampleResult.setSuccessful(false);
-	    		sampleResult.setResponseMessage(e.getMessage());
-	    		sampleResult.sampleEnd();
-	    		return sampleResult;
-			}
-	    	
+	    		if (!handler.isConnected()){
+	    			sampleResult.setSuccessful(false);
+		    		sampleResult.setResponseMessage("Connection is closed");
+		    		sampleResult.sampleEnd();
+		    		return sampleResult;
+	    		}
+	    		
+	    		int responseTimeout;
+	    		
+	    		try {
+	    			responseTimeout = Integer.parseInt(getResponseTimeout());
+	    		}catch(NumberFormatException e){
+	    			log.warn("Request timeout is not a number; using the default request timeout of " + DEFAULT_RESPONSE_TIMEOUT + "ms");
+	                responseTimeout = DEFAULT_RESPONSE_TIMEOUT;
+	    		}
+	    		
+	    		handler.sendMessage(payload);
+	    		
+	    		if (getWaitUntilResponse()){
+    				if (!handler.awaitMessage(responseTimeout, TimeUnit.MILLISECONDS, getResponsePattern())){
+    					sampleResult.setSuccessful(false);
+    		    		sampleResult.setResponseMessage("Response timeout");
+    		    		sampleResult.sampleEnd();
+    		    		return sampleResult;
+    				}
+    				sampleResult.setResponseData(handler.getMessages(), handler.getContentEncoding());
+	    		} 
+	    	} 
+		}catch (Exception e) {
+			sampleResult.setSuccessful(false);
+    		sampleResult.setResponseMessage(e.getMessage());
+    		sampleResult.sampleEnd();
+    		return sampleResult;
+		}	
     		sampleResult.setSuccessful(true);
     		sampleResult.setResponseMessage("");
     		sampleResult.setRequestHeaders(payload);

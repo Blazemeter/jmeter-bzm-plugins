@@ -45,9 +45,9 @@ public class WebSocketCollectorSampler extends WebSocketAbstractSampler {
     	
     	sampleResult.sampleStart();
     	
-    	WebSocketConnection webSocketConnection;
+    	Handler handler;
 		try {
-			webSocketConnection = getConnection (connectionId);
+			handler = getConnection (connectionId);
 		} catch (Exception e) {
 			sampleResult.setSuccessful(false);
 			sampleResult.setResponseMessage(e.getMessage());
@@ -56,14 +56,14 @@ public class WebSocketCollectorSampler extends WebSocketAbstractSampler {
 	    	return sampleResult;
 		}
 		
-		if (webSocketConnection == null){
+		if (handler == null){
 			sampleResult.setSuccessful(false);
 			sampleResult.setResponseMessage("Connection error");
 	    	sampleResult.sampleEnd();
 	    	return sampleResult;
 		}
 		
-    	sampleResult.setDataEncoding(webSocketConnection.getContentEncoding());
+    	sampleResult.setDataEncoding(handler.getContentEncoding());
     	
     	int responseTimeout;
 		
@@ -76,7 +76,7 @@ public class WebSocketCollectorSampler extends WebSocketAbstractSampler {
     	
     	if (getWaitUntilMessage()){
 			try {
-				if (!webSocketConnection.awaitMessage(responseTimeout, TimeUnit.MILLISECONDS, getResponsePattern())){
+				if (!handler.awaitMessage(responseTimeout, TimeUnit.MILLISECONDS, getResponsePattern())){
 					sampleResult.setSuccessful(false);
 					sampleResult.setResponseMessage("Response timeout");
 					sampleResult.sampleEnd();
@@ -91,7 +91,7 @@ public class WebSocketCollectorSampler extends WebSocketAbstractSampler {
     	}
     	
     	if (getCloseConnection()){
-    		webSocketConnection.close();
+    		handler.close();
     	}
     	
     	try {
@@ -105,7 +105,7 @@ public class WebSocketCollectorSampler extends WebSocketAbstractSampler {
     	
     	sampleResult.setSuccessful(true);
 		sampleResult.setResponseMessage("");
-		sampleResult.setResponseData(webSocketConnection.getMessages(),webSocketConnection.getContentEncoding());
+		sampleResult.setResponseData(handler.getMessages(),handler.getContentEncoding());
 		sampleResult.sampleEnd();
     	
     	return sampleResult;

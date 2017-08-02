@@ -6,6 +6,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -32,6 +33,14 @@ import org.apache.log.Logger;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.websocket.client.ClientUpgradeRequest;
 import org.eclipse.jetty.websocket.client.WebSocketClient;
+import org.eclipse.paho.client.mqttv3.IMqttActionListener;
+import org.eclipse.paho.client.mqttv3.IMqttAsyncClient;
+import org.eclipse.paho.client.mqttv3.IMqttToken;
+import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+
+import io.inventit.dev.mqtt.paho.MqttWebSocketAsyncClient;
 
 public abstract class WebSocketAbstractSampler extends AbstractSampler implements TestStateListener, ThreadListener {
 
@@ -74,7 +83,7 @@ public abstract class WebSocketAbstractSampler extends AbstractSampler implement
     protected static final String NON_HTTP_RESPONSE_CODE = "Non HTTP response code";
     protected static final String NON_HTTP_RESPONSE_MESSAGE = "Non HTTP response message";
 	
-    protected static Map<String, WebSocketConnection> connectionList;
+    protected static Map<String, Handler> connectionList;
 	
 	
 	public WebSocketAbstractSampler() {
@@ -88,7 +97,7 @@ public abstract class WebSocketAbstractSampler extends AbstractSampler implement
 
 	    @Override
 	    public void testStarted(String host) {
-	        connectionList =  new ConcurrentHashMap<String, WebSocketConnection>();
+	        connectionList =  new ConcurrentHashMap<String, Handler>();
 	    }
 
 	    @Override
@@ -99,8 +108,8 @@ public abstract class WebSocketAbstractSampler extends AbstractSampler implement
 
 	    @Override
 	    public void testEnded(String host) {
-	    	for (WebSocketConnection wsc : connectionList.values()) {
-	            wsc.close();
+	    	for (Handler h : connectionList.values()) {
+	            h.close();
 	        }  
 	    }
 
@@ -114,11 +123,113 @@ public abstract class WebSocketAbstractSampler extends AbstractSampler implement
 
 	    }   
 	    
-	    public WebSocketConnection getConnection (String connectionId) throws Exception{
+	    public Handler getConnection (String connectionId) throws Exception{
 	    	
 	    	if (connectionList.containsKey(connectionId)){
 	    		return connectionList.get(connectionId);
 	    	}
+	    	
+	    	if(getProtocolWSMQTTComboBox().equals("Mqtt")){
+	    		return getMqttConnection(connectionId);
+	    	}
+	    	else if (getProtocolWSMQTTComboBox().equals("Web Socket")){
+	    		return getConnectionWS (connectionId);
+	    	}
+	    	
+	    	return null;
+	    }
+	    
+	    public MqttCallBackImpl getMqttConnection (String connectionId) throws Exception{
+	    	final int MAX_RETRIES = 10;
+	    	MqttCallBackImpl callBackConnection = null;
+	    	IMqttActionListener mConnectionCallback = new IMqttActionListener() {
+	    	    @Override
+	    	    public void onSuccess(IMqttToken asyncActionToken) {
+	    	        log.info("onSuccess " + asyncActionToken);
+	    	    }
+
+	    	    @Override
+	    	    public void onFailure(IMqttToken asyncActionToken, Throwable ex) {
+	    	        log.error("onFailure " + asyncActionToken, ex);
+	    	    }
+	    	};
+
+    		String mqttUrl = null;
+    		
+    		if(getProtocol().equals("tcp")){
+    			 mqttUrl = "tcp://" + getServer() + ":" + getPort();
+    		}else{
+	    		 mqttUrl = getUri().toString();			
+
+    		}
+
+    		int qos = 0;
+			String topic = getTopic();
+			MemoryPersistence persistence = new MemoryPersistence();
+			UUID uuid = UUID.randomUUID();
+	        String randomUUIDString = uuid.toString();
+	        String clientID = "clientId" + randomUUIDString;
+	        
+			log.info("PARAMS: "+mqttUrl+" "+topic+" "+clientID);
+			IMqttAsyncClient client = null;
+			
+			if(getProtocol().equals("tcp")){
+				client = new MqttAsyncClient(mqttUrl, clientID, persistence);
+    		}else{
+    			client = new MqttWebSocketAsyncClient (mqttUrl, clientID, persistence);
+    		}
+
+			log.info("IMqttAsyncClient CREATED");
+			callBackConnection = new MqttCallBackImpl(client,clientID,getLogLevel(),getContentEncoding());
+			client.setCallback(callBackConnection);
+			log.info("CLIENT CALLBACK SETTED: "+clientID+" "+getLogLevel());
+			
+			int connectionTimeout;
+			try {
+	    		connectionTimeout = Integer.parseInt(getConnectionTimeout());
+	        } catch (NumberFormatException ex) {
+	            log.warn("Request timeout is not a number; using the default connection timeout of " + DEFAULT_CONNECTION_TIMEOUT + "ms");
+	            connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
+	        }
+			
+			
+			MqttConnectOptions connOpts = new MqttConnectOptions();
+			log.info("CONNECTION CREATED");
+			callBackConnection.addMessage("CONNECTION CREATED");
+			connOpts.setConnectionTimeout(connectionTimeout);
+			connOpts.setCleanSession(true);
+			log.info("CONNECTION CONFIGURED WITH: Timeout: "+connectionTimeout+" cleanSession = TRUE");
+
+			client.connect(connOpts,null,mConnectionCallback);
+			log.info("CLIENT CONNECTING...");
+			int i=0;
+			while (!client.isConnected()&& i<=MAX_RETRIES){
+				
+				log.info("CONNECTION ATTEMPT: "+i);
+				i++;
+
+				Thread.sleep(1000);
+			}
+			if (i>MAX_RETRIES){
+				callBackConnection.addMessage("CLIENT COULD NOT CONNECT");
+				return null;
+			}
+
+			log.info("CLIENT HAS SUCCESSFULLY CONNECTED");
+			callBackConnection.addMessage("CLIENT HAS SUCCESSFULLY CONNECTED");
+			
+			client.subscribe(topic, qos);
+			log.info("CLIENT HAS SUBSCRIBED : TOPIC: "+topic+" QoS: "+qos);
+			callBackConnection.addMessage("CLIENT HAS SUBSCRIBED : TOPIC: "+topic+" QoS: "+qos);
+ 	    	
+	    	connectionList.put(connectionId, callBackConnection);
+	    	
+	    	return callBackConnection;
+	    }
+	    
+	    public WebSocketConnection getConnectionWS (String connectionId) throws Exception{
+	    	
+	    	
 	    	
 	    	URI uri = getUri();;
 	    
@@ -182,19 +293,18 @@ public abstract class WebSocketAbstractSampler extends AbstractSampler implement
 	        
 	        // HTTP URLs must be absolute, allow file to be relative
 	        if (!path.startsWith("/")) { // $NON-NLS-1$
-	            pathAndQuery.append("/"); // $NON-NLS-1$
+	           path = "/" + path;
 	        }
-	        pathAndQuery.append(path);
-
+	
 		    String queryString = getQueryString(getContentEncoding());
-		    if (queryString.length() > 0) {
-		        if (path.contains(QRY_PFX)) {// Already contains a prefix
-		            pathAndQuery.append(QRY_SEP);
-		        } else {
-		            pathAndQuery.append(QRY_PFX);
-		        }
-		        pathAndQuery.append(queryString);
-		    }
+//		    if (queryString.length() > 0) {
+//		        if (path.contains(QRY_PFX)) {// Already contains a prefix
+//		            pathAndQuery.append(QRY_SEP);
+//		        } else {
+//		            pathAndQuery.append(QRY_PFX);
+//		        }
+//		        pathAndQuery.append(queryString);
+//		    }
 		    
 	        // If default port for protocol is used, we do not include port in URL
 	        if (isProtocolDefaultPort()) {
@@ -327,6 +437,10 @@ public abstract class WebSocketAbstractSampler extends AbstractSampler implement
 	        return buf.toString();
 	    }
 
+	    public String getProtocolWSMQTTComboBox(){
+			return getPropertyAsString("WebSocketConnectionConfig.ProtocolWSMQTTComboBox");
+		}
+	    
 		public String getServer() {
 			return getPropertyAsString("WebSocketConnectionConfig.Server");
 		}
@@ -337,6 +451,10 @@ public abstract class WebSocketAbstractSampler extends AbstractSampler implement
 		
 		public String getPath() {
 			return getPropertyAsString("WebSocketConnectionConfig.Path");
+		}
+		
+		public String getTopic() {
+			return getPropertyAsString("WebSocketConnectionConfig.Topic");
 		}
 		
 		public String getImplementation() {
@@ -369,6 +487,10 @@ public abstract class WebSocketAbstractSampler extends AbstractSampler implement
 	    public CookieManager getCookieManager() {
 	        return (CookieManager) getProperty(this.COOKIE_MANAGER).getObjectValue();
 	    }
+	    
+	    public String getLogLevel(){
+			return getPropertyAsString("WebSocketConnectionConfig.LogLevel");
+		}
 	    
 		protected void setConnectionHeaders(ClientUpgradeRequest request, HeaderManager headerManager, CacheManager cacheManager) {
 	        if (headerManager != null) {

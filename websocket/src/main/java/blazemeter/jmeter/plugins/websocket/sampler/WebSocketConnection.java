@@ -1,8 +1,6 @@
 package blazemeter.jmeter.plugins.websocket.sampler;
 
 import java.io.IOException;
-import java.util.LinkedList;
-import java.util.Queue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -19,7 +17,7 @@ import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 
 @WebSocket(maxTextMessageSize = 256 * 1024 * 1024)
-public class WebSocketConnection {
+public class WebSocketConnection extends Handler {
 
 	private static final Logger log = LoggingManager.getLoggerForClass();
 	
@@ -37,10 +35,6 @@ public class WebSocketConnection {
 	private String waitResponsePatter;
 	private Pattern waitResponseExpresion;
 	
-	private String encoding;
-	
-	private Queue<String> messages = new LinkedList<String>();
-	
 	private boolean waitMessage;
 	
 	public WebSocketConnection(WebSocketClient webSocketClient, String closeConnectionPattern){
@@ -48,10 +42,10 @@ public class WebSocketConnection {
 	}
 	
 	public WebSocketConnection(WebSocketClient webSocketClient, String closeConnectionPattern, String encoding) {
+		super(encoding);
 		this.webSocketClient = webSocketClient;
 		this.closeConnectionPattern= new CompoundVariable(closeConnectionPattern).execute();
 		initializePatterns();
-		this.encoding = encoding;
 		this.waitMessage = false;
 	}
 	
@@ -97,15 +91,6 @@ public class WebSocketConnection {
         messages.add("[SEND at "+ System.currentTimeMillis() + "] " + message);
     }
 	
-    public String getMessages(){
-    	String ret = "";
-    	for (String s : messages){
-    		ret = ret + s + "\n";
-    	}
-    	messages.clear();
-    	return ret;
-    }
-    
     public boolean isConnected() {
         return connected;
     }
@@ -140,10 +125,7 @@ public class WebSocketConnection {
         }
     }
 	
-	public String getContentEncoding() {
-		return this.encoding;
-	}
-	
+
 	public boolean awaitOpen(int duration, TimeUnit unit) throws InterruptedException {
         boolean res = this.openLatch.await(duration, unit);
         return res;
