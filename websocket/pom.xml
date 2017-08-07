@@ -34,7 +34,17 @@
 		    <artifactId>websocket-client</artifactId>
 		    <version>${version.org.eclipse.jetty.all}</version>
 		</dependency>
-	
+		
+		<dependency>
+	        <groupId>org.eclipse.paho</groupId>
+	        <artifactId>org.eclipse.paho.client.mqttv3</artifactId>
+        	<version>1.0.2</version>
+        </dependency>
+        <dependency>
+		    <groupId>io.inventit.dev</groupId>
+		    <artifactId>mqtt-websocket-java</artifactId>
+		    <version>1.0.1</version>
+		</dependency>	
     </dependencies>
 
     <build>

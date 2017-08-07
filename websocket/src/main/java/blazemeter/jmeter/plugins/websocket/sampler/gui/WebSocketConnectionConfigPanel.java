@@ -3,10 +3,12 @@ package blazemeter.jmeter.plugins.websocket.sampler.gui;
 
 import java.awt.Component;
 
+import javax.swing.ButtonGroup;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 
 import org.apache.jmeter.config.Arguments;
@@ -16,12 +18,19 @@ import org.apache.jmeter.protocol.http.gui.HTTPArgumentsPanel;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jorphan.logging.LoggingManager;
-import org.apache.log.Logger;
+import com.googlecode.mp4parser.util.Logger;
 
 
 public class WebSocketConnectionConfigPanel extends javax.swing.JPanel {
     
-
+	JRadioButton ws = new JRadioButton("ws",true);
+    JRadioButton wss = new JRadioButton("wss");
+    JRadioButton tcp = new JRadioButton("tcp");
+    
+    private JLabel logLabel = new JLabel();
+	private JComboBox logComboBox = new JComboBox();
+	ButtonGroup group = new ButtonGroup();
+	
     private JPanel webServerPanel = new JPanel();
 	private JLabel serverLabel = new JLabel();
 	private JTextField server = new JTextField();
@@ -36,11 +45,15 @@ public class WebSocketConnectionConfigPanel extends javax.swing.JPanel {
 	private JLabel protocolLabel = new JLabel();
 	private JTextField protocol = new JTextField();
 	private JLabel pathLabel = new JLabel();
+	private JLabel topicLabel = new JLabel();
 	private JTextField path = new JTextField();
+	private JTextField topic = new JTextField();
 	private JLabel contentEncodingLabel = new JLabel();
 	private JTextField contentEncoding = new JTextField();
 	private JLabel implementationLabel = new JLabel();
 	private JComboBox implementationComboBox = new JComboBox();	
+	private JLabel protocolWSMQTTLabel = new JLabel();
+	private JComboBox protocolWSMQTTComboBox = new JComboBox();	
 	private HTTPArgumentsPanel attributePanel;
     private JPanel querystringAttributesPanel = new JPanel();
 	
@@ -62,7 +75,9 @@ public class WebSocketConnectionConfigPanel extends javax.swing.JPanel {
 
     private void initComponents() {
 
-     
+    	group.add(ws);
+        group.add(wss);
+        group.add(tcp);
 
         webServerPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(JMeterUtils.getResString("web_server")));
 
@@ -123,11 +138,13 @@ public class WebSocketConnectionConfigPanel extends javax.swing.JPanel {
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        requestPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("WebSocket Request"));
+        requestPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("WebSocket/MQTT Request"));
 
         protocolLabel.setText("Protocol [ws/wss]:");
 
-        pathLabel.setText(JMeterUtils.getResString("path"));
+        pathLabel.setText("Path:");
+        
+        topicLabel.setText("Topic:");
 
         contentEncodingLabel.setText(JMeterUtils.getResString("content_encoding"));
 
@@ -137,6 +154,13 @@ public class WebSocketConnectionConfigPanel extends javax.swing.JPanel {
 
         implementationComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Jetty" }));
 
+        protocolWSMQTTLabel.setText("Protocol:");
+
+        protocolWSMQTTComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Web Socket","Mqtt"}));
+        
+        logComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] {"info", "debug","none"}));
+        logLabel.setText("Log level");
+        
         javax.swing.GroupLayout requestPanelLayout = new javax.swing.GroupLayout(requestPanel);
         requestPanel.setLayout(requestPanelLayout);
 		requestPanelLayout.setHorizontalGroup(
@@ -150,9 +174,19 @@ public class WebSocketConnectionConfigPanel extends javax.swing.JPanel {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(implementationComboBox, 0, 1, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(protocolLabel)
+                        .addComponent(protocolWSMQTTLabel)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(protocol, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(protocolWSMQTTComboBox, 0, 1, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(logLabel)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(logComboBox, 0, 1, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(ws)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(wss)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(tcp)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(contentEncodingLabel)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -161,7 +195,11 @@ public class WebSocketConnectionConfigPanel extends javax.swing.JPanel {
                     .addGroup(requestPanelLayout.createSequentialGroup()
                         .addComponent(pathLabel)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(path)))
+                        .addComponent(path))
+	                .addGroup(requestPanelLayout.createSequentialGroup()
+	                        .addComponent(topicLabel)
+	                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+	                        .addComponent(topic)))
                 .addContainerGap())
         );
 		requestPanelLayout.setVerticalGroup(
@@ -169,16 +207,24 @@ public class WebSocketConnectionConfigPanel extends javax.swing.JPanel {
             .addGroup(requestPanelLayout.createSequentialGroup()
                 .addGap(10, 10, 10)
                 .addGroup(requestPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(protocolLabel)
-                    .addComponent(protocol, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(contentEncodingLabel)
-                    .addComponent(contentEncoding, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                		.addComponent(ws)
+                        .addComponent(wss)
+                        .addComponent(tcp, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(contentEncodingLabel)
+                        .addComponent(contentEncoding, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(logLabel)
+                        .addComponent(logComboBox,javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(protocolWSMQTTLabel)
+                        .addComponent(protocolWSMQTTComboBox,javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(implementationLabel)
                     .addComponent(implementationComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(requestPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(pathLabel)
                     .addComponent(path, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(requestPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(topicLabel)
+                        .addComponent(topic, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(querystringAttributesPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 102, Short.MAX_VALUE)
                 .addGap(8, 8, 8)
@@ -246,13 +292,15 @@ public class WebSocketConnectionConfigPanel extends javax.swing.JPanel {
     }
 
     public void initFields() {
-    	contentEncoding.setText("urf-8");
+    	contentEncoding.setText("utf-8");
     	path.setText("");
-    	protocol.setText("ws");
+    	topic.setText("");
+    	//protocol.setText("ws");
     	connectionTimeout.setText("");
     	server.setText("");
-    	port.setText("80");
+    	port.setText("");
     	implementationComboBox.setSelectedItem("Jetty");
+        protocolWSMQTTComboBox.setSelectedItem("Mqtt");
     	closePattern.setText("");
     	getAttributePanel().clear();
     	getPatternsPanel().clear();
@@ -273,9 +321,24 @@ public class WebSocketConnectionConfigPanel extends javax.swing.JPanel {
     public String getPath() {
         return path.getText();
     }
+    
+    public void setTopic(String topic) {
+        this.topic.setText(topic);
+    }
+
+    public String getTopic() {
+        return topic.getText();
+    }
 
     public void setProtocol(String protocolParam) {
-        protocol.setText(protocolParam);
+    	if (protocolParam.equals("tcp")){
+    		tcp.setSelected(true);
+    	}else if(protocolParam.equals("wss")){
+    		wss.setSelected(true);
+    	}else{
+    		ws.setSelected(true);;
+    	}   	 	
+    	
     }
 
     public String getProtocol() {
@@ -309,11 +372,43 @@ public class WebSocketConnectionConfigPanel extends javax.swing.JPanel {
     public void setImplementation(String implementationParam) {
         implementationComboBox.setSelectedItem(implementationParam);
     }
+    
+    public void setProtocolWSMQTTComboBox(String WSMQTTParam) {
+        protocolWSMQTTComboBox.setSelectedItem(WSMQTTParam);
+    }
+
+    public String getProtocolWSMQTTComboBox() {return (String) protocolWSMQTTComboBox.getSelectedItem();}
+    
+    public void setLogLevel(String logLevel){
+    	logComboBox.setSelectedItem(logLevel);
+    }
+    
+    public String getLogLevel(){
+    	return (String) logComboBox.getSelectedItem();
+    }
+    
+//    public  void setWs (boolean check) {ws.setSelected(check);}
+//    public boolean getWs() {return ws.isSelected();}
+
+    public String getProtocolSelected(){
+        if(ws.isSelected()){
+            return "ws";
+        } else if(wss.isSelected()){
+            return "wss";
+        }else {
+        	return "tcp";
+        }
+    }
+    
+    public void setProtocolSelected(){
+    	
+    }
+
 
     public String getImplementation() {
         return (String) implementationComboBox.getSelectedItem();
     }
-
+   
     /**
      * @return the attributePanel
      */
