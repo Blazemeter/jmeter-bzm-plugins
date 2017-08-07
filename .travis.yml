@@ -3,6 +3,10 @@ language: java
 jdk:
 - oraclejdk8
 
+before_install: 
+  - curl -O -L https://github.com/inventit/mqtt-websocket-java/releases/download/1.0.1/mqtt-websocket-java-1.0.1.jar
+  - mvn install:install-file -Dfile=mqtt-websocket-java-1.0.1.jar -DgroupId=io.inventit.dev -DartifactId=mqtt-websocket-java -Dversion=1.0.1 -Dpackaging=jar
+
 install: "mvn -Dmaven.test.skip=true clean install --batch-mode"
 script: "mvn -Djava.awt.headless=true -Dmaven.test.redirectTestOutputToFile=true -Dcobertura.report.format=xml --fail-at-end --batch-mode cobertura:cobertura test "
 

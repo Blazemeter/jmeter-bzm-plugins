@@ -44,9 +44,7 @@
 		    <groupId>io.inventit.dev</groupId>
 		    <artifactId>mqtt-websocket-java</artifactId>
 		    <version>1.0.1</version>
-		    <scope>system</scope>
-		    <systemPath>${project.basedir}/lib/mqtt-websocket-java-1.0.1.jar</systemPath>
-  		</dependency>	
+		</dependency>	
     </dependencies>
 
     <build>
