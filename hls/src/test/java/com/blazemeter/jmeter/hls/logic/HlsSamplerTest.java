@@ -40,6 +40,7 @@ public class HlsSamplerTest {
 		sampler.setUrlVideoType("Bandwidth");
 		sampler.setPRotocol("https");
 		sampler.setPlaySecondsData("20");
+		sampler.setVideoDuration(true);
 		sampler.setParser(parserMock);
 		sampler.setName("Test");
 	}

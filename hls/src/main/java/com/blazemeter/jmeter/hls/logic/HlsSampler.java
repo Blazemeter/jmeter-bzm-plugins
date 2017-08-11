@@ -182,13 +182,16 @@ public class HlsSampler extends AbstractSampler {
 					if (!isPresent) {
 						fragmentToDownload.add(frag);
 						fragmentsDownloaded.add(frag.getTsUri().trim());
-						currenTimeseconds += Float.parseFloat(frag.getDuration());
+						if(getVideoDuration()) {
+							currenTimeseconds += Float.parseFloat(frag.getDuration());
+						}
 					}
 				}
-					List<SampleResult> videoFragment = getFragments(parser, fragmentToDownload, auxPath);
-					for (SampleResult sam : videoFragment) {
-						playListResult.addSubResult(sam);
-					}
+
+				List<SampleResult> videoFragment = getFragments(parser, fragmentToDownload, auxPath);
+				for (SampleResult sam : videoFragment) {
+					playListResult.addSubResult(sam);
+				}
 
 				if(!list.contains(playListResult.getSampleLabel()))
 				{
