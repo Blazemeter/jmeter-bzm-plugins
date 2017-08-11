@@ -1,10 +1,6 @@
 package com.blazemeter.jmeter.hls.logic;
 
-//import org.apache.http.protocol.BasicHttpContext;
-//import org.apache.http.protocol.HttpContext;
 import org.apache.jmeter.samplers.SampleResult;
-import org.apache.jorphan.logging.LoggingManager;
-import org.apache.log.Logger;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -13,27 +9,18 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.apache.http.protocol.HTTP.USER_AGENT;
 
 public class Parser implements Serializable {
-    private float duration = -1;
-	private float actualDuration = 0;
-	private static final Pattern PORT_PATTERN = Pattern.compile("\\d+");
-	private static final String USER_TOKEN = "__jmeter.USER_TOKEN__"; //$NON-NLS-1$
-	private static final Logger log = LoggingManager.getLoggerForClass();
-	private static final String PROXY_CONNECTION = "proxy-connection"; // $NON-NLS-1$
-	private final Map<String, String> headers = new HashMap<>();
-
 
 
 	public Parser() {
 	}
+
 
 	// HTTP GET request
 	public DataRequest getBaseUrl(URL url, SampleResult sampleResult, boolean setRequest) throws IOException {
@@ -86,7 +73,7 @@ public class Parser implements Serializable {
 		result.setResponseMessage(con.getResponseMessage());
 		result.setContentType(con.getContentType());
 		result.setSuccess(isSuccessCode(responseCode));
-		result.setSentBytes(sentBytes);// TODO consultar
+		result.setSentBytes(sentBytes);
 		result.setContentEncoding(getEncoding(con));
 
 		return result;
@@ -109,39 +96,13 @@ public class Parser implements Serializable {
 		return charset;
 	}
 
-	public String extractUriMaster(String res, String resolution, String bandwidth, String bandSelected,
-			String resolSelected, String urlVideoType) {
+
+	public String extractUriMaster(String res, String resolution, String bandwidth, String bandSelected, String resolSelected) {
 		String pattern = "(EXT-X-STREAM-INF.*)\\n(.*\\.m3u8.*)";
 		String bandwidthPattern = "[:|,]BANDWIDTH=(\\d*)";
 		String resolutionPattern = "[:|,]RESOLUTION=(\\d*x\\d*)";
 
-		String urlCandidates = "";
-		String secResolution = " ";
-		String secBandwidth = " ";
-
-		String bandwidthMax = "100000000";
-		String bandwidthMin = "0";
-		String resolutionMin = "100x100";
-		String resolutionMax = "5000x5000";
-		String uri = "";
-
-		Pattern r = Pattern.compile(pattern);
-		Pattern b = Pattern.compile(bandwidthPattern);
-		Pattern reso = Pattern.compile(resolutionPattern);
-
-		Matcher m = r.matcher(res);
-
-		boolean out = false;
-
-		if (urlVideoType.equalsIgnoreCase("Bandwidth")) {
-			uri = getBandwidthUrl(pattern, bandwidthPattern, resolutionPattern, res, bandwidth, bandSelected);
-		} else {
-			uri = getResolutionUrl(pattern, bandwidthPattern, resolutionPattern, res, resolution, bandwidth,
-					bandSelected, resolSelected);
-		}
-
-		return uri;
-
+		return getResolutionUrl(pattern, bandwidthPattern, resolutionPattern, res, resolution, bandwidth, bandSelected, resolSelected);
 	}
 
 	public List<DataFragment> extractVideoUrl(String playlistUrl) {
@@ -155,55 +116,8 @@ public class Parser implements Serializable {
 			mediaList.add(data);
 		}
 		return mediaList;
-
 	}
 
-	public String getBandwidthUrl(String pattern, String bandwidthPattern, String resolutionPattern, String res,
-			String bandwidth, String bandSelected) {
-		String bandwidthMax = "100000000";
-		String secBandwidth = " ";
-		String urlCandidate = "";
-		Pattern r = Pattern.compile(pattern);
-		Pattern b = Pattern.compile(bandwidthPattern);
-		Pattern reso = Pattern.compile(resolutionPattern);
-		Matcher m = r.matcher(res);
-
-		while (m.find()) {
-			Matcher mb = b.matcher(m.group(1));
-			// Matcher mBandwidth = b.matcher(m.toString());
-			Matcher mResolution = reso.matcher(m.toString());
-
-			mb.find();
-			if ((bandSelected.equalsIgnoreCase("customBandwidth"))	&& (Integer.parseInt(mb.group(1)) <= Integer.parseInt(bandwidth)) && mResolution.find()) {
-				if ((Integer.parseInt(mb.group(1)) == Integer.parseInt(bandwidth)))
-				{
-					urlCandidate = m.group(2);
-					break;
-				}
-				else if(selectBandwidth(bandwidth, mb.group(1)))
-				{
-					urlCandidate = m.group(2);
-				}
-
-
-			} else if ((bandSelected.equalsIgnoreCase("minBandwidth")) && mResolution.find()) {
-				if (secBandwidth.equals(" ") && selectBandwidth(mb.group(1), bandwidthMax)
-						|| (!secBandwidth.equals(" ") && selectBandwidth(mb.group(1), secBandwidth))) {
-					secBandwidth = mb.group(1);
-					urlCandidate = m.group(2);
-				}
-			} else if ((bandSelected.equalsIgnoreCase("maxBandwidth"))) {
-				if (secBandwidth.equals(" ") && !selectBandwidth(bandwidthMax, mb.group(1))
-						|| (!secBandwidth.equals(" ") && selectBandwidth(secBandwidth, mb.group(1)))) {
-					secBandwidth = mb.group(1);
-					urlCandidate = m.group(2);
-				}
-			}
-
-		}
-		return urlCandidate;
-
-	}
 
 	public String getResolutionUrl(String pattern, String bandwidthPattern, String resolutionPattern, String res,
 			String resolution, String bandwidth, String bandSelected, String resolSelected) {
@@ -231,7 +145,6 @@ public class Parser implements Serializable {
 
 			if (resolSelected.equalsIgnoreCase("customResolution") && mResolution.find()) {
 				if (bandSelected.equalsIgnoreCase("customBandwidth")) {
-
 					if (mreso.group(1).equals(resolution)) {
 						uri = m.group(2);
 						break;
@@ -367,8 +280,6 @@ public class Parser implements Serializable {
 		return !m1.find();
 	}
 
-	// Checks if the resolution of the video (candidate2) is closer to the
-	// resolution custom (target) than the one already saved (candidate1)
 	public boolean findResolution(String target, String candidate1, String candidate2) {
 		boolean ret = false;
 

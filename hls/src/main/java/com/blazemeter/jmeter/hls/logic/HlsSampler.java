@@ -20,6 +20,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class HlsSampler extends AbstractSampler {
 	private static final Logger log = LoggingManager.getLoggerForClass();
 	private String playlistUri;
@@ -77,9 +78,11 @@ public class HlsSampler extends AbstractSampler {
 	private String getPlaylistPath(DataRequest respond, Parser parser) throws MalformedURLException {
 		URL masterURL = new URL(getURLData());
 		playlistUri = parser.extractUriMaster(respond.getResponse(), this.getRESDATA(), this.getNetwordData(),
-				this.getBandwidthType(), this.getResolutionType(), this.getUrlVideoType());
+				this.getBandwidthType(), this.getResolutionType());
 		String auxPath = masterURL.getPath().substring(0, masterURL.getPath().lastIndexOf('/') + 1);
 
+		if(playlistUri.trim().equals(""))
+			playlistUri = getURLData();
 		if (playlistUri.startsWith("http")) {
 			playlist = playlistUri;
 		} else if (playlistUri.indexOf('/') == 0) {
@@ -96,12 +99,13 @@ public class HlsSampler extends AbstractSampler {
 
 	private DataRequest getPlayList(SampleResult playListResult, Parser parser) throws IOException {
 
+		String lastPath = "";
 		playListResult.sampleStart();
 		DataRequest subRespond = parser.getBaseUrl(new URL(playlist), playListResult, true);
 		playListResult.sampleEnd();
 
 		String[] urlArray = playlist.split("/");
-		String lastPath = urlArray[urlArray.length - 1];
+		lastPath = urlArray[urlArray.length - 1];
 
 		playListResult.setRequestHeaders(subRespond.getRequestHeaders() + "\n\n" + getCookieHeader(playlist) + "\n\n"
 				+ getRequestHeader(this.getHeaderManager()));
@@ -136,6 +140,8 @@ public class HlsSampler extends AbstractSampler {
 		boolean isVod = getHlsVideoType().equals("vod");
 		boolean out = false;
 		boolean firstTime = true;
+		List<String> list = new ArrayList<>();
+
 		try {
 
 			DataRequest respond = getMasterList(masterResult, parser);
@@ -148,6 +154,7 @@ public class HlsSampler extends AbstractSampler {
 			while ((playSeconds >= currenTimeseconds) && !out) {
 				SampleResult playListResult = new SampleResult();
 				DataRequest subRespond = getPlayList(playListResult, parser);
+
 				List<DataFragment> videoUri = parser.extractVideoUrl(subRespond.getResponse());
 				List<DataFragment> fragmentToDownload = new ArrayList<>();
 
@@ -168,13 +175,16 @@ public class HlsSampler extends AbstractSampler {
 					boolean isPresent = false;
 					int length = fragmentsDownloaded.size();
 
-					if (length != 0)
-						isPresent = fragmentsDownloaded.contains(frag.getTsUri());
+					if (length != 0) {
+						isPresent = fragmentsDownloaded.contains(frag.getTsUri().trim());
+					}
 
 					if (!isPresent) {
 						fragmentToDownload.add(frag);
 						fragmentsDownloaded.add(frag.getTsUri().trim());
-						currenTimeseconds += Float.parseFloat(frag.getDuration());
+						if(getVideoDuration()) {
+							currenTimeseconds += Float.parseFloat(frag.getDuration());
+						}
 					}
 				}
 
@@ -182,10 +192,13 @@ public class HlsSampler extends AbstractSampler {
 				for (SampleResult sam : videoFragment) {
 					playListResult.addSubResult(sam);
 				}
-				masterResult.addSubResult(playListResult);
 
+				if(!list.contains(playListResult.getSampleLabel()))
+				{
+					masterResult.addSubResult(playListResult);
+					list.add(playListResult.getSampleLabel());
+				}
 			}
-			// }
 
 		} catch (IOException e1) {
 			e1.printStackTrace();
@@ -195,6 +208,7 @@ public class HlsSampler extends AbstractSampler {
 		}
 		return masterResult;
 	}
+
 
 	public String getURLData() {
 		return this.getPropertyAsString("HLS.URL_DATA");
@@ -222,10 +236,6 @@ public class HlsSampler extends AbstractSampler {
 
 	public String getResolutionType() {
 		return this.getPropertyAsString("HLS.RESOLUTION_TYPE");
-	}
-
-	public String getUrlVideoType() {
-		return this.getPropertyAsString("HLS.URLVIDEOTYPE");
 	}
 
 	public String getBandwidthType() {
@@ -342,7 +352,8 @@ public class HlsSampler extends AbstractSampler {
 			uris.remove(0);
 			List<SampleResult> aux = getFragments(parser, uris, url);
 			for (SampleResult s : aux) {
-				res.add(s);
+				if(!res.contains(s))
+					res.add(s);
 			}
 		}
 		return res;
