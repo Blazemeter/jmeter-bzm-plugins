@@ -56,7 +56,7 @@ public class JMeterThreadParallel extends JMeterThread {
 
     @Override
     public void run() {
-        JMeterContextServiceAccessor.decrNumberOfThreads();
+        JMeterContextServiceAccessorParallel.decrNumberOfThreads();
         super.run();
     }
 }
