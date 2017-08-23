@@ -12,7 +12,7 @@ import org.apache.jmeter.testelement.AbstractTestElement;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.ThreadListener;
 import org.apache.jmeter.threads.JMeterContext;
-import org.apache.jmeter.threads.JMeterContextServiceAccessor;
+import org.apache.jmeter.threads.JMeterContextServiceAccessorParallel;
 import org.apache.jmeter.threads.JMeterThread;
 import org.apache.jmeter.threads.JMeterThreadMonitor;
 import org.apache.jmeter.threads.JMeterVariables;
@@ -148,7 +148,7 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
 
     @Override
     public void threadFinished(JMeterThread thread) {
-        JMeterContextServiceAccessor.incrNumberOfThreads();
+        JMeterContextServiceAccessorParallel.incrNumberOfThreads();
         try {
             Field field = AbstractTestElement.class.getDeclaredField("threadContext");
             field.setAccessible(true);
