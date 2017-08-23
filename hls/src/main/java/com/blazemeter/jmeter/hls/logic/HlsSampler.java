@@ -140,6 +140,7 @@ public class HlsSampler extends AbstractSampler {
 		boolean isVod = getHlsVideoType().equals("vod");
 		boolean out = false;
 		boolean firstTime = true;
+		boolean containNewFragments = false;
 		List<String> list = new ArrayList<>();
 
 		try {
@@ -151,7 +152,9 @@ public class HlsSampler extends AbstractSampler {
 			if (!getPlAYSecondsData().isEmpty())
 				playSeconds = Integer.parseInt(getPlAYSecondsData());
 
+
 			while ((playSeconds >= currenTimeseconds) && !out) {
+
 				SampleResult playListResult = new SampleResult();
 				DataRequest subRespond = getPlayList(playListResult, parser);
 
@@ -182,6 +185,7 @@ public class HlsSampler extends AbstractSampler {
 					if (!isPresent) {
 						fragmentToDownload.add(frag);
 						fragmentsDownloaded.add(frag.getTsUri().trim());
+						containNewFragments = true;
 						if(getVideoDuration()) {
 							currenTimeseconds += Float.parseFloat(frag.getDuration());
 						}
@@ -193,11 +197,13 @@ public class HlsSampler extends AbstractSampler {
 					playListResult.addSubResult(sam);
 				}
 
-				if(!list.contains(playListResult.getSampleLabel()))
+				if((!list.contains(playListResult.getSampleLabel())) || (list.contains(playListResult.getSampleLabel()) && containNewFragments))
 				{
 					masterResult.addSubResult(playListResult);
 					list.add(playListResult.getSampleLabel());
+					containNewFragments = false;
 				}
+
 			}
 
 		} catch (IOException e1) {
