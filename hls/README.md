@@ -58,3 +58,5 @@ After selecting the desired bandwidth you can select a resolution to simulate yo
 You can set listeners to evaluate the results of your tests. The View Results Tree Listener displays the HLS Hierarchy, so you can inspect how the requests and responses worked.
 
 ![](HLSResults.png)
+
+Assertions are supported for the master playlist and variant (child) playlist. Examples: Response Assertion and Duration Assertion. Select “Main sample only” in assertion to test the master playlist response and “Sub-samples only” to test the variant (child) playlist response.
