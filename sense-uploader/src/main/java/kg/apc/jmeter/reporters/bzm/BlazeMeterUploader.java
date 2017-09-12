@@ -26,7 +26,6 @@ public class BlazeMeterUploader extends BackendListener implements StatusNotifie
         super();
         setClassname(JMeterUtils.getPropDefault("blazemeter.client", BlazeMeterBackendListenerClient.class.getName()));
         setProperty(TestElement.GUI_CLASS, BlazeMeterUploaderGui.class.getName());
-        setName("BlazeMeter Uploader");
     }
 
     @Override

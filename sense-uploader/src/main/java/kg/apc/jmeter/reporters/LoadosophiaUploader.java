@@ -37,7 +37,6 @@ public class LoadosophiaUploader extends BackendListener implements StatusNotifi
         super();
         setClassname(JMeterUtils.getPropDefault("sense.client", LoadosophiaClient.class.getName()));
         setProperty(TestElement.GUI_CLASS, LoadosophiaUploaderGui.class.getName());
-        setName("BlazeMeter Sense Uploader");
     }
 
     @Override
