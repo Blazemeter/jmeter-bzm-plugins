@@ -12,11 +12,6 @@ import org.apache.log.Logger;
 
 public class WebSocketCollectorSampler extends WebSocketAbstractSampler {
 
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -4085748361510897426L;
 	private static final Logger log = LoggingManager.getLoggerForClass();
 
     public WebSocketCollectorSampler() {

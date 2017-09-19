@@ -44,10 +44,7 @@ import io.inventit.dev.mqtt.paho.MqttWebSocketAsyncClient;
 
 public abstract class WebSocketAbstractSampler extends AbstractSampler implements TestStateListener, ThreadListener {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -8645902802126134304L;
+	private Factory factory;
 
 	protected static final Logger log = LoggingManager.getLoggerForClass();
     
@@ -88,6 +85,11 @@ public abstract class WebSocketAbstractSampler extends AbstractSampler implement
 	
 	public WebSocketAbstractSampler() {
 		super();
+		this.factory = new Factory();
+	}
+	
+	public void setFactory (Factory factory){
+		this.factory = factory;
 	}
 
 	 @Override
@@ -155,13 +157,8 @@ public abstract class WebSocketAbstractSampler extends AbstractSampler implement
 	    	};
 
     		String mqttUrl = null;
-    		
-    		if(getProtocol().equals("tcp")){
-    			 mqttUrl = "tcp://" + getServer() + ":" + getPort();
-    		}else{
-	    		 mqttUrl = getUri().toString();			
+       		mqttUrl = getUri().toString();			
 
-    		}
 
     		int qos = 0;
 			String topic = getTopic();
@@ -173,14 +170,12 @@ public abstract class WebSocketAbstractSampler extends AbstractSampler implement
 			log.info("PARAMS: "+mqttUrl+" "+topic+" "+clientID);
 			IMqttAsyncClient client = null;
 			
-			if(getProtocol().equals("tcp")){
-				client = new MqttAsyncClient(mqttUrl, clientID, persistence);
-    		}else{
-    			client = new MqttWebSocketAsyncClient (mqttUrl, clientID, persistence);
-    		}
+			
+			client = factory.getMqttAsyncClient (getProtocol(), mqttUrl, clientID, persistence);
 
 			log.info("IMqttAsyncClient CREATED");
-			callBackConnection = new MqttCallBackImpl(client,clientID,getLogLevel(),getContentEncoding());
+			callBackConnection = factory.getMqttHandler(client,clientID,getLogLevel(),getContentEncoding()); 
+					
 			client.setCallback(callBackConnection);
 			log.info("CLIENT CALLBACK SETTED: "+clientID+" "+getLogLevel());
 			
@@ -246,7 +241,7 @@ public abstract class WebSocketAbstractSampler extends AbstractSampler implement
 	    	SslContextFactory sslContexFactory = new SslContextFactory();
 	        sslContexFactory.setTrustAll(true);
 	        WebSocketClient webSocketClient = new WebSocketClient(sslContexFactory);
-	        WebSocketConnection webSocketConnection = new WebSocketConnection(webSocketClient, closeConnectionPattern, getContentEncoding());
+	        WebSocketConnection webSocketConnection = factory.getWebSocketHandler(webSocketClient, closeConnectionPattern, getContentEncoding());
 	        
 			webSocketClient.start();
 	        
@@ -296,7 +291,7 @@ public abstract class WebSocketAbstractSampler extends AbstractSampler implement
 	           path = "/" + path;
 	        }
 	
-		    String queryString = getQueryString(getContentEncoding());
+//		    String queryString = getQueryString(getContentEncoding());
 //		    if (queryString.length() > 0) {
 //		        if (path.contains(QRY_PFX)) {// Already contains a prefix
 //		            pathAndQuery.append(QRY_SEP);
@@ -308,10 +303,10 @@ public abstract class WebSocketAbstractSampler extends AbstractSampler implement
 		    
 	        // If default port for protocol is used, we do not include port in URL
 	        if (isProtocolDefaultPort()) {
-	        	return new URI(protocol, null, domain, -1, path, queryString, null);
+	        	return new URI(protocol, null, domain, -1, path, null, null);
 //	            return new URL(protocol, domain, pathAndQuery.toString());
 	        }
-	        return new URI(protocol, null, domain, getPort(), path, queryString, null);
+	        return new URI(protocol, null, domain, getPort(), path, null, null);
 //	        return new URL(protocol, domain, getPort(), pathAndQuery.toString());
 	    }
 	    

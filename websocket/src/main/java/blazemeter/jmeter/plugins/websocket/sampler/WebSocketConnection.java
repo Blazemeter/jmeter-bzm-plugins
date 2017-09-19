@@ -1,6 +1,7 @@
 package blazemeter.jmeter.plugins.websocket.sampler;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -17,7 +18,7 @@ import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 
 @WebSocket(maxTextMessageSize = 256 * 1024 * 1024)
-public class WebSocketConnection extends Handler {
+public class WebSocketConnection extends Handler implements Serializable{
 
 	private static final Logger log = LoggingManager.getLoggerForClass();
 	

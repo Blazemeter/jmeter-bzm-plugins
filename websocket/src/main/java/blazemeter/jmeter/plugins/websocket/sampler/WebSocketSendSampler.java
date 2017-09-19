@@ -35,10 +35,6 @@ import org.eclipse.jetty.websocket.client.WebSocketClient;
 
 public class WebSocketSendSampler extends WebSocketAbstractSampler {
 
-    /**
-	 * 
-	 */
-	private static final long serialVersionUID = -2448936343629837103L;
 
 	public WebSocketSendSampler() {
         super();
@@ -130,12 +126,12 @@ public class WebSocketSendSampler extends WebSocketAbstractSampler {
     		sampleResult.sampleEnd();
     		return sampleResult;
 		}	
-    		sampleResult.setSuccessful(true);
-    		sampleResult.setResponseMessage("");
-    		sampleResult.setRequestHeaders(payload);
-    		sampleResult.sampleEnd();
-    		return sampleResult;
-    	}
+		sampleResult.setSuccessful(true);
+		sampleResult.setResponseMessage("");
+		sampleResult.setRequestHeaders(payload);
+		sampleResult.sampleEnd();
+		return sampleResult;
+	}
 
 	public String getPayloadContent() {
 		return getPropertyAsString("payloadContent");
