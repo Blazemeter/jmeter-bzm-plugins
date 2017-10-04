@@ -1,6 +1,8 @@
 package kg.apc.jmeter.reporters.bzm;
 
 import kg.apc.emulators.TestJMeterUtils;
+import org.apache.jmeter.util.JMeterUtils;
+import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -14,8 +16,14 @@ public class BlazemeterUploaderTest {
         TestJMeterUtils.createJmeterEnv();
     }
 
+    @After
+    public void tearDown() {
+        JMeterUtils.getJMeterProperties().remove("blazemeter.client");
+    }
+
     @Test
     public void testFlow() throws Exception {
+        JMeterUtils.setProperty("blazemeter.client", BLCEmul.class.getName());
         BlazeMeterUploader uploader = new BlazeMeterUploader();
         uploader.setGui(new BlazeMeterUploaderGui());
         uploader.setShareTest(true);
@@ -38,4 +46,5 @@ public class BlazemeterUploaderTest {
         BlazeMeterUploader clone = (BlazeMeterUploader) uploader.clone();
         assertEquals(gui, clone.gui);
     }
+
 }

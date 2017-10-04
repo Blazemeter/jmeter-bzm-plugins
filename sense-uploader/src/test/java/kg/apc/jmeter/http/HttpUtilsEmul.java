@@ -3,6 +3,7 @@ package kg.apc.jmeter.http;
 import kg.apc.jmeter.notifier.StatusNotifierCallback;
 import net.sf.json.JSON;
 import net.sf.json.JSONObject;
+import net.sf.json.JSONSerializer;
 import org.apache.http.client.methods.HttpRequestBase;
 
 import java.io.IOException;
@@ -40,5 +41,9 @@ public class HttpUtilsEmul extends HttpUtils {
         } else {
             throw new IOException("No responses to emulate");
         }
+    }
+
+    public void addEmul(String s) {
+        addEmul(JSONSerializer.toJSON(s));
     }
 }
