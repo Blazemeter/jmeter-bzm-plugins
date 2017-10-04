@@ -3,6 +3,7 @@ package kg.apc.jmeter.reporters;
 import kg.apc.jmeter.JMeterPluginsUtils;
 import kg.apc.jmeter.gui.BrowseAction;
 import kg.apc.jmeter.gui.GuiBuilderHelper;
+import org.apache.jmeter.samplers.Clearable;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.visualizers.gui.AbstractListenerGui;
 import org.apache.jorphan.logging.LoggingManager;
@@ -18,7 +19,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 
-public class LoadosophiaUploaderGui extends AbstractListenerGui implements HyperlinkListener {
+public class LoadosophiaUploaderGui extends AbstractListenerGui implements HyperlinkListener, Clearable {
     private static final Logger log = LoggingManager.getLoggerForClass();
     public static final String WIKIPAGE = "LoadosophiaUploader";
     private JTextField testTitle;
@@ -164,6 +165,7 @@ public class LoadosophiaUploaderGui extends AbstractListenerGui implements Hyper
     }
 
     private void initFields() {
+        clearData();
         testTitle.setText("");
         projectKey.setText("DEFAULT");
         uploadToken.setText("Replace this text with upload token received at sense.blazemeter.com\nRemember that anyone who has this token can upload files to your account.\nPlease, treat your token as confidential data.\nSee plugin help for details.");
