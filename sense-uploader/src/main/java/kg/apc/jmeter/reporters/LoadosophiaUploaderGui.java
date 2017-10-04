@@ -61,6 +61,7 @@ public class LoadosophiaUploaderGui extends AbstractListenerGui implements Hyper
 
     @Override
     public void modifyTestElement(TestElement te) {
+        super.configureTestElement(te);
         if (te instanceof LoadosophiaUploader) {
             LoadosophiaUploader fw = (LoadosophiaUploader) te;
             fw.setProject(projectKey.getText());

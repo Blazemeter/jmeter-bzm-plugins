@@ -48,6 +48,7 @@ public class BlazeMeterUploaderGui extends AbstractListenerGui implements Hyperl
 
     @Override
     public void modifyTestElement(TestElement te) {
+        super.configureTestElement(te);
         if (te instanceof BlazeMeterUploader) {
             BlazeMeterUploader uploader = (BlazeMeterUploader) te;
             uploader.setShareTest(shareTest.isSelected());
