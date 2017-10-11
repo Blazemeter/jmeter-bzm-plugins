@@ -166,7 +166,6 @@ public class LoadosophiaUploaderGui extends AbstractListenerGui implements Hyper
     }
 
     private void initFields() {
-        clearData();
         testTitle.setText("");
         projectKey.setText("DEFAULT");
         uploadToken.setText("Replace this text with upload token received at sense.blazemeter.com\nRemember that anyone who has this token can upload files to your account.\nPlease, treat your token as confidential data.\nSee plugin help for details.");
@@ -187,6 +186,7 @@ public class LoadosophiaUploaderGui extends AbstractListenerGui implements Hyper
         initFields();
     }
 
+    @Override
     public void clearData() {
         infoText = "";
         infoArea.setText("");
