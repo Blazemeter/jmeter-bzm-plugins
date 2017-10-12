@@ -2,6 +2,7 @@ package kg.apc.jmeter.reporters.bzm;
 
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.gui.MainFrame;
+import org.apache.jmeter.samplers.Clearable;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jmeter.visualizers.backend.BackendListener;
@@ -11,7 +12,7 @@ import kg.apc.jmeter.notifier.StatusNotifierCallback;
 
 import java.lang.reflect.Field;
 
-public class BlazeMeterUploader extends BackendListener implements StatusNotifierCallback {
+public class BlazeMeterUploader extends BackendListener implements StatusNotifierCallback, Clearable {
 
     private static final Logger log = LoggingManager.getLoggerForClass();
 
@@ -126,5 +127,12 @@ public class BlazeMeterUploader extends BackendListener implements StatusNotifie
         } catch (IllegalAccessException | NoSuchFieldException e) {
             log.error("Cannot inject links into backend listener client", e);
         }
+    }
+
+    // This is required so that
+    // @see org.apache.jmeter.gui.tree.JMeterTreeModel.getNodesOfType()
+    // can find the Clearable nodes - the userObject has to implement the interface.
+    @Override
+    public void clearData() {
     }
 }

@@ -6,6 +6,7 @@ import kg.apc.jmeter.vizualizers.CorrectedResultCollector;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.gui.MainFrame;
 import org.apache.jmeter.reporters.ResultCollector;
+import org.apache.jmeter.samplers.Clearable;
 import org.apache.jmeter.samplers.SampleEvent;
 import org.apache.jmeter.samplers.SampleSaveConfiguration;
 import org.apache.jmeter.testelement.TestElement;
@@ -18,7 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 
-public class LoadosophiaUploader extends BackendListener implements StatusNotifierCallback {
+public class LoadosophiaUploader extends BackendListener implements StatusNotifierCallback, Clearable {
 
     private static final Logger log = LoggingManager.getLoggerForClass();
     public static final String TITLE = "title";
@@ -207,5 +208,13 @@ public class LoadosophiaUploader extends BackendListener implements StatusNotifi
         } catch (IllegalAccessException | NoSuchFieldException e) {
             log.error("Cannot inject links into backend listener client", e);
         }
+    }
+
+
+    // This is required so that
+    // @see org.apache.jmeter.gui.tree.JMeterTreeModel.getNodesOfType()
+    // can find the Clearable nodes - the userObject has to implement the interface.
+    @Override
+    public void clearData() {
     }
 }

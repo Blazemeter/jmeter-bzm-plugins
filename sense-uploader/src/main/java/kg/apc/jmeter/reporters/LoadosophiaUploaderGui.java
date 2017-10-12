@@ -3,6 +3,7 @@ package kg.apc.jmeter.reporters;
 import kg.apc.jmeter.JMeterPluginsUtils;
 import kg.apc.jmeter.gui.BrowseAction;
 import kg.apc.jmeter.gui.GuiBuilderHelper;
+import org.apache.jmeter.gui.UnsharedComponent;
 import org.apache.jmeter.samplers.Clearable;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.visualizers.gui.AbstractListenerGui;
@@ -19,7 +20,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 
-public class LoadosophiaUploaderGui extends AbstractListenerGui implements HyperlinkListener, Clearable {
+public class LoadosophiaUploaderGui extends AbstractListenerGui implements HyperlinkListener, Clearable, UnsharedComponent {
     private static final Logger log = LoggingManager.getLoggerForClass();
     public static final String WIKIPAGE = "LoadosophiaUploader";
     private JTextField testTitle;
