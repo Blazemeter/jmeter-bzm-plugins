@@ -32,6 +32,7 @@ public class LoadosophiaUploaderTest {
     public void testTestEnded() throws IOException {
         System.out.println("testEnded");
         LoadosophiaUploader instance = new LoadosophiaUploaderEmul();
+        instance.resetTest();
         instance.setStoreDir(TestJMeterUtils.getTempDir());
         instance.setTitle("UnitTest");
         instance.setColorFlag("gray");
@@ -214,6 +215,7 @@ public class LoadosophiaUploaderTest {
     public void testOnlineProcessor() throws InterruptedException {
         System.out.println("onlineProcessor");
         LoadosophiaUploader instance = new LoadosophiaUploaderEmul();
+        instance.resetTest();
         instance.setUseOnline(true);
         instance.setStoreDir(TestJMeterUtils.getTempDir());
         instance.testStarted("");
