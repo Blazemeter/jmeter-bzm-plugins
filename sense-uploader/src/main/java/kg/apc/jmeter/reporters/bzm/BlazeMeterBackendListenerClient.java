@@ -82,9 +82,11 @@ public class BlazeMeterBackendListenerClient implements BackendListenerClient {
         accumulator.addAll(list);
         JSONObject data = JSONConverter.convertToJSON(accumulator, list);
 
-        while (!apiClient.isTestStarted()) {
+        int counter = 0;
+        while (!apiClient.isTestStarted() && counter < 3) {
             log.debug("Waiting for test starting");
             makeDelay();
+            counter++;
         }
 
         try {
