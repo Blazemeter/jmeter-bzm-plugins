@@ -11,6 +11,7 @@ import org.apache.log.Logger;
 import kg.apc.jmeter.notifier.StatusNotifierCallback;
 
 import java.lang.reflect.Field;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class BlazeMeterUploader extends BackendListener implements StatusNotifierCallback, Clearable {
 
@@ -22,6 +23,7 @@ public class BlazeMeterUploader extends BackendListener implements StatusNotifie
     public static final String SHARE_TEST = "share";
 
     protected BlazeMeterUploaderGui gui;
+    private static volatile AtomicBoolean isTestStarted = new AtomicBoolean(false);
 
     public BlazeMeterUploader() {
         super();
@@ -38,7 +40,9 @@ public class BlazeMeterUploader extends BackendListener implements StatusNotifie
     public void testStarted(String host) {
         setArguments(createArguments());
         super.testStarted(host);
-        initClient();
+        if (!isTestStarted.getAndSet(true)) {
+            initClient();
+        }
     }
 
     private Arguments createArguments() {
@@ -56,7 +60,6 @@ public class BlazeMeterUploader extends BackendListener implements StatusNotifie
             gui.inform(info);
         }
         log.info(info);
-        System.out.println(info);
     }
 
     @Override
@@ -69,6 +72,7 @@ public class BlazeMeterUploader extends BackendListener implements StatusNotifie
     @Override
     public void testEnded(String host) {
         super.testEnded(host);
+        isTestStarted.set(false);
     }
 
     @Override
