@@ -45,6 +45,11 @@ public class BlazeMeterAPIClient {
         }
     }
 
+
+    public boolean isTestStarted() {
+        return test != null;
+    }
+
     public void sendOnlineData(JSONObject data) throws IOException {
         JSONObject session = test.getSession().sendData(data);
         int statusCode = session.getInt("statusCode");

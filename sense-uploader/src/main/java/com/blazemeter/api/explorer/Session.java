@@ -50,7 +50,7 @@ public class Session extends BZAObject {
         data.put("signature", signature);
         data.put("testId", testId);
         data.put("sessionId", getId());
-        httpUtils.query(httpUtils.createPost(uri, data.toString()), 500);
+        httpUtils.query(httpUtils.createPost(uri, data.toString()), 200);
     }
 
     public String getUserId() {

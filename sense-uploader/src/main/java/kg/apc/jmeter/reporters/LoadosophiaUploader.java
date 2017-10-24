@@ -18,6 +18,7 @@ import org.apache.log.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class LoadosophiaUploader extends BackendListener implements StatusNotifierCallback, Clearable {
 
@@ -29,7 +30,8 @@ public class LoadosophiaUploader extends BackendListener implements StatusNotifi
     public static final String STORE_DIR = "storeDir";
     public static final String USE_ONLINE = "useOnline";
 
-    protected ResultCollector resultCollector = new CorrectedResultCollector();
+    protected static ResultCollector resultCollector = new CorrectedResultCollector();
+    private static volatile AtomicBoolean isTestStarted = new AtomicBoolean(false);
     protected String fileName;
     protected LoadosophiaUploaderGui gui;
     public static final String FILE_NAME = "fileName";
@@ -52,14 +54,19 @@ public class LoadosophiaUploader extends BackendListener implements StatusNotifi
 
     @Override
     public void testStarted(String host) {
-        try {
-            setupSaving();
-        } catch (IOException ex) {
-            log.error("Unable to set up saving config", ex);
+        final boolean isStarted = isTestStarted.getAndSet(true);
+        if (!isStarted) {
+            try {
+                setupSaving();
+            } catch (IOException ex) {
+                log.error("Unable to set up saving config", ex);
+            }
         }
         setArguments(createArguments());
         super.testStarted(host);
-        initClient();
+        if (!isStarted) {
+            initClient();
+        }
         resultCollector.testStarted(host);
     }
 
@@ -80,6 +87,7 @@ public class LoadosophiaUploader extends BackendListener implements StatusNotifi
     public void testEnded(String host) {
         super.testEnded(host);
         resultCollector.testEnded(host);
+        isTestStarted.set(false);
     }
 
     @Override
@@ -216,5 +224,9 @@ public class LoadosophiaUploader extends BackendListener implements StatusNotifi
     // can find the Clearable nodes - the userObject has to implement the interface.
     @Override
     public void clearData() {
+    }
+
+    protected void resetTest() {
+        isTestStarted.set(false);
     }
 }
