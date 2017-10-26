@@ -8,8 +8,6 @@ import org.apache.jmeter.testelement.TestElement;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class RandomCSVDataSetConfigGui extends AbstractConfigGui {
 
@@ -108,7 +106,7 @@ public class RandomCSVDataSetConfigGui extends AbstractConfigGui {
 
         checkArea = new JTextArea();
         addToPanel(mainPanel, editConstraints, 1, row, GuiBuilderHelper.getTextAreaScrollPaneContainer(checkArea, 10));
-//        checkButton.addActionListener(new TestDirectoryListingAction(this));
+        checkButton.addActionListener(new TestRandomCSVAction(this));
         checkArea.setEditable(false);
         checkArea.setOpaque(false);
 
@@ -119,15 +117,18 @@ public class RandomCSVDataSetConfigGui extends AbstractConfigGui {
     }
 
     private void initGuiValues() {
-//        sourceDirectoryField.setText("");
-//        destinationVariableField.setText("");
-//        isUseFullPathCheckBox.setSelected(false);
-//        isRandomOrderCheckBox.setSelected(false);
-//        isRecursiveListing.setSelected(false);
-//        isRewindOnTheEndCheckBox.setSelected(true);
-//        isIndependentListCheckBox.setSelected(false);
-//        isReReadDirectoryCheckBox.setSelected(false);
-//        checkArea.setText("");
+        filenameField.setText("");
+        fileEncodingField.setText("UTF-8");
+        delimiterField.setText(",");
+        variableNamesField.setText("");
+
+        isRandomOrderCheckBox.setSelected(true);
+        isIgnoreFirstLineCheckBox.setSelected(false);
+        isAllowQuotedDataCheckBox.setSelected(false);
+        isRewindOnTheEndCheckBox.setSelected(true);
+        isIndependentListCheckBox.setSelected(false);
+
+        checkArea.setText("");
     }
 
     private void addToPanel(JPanel panel, GridBagConstraints constraints, int col, int row, JComponent component) {
@@ -158,6 +159,17 @@ public class RandomCSVDataSetConfigGui extends AbstractConfigGui {
         configureTestElement(element);
         if (element instanceof RandomCSVDataSetConfig) {
             RandomCSVDataSetConfig randomCSV = (RandomCSVDataSetConfig) element;
+
+            randomCSV.setFilename(this.filenameField.getText());
+            randomCSV.setFileEncoding(this.fileEncodingField.getText());
+            randomCSV.setDelimiter(this.delimiterField.getText());
+            randomCSV.setVariableNames(this.variableNamesField.getText());
+
+            randomCSV.setRandomOrder(this.isRandomOrderCheckBox.isSelected());
+            randomCSV.setIgnoreFirstLine(this.isIgnoreFirstLineCheckBox.isSelected());
+            randomCSV.setAllowQuotedData(this.isAllowQuotedDataCheckBox.isSelected());
+            randomCSV.setRewindOnTheEndOfList(this.isRewindOnTheEndCheckBox.isSelected());
+            randomCSV.setIndependentListPerThread(this.isIndependentListCheckBox.isSelected());
         }
     }
 
@@ -168,16 +180,16 @@ public class RandomCSVDataSetConfigGui extends AbstractConfigGui {
         if (element instanceof RandomCSVDataSetConfig) {
             RandomCSVDataSetConfig randomCSV = (RandomCSVDataSetConfig) element;
 
-//            sourceDirectoryField.setText(directoryListingConfig.getSourceDirectory());
-//            destinationVariableField.setText(directoryListingConfig.getDestinationVariableName());
-//            isUseFullPathCheckBox.setSelected(directoryListingConfig.getUseFullPath());
-//            isRandomOrderCheckBox.setSelected(directoryListingConfig.getRandomOrder());
-//            isRecursiveListing.setSelected(directoryListingConfig.getRecursiveListing());
-//            isRewindOnTheEndCheckBox.setSelected(directoryListingConfig.getRewindOnTheEnd());
-//            isReReadDirectoryCheckBox.setSelected(directoryListingConfig.getReReadDirectoryOnTheEndOfList());
-//            isIndependentListCheckBox.setSelected(directoryListingConfig.getIndependentListPerThread());
-//
-//            isReReadDirectoryCheckBox.setEnabled(isRewindOnTheEndCheckBox.isSelected());
+            filenameField.setText(randomCSV.getFilename());
+            fileEncodingField.setText(randomCSV.getFileEncoding());
+            delimiterField.setText(randomCSV.getDelimiter());
+            variableNamesField.setText(randomCSV.getVariableNames());
+
+            isRandomOrderCheckBox.setSelected(randomCSV.isRandomOrder());
+            isIgnoreFirstLineCheckBox.setSelected(randomCSV.isIgnoreFirstLine());
+            isAllowQuotedDataCheckBox.setSelected(randomCSV.isAllowQuotedData());
+            isRewindOnTheEndCheckBox.setSelected(randomCSV.isRewindOnTheEndOfList());
+            isIndependentListCheckBox.setSelected(randomCSV.isIndependentListPerThread());
 
         }
     }
