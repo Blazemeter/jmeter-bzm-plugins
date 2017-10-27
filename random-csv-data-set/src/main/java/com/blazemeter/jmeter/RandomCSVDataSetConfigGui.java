@@ -81,16 +81,16 @@ public class RandomCSVDataSetConfigGui extends AbstractConfigGui {
         addToPanel(mainPanel, editConstraints, 1, row, isRandomOrderCheckBox = new JCheckBox());
         row++;
 
-        addToPanel(mainPanel, labelConstraints, 0, row, new JLabel("Ignore first line: ", JLabel.RIGHT));
-        addToPanel(mainPanel, editConstraints, 1, row, isIgnoreFirstLineCheckBox = new JCheckBox());
-        row++;
-
         addToPanel(mainPanel, labelConstraints, 0, row, new JLabel("Allow quoted data: ", JLabel.RIGHT));
         addToPanel(mainPanel, editConstraints, 1, row, isAllowQuotedDataCheckBox = new JCheckBox());
         row++;
 
         addToPanel(mainPanel, labelConstraints, 0, row, new JLabel("Rewind on end of list: ", JLabel.RIGHT));
         addToPanel(mainPanel, editConstraints, 1, row, isRewindOnTheEndCheckBox = new JCheckBox());
+        row++;
+
+        addToPanel(mainPanel, labelConstraints, 0, row, new JLabel("First line is CSV header: ", JLabel.RIGHT));
+        addToPanel(mainPanel, editConstraints, 1, row, isIgnoreFirstLineCheckBox = new JCheckBox());
         row++;
 
         addToPanel(mainPanel, labelConstraints, 0, row, new JLabel("Independent list per thread: ", JLabel.RIGHT));
@@ -100,7 +100,7 @@ public class RandomCSVDataSetConfigGui extends AbstractConfigGui {
         editConstraints.insets = new java.awt.Insets(4, 0, 0, 0);
         labelConstraints.insets = new java.awt.Insets(4, 0, 0, 2);
 
-        addToPanel(mainPanel, labelConstraints, 0, row, checkButton = new JButton("Test Random CSV Config"));
+        addToPanel(mainPanel, labelConstraints, 0, row, checkButton = new JButton("Test CSV Reading"));
 
         labelConstraints.insets = new java.awt.Insets(4, 0, 0, 0);
 
