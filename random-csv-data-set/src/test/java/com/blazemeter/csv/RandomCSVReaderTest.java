@@ -39,4 +39,32 @@ public class RandomCSVReaderTest {
 
         assertFalse(reader.hasNextRecord());
     }
+
+    @Test
+    public void testReadWithHeaderAndRepeat() throws Exception {
+        String path = this.getClass().getResource("/JMeterCsvResults.csv").getPath();
+
+        RandomCSVReader reader = new RandomCSVReader(new File(path), "UTF-8", ',', false, true, true);
+
+        assertEquals("[timeStamp, elapsed, label, responseCode, responseMessage, threadName, dataType, success, bytes]",
+                Arrays.toString(reader.getHeader()));
+
+        assertTrue(reader.hasNextRecord());
+        assertEquals("1393227741256", reader.getNextRecord()[0]);
+
+        assertTrue(reader.hasNextRecord());
+        assertEquals("1393227741257", reader.getNextRecord()[0]);
+
+        assertTrue(reader.hasNextRecord());
+        assertEquals("1393227741258", reader.getNextRecord()[0]);
+
+        assertTrue(reader.hasNextRecord());
+        assertEquals("1393227741256", reader.getNextRecord()[0]);
+
+        assertTrue(reader.hasNextRecord());
+        assertEquals("1393227741257", reader.getNextRecord()[0]);
+
+        assertTrue(reader.hasNextRecord());
+        assertEquals("1393227741258", reader.getNextRecord()[0]);
+    }
 }

@@ -26,6 +26,8 @@ public class RandomCSVReader {
     private RandomBufferedReader rbr;
     private Random random;
 
+    private BufferedReader consistentReader;
+
     public RandomCSVReader(File file, String encoding, char delim,
                            boolean randomOrder, boolean firstLineIsHeader,
                            boolean isRewindOnEndOfList) throws IOException {
@@ -39,6 +41,15 @@ public class RandomCSVReader {
         if (randomOrder) {
             rbr = new RandomBufferedReader(createReader(), new RandomAccessFile(file, "r"));
             initRandom();
+        } else {
+            initConsistentReader();
+        }
+    }
+
+    private void initConsistentReader() throws IOException {
+        consistentReader = new BufferedReader(createReader());
+        if (firstLineIsHeader && !this.offsets.isEmpty()) {
+            consistentReader.skip(this.offsets.get(0)); //TODO: any other ideas how skip header?
         }
     }
 
@@ -46,16 +57,15 @@ public class RandomCSVReader {
         if (randomOrder) {
             int pos = getRandomPos();
             swap(curPos + pos);
-            return readCurrentLine();
+            return readCurrentLineWithSeek();
         } else {
-            //TODO
-            return null;
+            return readCurrentLine();
         }
     }
 
-    public boolean hasNextRecord() {
+    public boolean hasNextRecord() throws IOException {
         if (!(curPos < offsets.size()) && isRewindOnEndOfList) {
-            initRandom();
+            reInitialize();
             curPos = 0;
             return true;
         } else if (curPos < offsets.size()) {
@@ -64,12 +74,25 @@ public class RandomCSVReader {
         return false;
     }
 
+    private void reInitialize() throws IOException {
+        if (randomOrder) {
+            initRandom();
+        } else {
+            initConsistentReader();
+        }
+    }
+
     public String[] getHeader() throws IOException {
         if (firstLineIsHeader) {
             BufferedReader reader = new BufferedReader(createReader());
             return CSVSaveService.csvReadFile(reader, delim);
         }
         return null;
+    }
+
+    private String[] readCurrentLine() throws IOException {
+        curPos++;
+        return CSVSaveService.csvReadFile(consistentReader, delim);
     }
 
     private void initRandom() {
@@ -97,7 +120,7 @@ public class RandomCSVReader {
         offsets.set(pos, tmp);
     }
 
-    private String[] readCurrentLine() throws IOException {
+    private String[] readCurrentLineWithSeek() throws IOException {
         long lineAddr = offsets.get(curPos);
         curPos++;
         rbr.seek(lineAddr);
