@@ -3,16 +3,21 @@ package com.blazemeter.csv;
 import org.apache.jmeter.save.CSVSaveService;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Random;
 
 public class RandomCSVReader {
 
     private File file;
-    private char delim = ',';
+    private String encoding;
+    private char delim;
     private boolean randomOrder;
 
     private ArrayList<Integer> offsets;
@@ -20,11 +25,13 @@ public class RandomCSVReader {
     private RandomBufferedReader rbr;
     private Random random;
 
-    public RandomCSVReader(File file, boolean randomOrder) throws IOException {
+    public RandomCSVReader(File file, String encoding, char delim, boolean randomOrder) throws IOException {
         this.file = file;
+        this.encoding = encoding;
+        this.delim = delim;
         this.randomOrder = randomOrder;
         if (randomOrder) {
-            rbr = new RandomBufferedReader(new FileReader(file), new RandomAccessFile(file, "r"));
+            rbr = new RandomBufferedReader(createReader(), new RandomAccessFile(file, "r"));
             offsets = new ArrayList<>();
             initOffsets();
             initRandom();
@@ -36,16 +43,14 @@ public class RandomCSVReader {
     }
 
     private void initOffsets() throws IOException {
-        BufferedReaderExt reader = new BufferedReaderExt(new FileReader(file));
+        BufferedReaderExt reader = new BufferedReaderExt(createReader());
         long fileSize = file.length();
         offsets.add(0);
         while (reader.getPos() <= fileSize) {
-            String[] records = CSVSaveService.csvReadFile(reader, delim);
+            CSVSaveService.csvReadFile(reader, delim);
             if (reader.getPos() <= fileSize) {
                 offsets.add(reader.getPos());
-//                System.out.println("Add position " + reader.getPos());
             }
-//            System.out.println(Arrays.toString(records));
         }
     }
 
@@ -79,5 +84,9 @@ public class RandomCSVReader {
         int rand = random.nextInt(offsets.size() - curPos);
         System.out.println("Generate " + rand);
         return rand;
+    }
+
+    private Reader createReader() throws IOException {
+        return new InputStreamReader(new FileInputStream(file), encoding);
     }
 }

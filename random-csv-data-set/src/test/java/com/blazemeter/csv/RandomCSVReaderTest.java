@@ -5,12 +5,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Hashtable;
-import java.util.List;
-
-import static org.junit.Assert.*;
 
 public class RandomCSVReaderTest {
 
@@ -26,7 +21,7 @@ public class RandomCSVReaderTest {
 //        String path = "/home/artem/home/res.csv";
 
         long st = System.currentTimeMillis();
-        RandomCSVReader reader = new RandomCSVReader(new File(path), true);
+        RandomCSVReader reader = new RandomCSVReader(new File(path), "UTF-8", ',', true);
         System.out.println("Init finished: " + (System.currentTimeMillis() - st));
 
         System.out.println("==========");
