@@ -7,6 +7,8 @@ import org.junit.Test;
 import java.io.File;
 import java.util.Arrays;
 
+import static org.junit.Assert.*;
+
 public class RandomCSVReaderTest {
 
     @BeforeClass
@@ -16,19 +18,25 @@ public class RandomCSVReaderTest {
     }
 
     @Test
-    public void testRead() throws Exception {
+    public void testRandomReadWithHeaderAndWithoutRepeat() throws Exception {
         String path = this.getClass().getResource("/JMeterCsvResults.csv").getPath();
-//        String path = "/home/artem/home/res.csv";
 
-        long st = System.currentTimeMillis();
-        RandomCSVReader reader = new RandomCSVReader(new File(path), "UTF-8", ',', true);
-        System.out.println("Init finished: " + (System.currentTimeMillis() - st));
+        RandomCSVReader reader = new RandomCSVReader(new File(path), "UTF-8", ',', true, true, false);
 
-        System.out.println("==========");
-        System.out.println(Arrays.toString(reader.getNextRecord()));
-        System.out.println(Arrays.toString(reader.getNextRecord()));
-        System.out.println(Arrays.toString(reader.getNextRecord()));
-        System.out.println(Arrays.toString(reader.getNextRecord()));
+        assertEquals("[timeStamp, elapsed, label, responseCode, responseMessage, threadName, dataType, success, bytes]",
+                Arrays.toString(reader.getHeader()));
 
+        String timeStamps = "1393227741256,1393227741257,1393227741258";
+
+        assertTrue(reader.hasNextRecord());
+        assertTrue(timeStamps.contains(reader.getNextRecord()[0]));
+
+        assertTrue(reader.hasNextRecord());
+        assertTrue(timeStamps.contains(reader.getNextRecord()[0]));
+
+        assertTrue(reader.hasNextRecord());
+        assertTrue(timeStamps.contains(reader.getNextRecord()[0]));
+
+        assertFalse(reader.hasNextRecord());
     }
 }
