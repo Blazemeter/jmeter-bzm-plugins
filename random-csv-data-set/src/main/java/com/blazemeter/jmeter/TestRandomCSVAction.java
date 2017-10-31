@@ -35,13 +35,8 @@ public class TestRandomCSVAction implements ActionListener {
         JTextArea checkArea = randomCSVConfigGui.getCheckArea();
 
         try {
-            final CompoundVariable compoundVariable = new CompoundVariable();
-
-            compoundVariable.setParameters(config.getFilename());
-            config.setFilename(compoundVariable.execute());
-
-            compoundVariable.setParameters(config.getVariableNames());
-            config.setVariableNames(compoundVariable.execute());
+            config.setFilename(compoundValue(config.getFilename()));
+            config.setVariableNames(compoundValue(config.getVariableNames()));
 
             JMeterVariables jMeterVariables = new JMeterVariables();
             JMeterContextService.getContext().setVariables(jMeterVariables);
@@ -88,4 +83,10 @@ public class TestRandomCSVAction implements ActionListener {
         }
     }
 
+
+    private String compoundValue(String val) throws InvalidVariableException {
+        CompoundVariable compoundVariable = new CompoundVariable();
+        compoundVariable.setParameters(val);
+        return compoundVariable.execute();
+    }
 }

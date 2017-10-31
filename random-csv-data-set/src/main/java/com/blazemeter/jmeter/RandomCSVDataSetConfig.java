@@ -52,9 +52,9 @@ public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThrea
 
     public String[] getDestinationVariableKeys() {
         String vars = getVariableNames();
-        return (vars == null || !vars.isEmpty()) ?
-                getReader().getHeader() :
-                JOrphanUtils.split(vars, ",");
+        return hasVariablesNames() ?
+                JOrphanUtils.split(vars, ",") :
+                getReader().getHeader();
     }
 
     // TODO: what we do when user set less columns that in file?
@@ -73,10 +73,16 @@ public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThrea
                 getFilename(),
                 getFileEncoding(),
                 getDelimiter(),
+                hasVariablesNames(),
                 isRandomOrder(),
                 isIgnoreFirstLine(),
                 isRewindOnTheEndOfList()
         );
+    }
+
+    private boolean hasVariablesNames() {
+        String vars = getVariableNames();
+        return (vars != null && !vars.isEmpty());
     }
 
     @Override

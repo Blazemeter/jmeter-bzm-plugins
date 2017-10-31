@@ -21,7 +21,6 @@ public class RandomCSVReader {
     private String encoding;
     private char delim;
     private boolean randomOrder;
-    private boolean firstLineIsHeader;
     private boolean isRewindOnEndOfList;
 
     private ArrayList<Integer> offsets;
@@ -32,14 +31,17 @@ public class RandomCSVReader {
     private BufferedReader consistentReader;
     private String[] header;
 
-    public RandomCSVReader(String filename, String encoding, String delim,
+    private boolean isSkipFirstLine;
+
+    public RandomCSVReader(String filename, String encoding,
+                           String delim, boolean hasVariableNames,
                            boolean randomOrder, boolean firstLineIsHeader,
                            boolean isRewindOnEndOfList) {
         this.file = new File(filename);
         this.encoding = encoding;
         this.delim = (delim != null && !delim.isEmpty()) ? delim.charAt(0) : ',';
+        this.isSkipFirstLine = !(!firstLineIsHeader && hasVariableNames);
         this.randomOrder = randomOrder;
-        this.firstLineIsHeader = firstLineIsHeader;
         this.isRewindOnEndOfList = isRewindOnEndOfList;
         try {
             initOffsets();
@@ -57,14 +59,18 @@ public class RandomCSVReader {
     }
 
     private void initHeader() {
-        if (firstLineIsHeader) {
-            header = readHeader();
+        try {
+            BufferedReader reader = new BufferedReader(createReader());
+            header = CSVSaveService.csvReadFile(reader, delim);
+        } catch (IOException ex) {
+            LOGGER.error("Cannot read CSV header ", ex);
+            throw new RuntimeException("Cannot read CSV header ", ex);
         }
     }
 
     private void initConsistentReader() throws IOException {
         consistentReader = new BufferedReader(createReader());
-        if (firstLineIsHeader && !this.offsets.isEmpty()) {
+        if (isSkipFirstLine && !this.offsets.isEmpty()) {
             consistentReader.skip(this.offsets.get(0)); //TODO: any other ideas how skip header?
         }
     }
@@ -79,8 +85,8 @@ public class RandomCSVReader {
                 return readCurrentLine();
             }
         } catch (IOException ex) {
-            LOGGER.error("Cannot get next record from csv file: " , ex);
-            throw new RuntimeException("Cannot get next record from csv file: " , ex);
+            LOGGER.error("Cannot get next record from csv file: ", ex);
+            throw new RuntimeException("Cannot get next record from csv file: ", ex);
         }
     }
 
@@ -110,20 +116,7 @@ public class RandomCSVReader {
     }
 
     public String[] getHeader() {
-        return (header != null) ? header : readHeader();
-    }
-
-    private String[] readHeader() {
-        try {
-            if (firstLineIsHeader) {
-                BufferedReader reader = new BufferedReader(createReader());
-                return CSVSaveService.csvReadFile(reader, delim);
-            }
-        } catch (IOException ex) {
-            LOGGER.error("Cannot read CSV header ", ex);
-            throw new RuntimeException("Cannot read CSV header ", ex);
-        }
-        return new String[0];
+        return header;
     }
 
     private String[] readCurrentLine() throws IOException {
@@ -137,7 +130,7 @@ public class RandomCSVReader {
 
     private void initOffsets() throws IOException {
         offsets = new ArrayList<>();
-        if (!firstLineIsHeader) {
+        if (!isSkipFirstLine) {
             offsets.add(0);
         }
         BufferedReaderExt reader = new BufferedReaderExt(createReader());
