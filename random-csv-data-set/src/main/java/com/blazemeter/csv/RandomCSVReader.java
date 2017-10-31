@@ -33,6 +33,8 @@ public class RandomCSVReader {
 
     private boolean isSkipFirstLine;
 
+    // TODO: close readers: 1 - after read header; before reInit
+
     public RandomCSVReader(String filename, String encoding,
                            String delim, boolean hasVariableNames,
                            boolean randomOrder, boolean firstLineIsHeader,
@@ -54,7 +56,7 @@ public class RandomCSVReader {
             initHeader();
         } catch (IOException ex) {
             LOGGER.error("Cannot initialize RandomCSVReader, because of error: ", ex);
-            throw new RuntimeException("Cannot initialize RandomCSVReader, because of error: ", ex);
+            throw new RuntimeException("Cannot initialize RandomCSVReader, because of error: " + ex.getMessage(), ex);
         }
     }
 
@@ -64,7 +66,7 @@ public class RandomCSVReader {
             header = CSVSaveService.csvReadFile(reader, delim);
         } catch (IOException ex) {
             LOGGER.error("Cannot read CSV header ", ex);
-            throw new RuntimeException("Cannot read CSV header ", ex);
+            throw new RuntimeException("Cannot read CSV header: " + ex.getMessage(), ex);
         }
     }
 
@@ -86,7 +88,7 @@ public class RandomCSVReader {
             }
         } catch (IOException ex) {
             LOGGER.error("Cannot get next record from csv file: ", ex);
-            throw new RuntimeException("Cannot get next record from csv file: ", ex);
+            throw new RuntimeException("Cannot get next record from csv file: " + ex.getMessage(), ex);
         }
     }
 
@@ -110,7 +112,7 @@ public class RandomCSVReader {
                 initConsistentReader();
             } catch (IOException ex) {
                 LOGGER.error("Cannot reInitialize consistent reader ", ex);
-                throw new RuntimeException("Cannot reInitialize consistent reader ", ex);
+                throw new RuntimeException("Cannot reInitialize consistent reader: " + ex.getMessage(), ex);
             }
         }
     }
