@@ -20,7 +20,6 @@ public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThrea
 
     public static final String RANDOM_ORDER = "randomOrder";
     public static final String IGNORE_FIRST_LINE = "ignoreFirstLine";
-    public static final String ALLOW_QUOTED_DATA = "allowQuotedData";
     public static final String REWIND_ON_THE_END = "rewindOnTheEndOfList";
     public static final String INDEPENDENT_LIST_PER_THREAD = "independentListPerThread";
 
@@ -147,14 +146,6 @@ public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThrea
 
     public void setIgnoreFirstLine(boolean ignoreFirstLine) {
         setProperty(IGNORE_FIRST_LINE, ignoreFirstLine);
-    }
-
-    public boolean isAllowQuotedData() {
-        return getPropertyAsBoolean(ALLOW_QUOTED_DATA);
-    }
-
-    public void setAllowQuotedData(boolean allowQuotedData) {
-        setProperty(ALLOW_QUOTED_DATA, allowQuotedData);
     }
 
     public boolean isRewindOnTheEndOfList() {

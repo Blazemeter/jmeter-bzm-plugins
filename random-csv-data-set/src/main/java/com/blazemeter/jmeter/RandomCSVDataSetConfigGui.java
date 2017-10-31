@@ -22,7 +22,6 @@ public class RandomCSVDataSetConfigGui extends AbstractConfigGui {
 
     private JCheckBox isRandomOrderCheckBox;
     private JCheckBox isIgnoreFirstLineCheckBox;
-    private JCheckBox isAllowQuotedDataCheckBox;
     private JCheckBox isRewindOnTheEndCheckBox;
     private JCheckBox isIndependentListCheckBox;
 
@@ -81,10 +80,6 @@ public class RandomCSVDataSetConfigGui extends AbstractConfigGui {
         addToPanel(mainPanel, editConstraints, 1, row, isRandomOrderCheckBox = new JCheckBox());
         row++;
 
-        addToPanel(mainPanel, labelConstraints, 0, row, new JLabel("Allow quoted data: ", JLabel.RIGHT));
-        addToPanel(mainPanel, editConstraints, 1, row, isAllowQuotedDataCheckBox = new JCheckBox());
-        row++;
-
         addToPanel(mainPanel, labelConstraints, 0, row, new JLabel("Rewind on end of list: ", JLabel.RIGHT));
         addToPanel(mainPanel, editConstraints, 1, row, isRewindOnTheEndCheckBox = new JCheckBox());
         row++;
@@ -124,7 +119,6 @@ public class RandomCSVDataSetConfigGui extends AbstractConfigGui {
 
         isRandomOrderCheckBox.setSelected(true);
         isIgnoreFirstLineCheckBox.setSelected(false);
-        isAllowQuotedDataCheckBox.setSelected(false);
         isRewindOnTheEndCheckBox.setSelected(true);
         isIndependentListCheckBox.setSelected(false);
 
@@ -167,7 +161,6 @@ public class RandomCSVDataSetConfigGui extends AbstractConfigGui {
 
             randomCSV.setRandomOrder(this.isRandomOrderCheckBox.isSelected());
             randomCSV.setIgnoreFirstLine(this.isIgnoreFirstLineCheckBox.isSelected());
-            randomCSV.setAllowQuotedData(this.isAllowQuotedDataCheckBox.isSelected());
             randomCSV.setRewindOnTheEndOfList(this.isRewindOnTheEndCheckBox.isSelected());
             randomCSV.setIndependentListPerThread(this.isIndependentListCheckBox.isSelected());
         }
@@ -187,7 +180,6 @@ public class RandomCSVDataSetConfigGui extends AbstractConfigGui {
 
             isRandomOrderCheckBox.setSelected(randomCSV.isRandomOrder());
             isIgnoreFirstLineCheckBox.setSelected(randomCSV.isIgnoreFirstLine());
-            isAllowQuotedDataCheckBox.setSelected(randomCSV.isAllowQuotedData());
             isRewindOnTheEndCheckBox.setSelected(randomCSV.isRewindOnTheEndOfList());
             isIndependentListCheckBox.setSelected(randomCSV.isIndependentListPerThread());
 
