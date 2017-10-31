@@ -33,7 +33,6 @@ public class RandomCSVReader {
 
     private boolean isSkipFirstLine;
 
-    // TODO: close readers: 1 - after read header; before reInit
 
     public RandomCSVReader(String filename, String encoding,
                            String delim, boolean randomOrder,
@@ -61,8 +60,7 @@ public class RandomCSVReader {
     }
 
     private void initHeader() {
-        try {
-            BufferedReader reader = new BufferedReader(createReader());
+        try (BufferedReader reader = new BufferedReader(createReader())) {
             header = CSVSaveService.csvReadFile(reader, delim);
         } catch (IOException ex) {
             LOGGER.error("Cannot read CSV header ", ex);
@@ -75,6 +73,10 @@ public class RandomCSVReader {
         if (isSkipFirstLine && !this.offsets.isEmpty()) {
             consistentReader.skip(this.offsets.get(0)); //TODO: any other ideas how skip header?
         }
+    }
+
+    private void closeConsistentReader() throws IOException {
+        consistentReader.close();
     }
 
     public String[] getNextRecord() {
@@ -109,6 +111,7 @@ public class RandomCSVReader {
             initRandom();
         } else {
             try {
+                closeConsistentReader();
                 initConsistentReader();
             } catch (IOException ex) {
                 LOGGER.error("Cannot reInitialize consistent reader ", ex);
@@ -135,12 +138,13 @@ public class RandomCSVReader {
         if (!isSkipFirstLine) {
             offsets.add(0);
         }
-        BufferedReaderExt reader = new BufferedReaderExt(createReader());
-        long fileSize = file.length();
-        while (reader.getPos() <= fileSize) {
-            CSVSaveService.csvReadFile(reader, delim);
-            if (reader.getPos() <= fileSize) {
-                offsets.add(reader.getPos());
+        try (BufferedReaderExt reader = new BufferedReaderExt(createReader())) {
+            long fileSize = file.length();
+            while (reader.getPos() <= fileSize) {
+                CSVSaveService.csvReadFile(reader, delim);
+                if (reader.getPos() <= fileSize) {
+                    offsets.add(reader.getPos());
+                }
             }
         }
         LOGGER.info("Found " + offsets.size() + " records in your csv file");
