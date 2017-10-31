@@ -144,7 +144,7 @@ public class RandomCSVDataSetConfigGui extends AbstractConfigGui {
 
     @Override
     public String getStaticLabel() {
-        return "bmz - Random CSV Data Set Config";
+        return "bzm - Random CSV Data Set Config";
     }
 
     @Override
