@@ -20,7 +20,7 @@ public class RandomCSVReaderTest {
     public void testRandomReadWithHeaderAndWithoutRepeat() throws Exception {
         String path = this.getClass().getResource("/JMeterCsvResults.csv").getPath();
 
-        RandomCSVReader reader = new RandomCSVReader(path, "UTF-8", ",", false, true, true, false);
+        RandomCSVReader reader = new RandomCSVReader(path, "UTF-8", ",", true, true, false, false);
 
         assertEquals("[timeStamp, elapsed, label, responseCode, responseMessage, threadName, dataType, success, bytes]",
                 Arrays.toString(reader.getHeader()));
@@ -65,5 +65,43 @@ public class RandomCSVReaderTest {
 
         assertTrue(reader.hasNextRecord());
         assertEquals("1393227741258", reader.getNextRecord()[0]);
+    }
+
+    @Test
+    public void testRecordsCount() throws Exception {
+        String path = this.getClass().getResource("/JMeterCsvResults.csv").getPath();
+
+        // test random
+        RandomCSVReader reader = new RandomCSVReader(path, "UTF-8", ",", true, false, false, false);
+        assertEquals(3, getRecordsCount(reader, 10));
+        reader = new RandomCSVReader(path, "UTF-8", ",", true, true, true, false);
+        assertEquals(3, getRecordsCount(reader, 10));
+        reader = new RandomCSVReader(path, "UTF-8", ",", true, false, true, false);
+        assertEquals(3, getRecordsCount(reader, 10));
+        reader = new RandomCSVReader(path, "UTF-8", ",", true, true, false, false);
+        assertEquals(4, getRecordsCount(reader, 10));
+
+
+        // test consistent
+        reader = new RandomCSVReader(path, "UTF-8", ",", false, false, false, false);
+        assertEquals(3, getRecordsCount(reader, 10));
+        reader = new RandomCSVReader(path, "UTF-8", ",", false, true, true, false);
+        assertEquals(3, getRecordsCount(reader, 10));
+        reader = new RandomCSVReader(path, "UTF-8", ",", false, false, true, false);
+        assertEquals(3, getRecordsCount(reader, 10));
+        reader = new RandomCSVReader(path, "UTF-8", ",", false, true, false, false);
+        assertEquals(4, getRecordsCount(reader, 10));
+    }
+
+    private int getRecordsCount(RandomCSVReader reader, int maxRecordsCount) {
+        int i = 0;
+        while (reader.hasNextRecord()) {
+            i++;
+            reader.getNextRecord();
+            if (i > maxRecordsCount) {
+                throw new AssertionError("File contains no more than " + maxRecordsCount);
+            }
+        }
+        return i;
     }
 }
