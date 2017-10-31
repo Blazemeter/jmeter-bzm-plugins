@@ -1,10 +1,15 @@
 package com.blazemeter.jmeter;
 
+import com.blazemeter.csv.RandomCSVReader;
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.engine.event.LoopIterationEvent;
 import org.apache.jmeter.engine.event.LoopIterationListener;
 import org.apache.jmeter.engine.util.NoThreadClone;
 import org.apache.jmeter.testelement.TestStateListener;
+import org.apache.jmeter.threads.JMeterContextService;
+import org.apache.jmeter.threads.JMeterVariables;
+import org.apache.jorphan.util.JMeterStopThreadException;
+import org.apache.jorphan.util.JOrphanUtils;
 
 public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThreadClone, LoopIterationListener, TestStateListener {
 
@@ -19,9 +24,60 @@ public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThrea
     public static final String REWIND_ON_THE_END = "rewindOnTheEndOfList";
     public static final String INDEPENDENT_LIST_PER_THREAD = "independentListPerThread";
 
+    private final ThreadLocal<RandomCSVReader> threadLocalRandomCSVReader = new ThreadLocal<RandomCSVReader>() {
+        @Override
+        protected RandomCSVReader initialValue() {
+            return createRandomCSVReader();
+        }
+    };
+
+    private RandomCSVReader randomCSVReader;
+
     @Override
     public void iterationStart(LoopIterationEvent loopIterationEvent) {
+        boolean isIndependentListPerThread = isIndependentListPerThread();
 
+        if (!isIndependentListPerThread && randomCSVReader == null) {
+            throw new JMeterStopThreadException("All records in the CSV file have been passed.");
+        }
+
+        if (getReader().hasNextRecord()) {
+            JMeterVariables variables = JMeterContextService.getContext().getVariables();
+            putVariables(variables, getKeys(), getReader().getNextRecord());
+        } else {
+            // TODO: interrupt iteration
+            randomCSVReader = null;
+            throw new JMeterStopThreadException("All records in the CSV file have been passed.");
+        }
+    }
+
+    private String[] getKeys() {
+        String vars = getVariableNames();
+        return (vars == null || !vars.isEmpty()) ?
+                getReader().getHeader() :
+                JOrphanUtils.split(vars, ",");
+    }
+
+    // TODO: what we do when user set less columns that in file?
+    private void putVariables(JMeterVariables variables, String[] keys, String[] values) {
+        for (int i = 0; i < keys.length; i++) {
+            variables.put(keys[i], values[i]);
+        }
+    }
+
+    private RandomCSVReader getReader() {
+        return isIndependentListPerThread() ? threadLocalRandomCSVReader.get() : randomCSVReader;
+    }
+
+    private RandomCSVReader createRandomCSVReader() {
+        return new RandomCSVReader(
+                getFilename(),
+                getFileEncoding(),
+                getDelimiter(),
+                isRandomOrder(),
+                isIgnoreFirstLine(),
+                isRewindOnTheEndOfList()
+        );
     }
 
     @Override
@@ -31,7 +87,7 @@ public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThrea
 
     @Override
     public void testStarted(String s) {
-
+        randomCSVReader = createRandomCSVReader();
     }
 
     @Override
@@ -41,7 +97,7 @@ public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThrea
 
     @Override
     public void testEnded(String s) {
-
+        randomCSVReader = null;
     }
 
 
