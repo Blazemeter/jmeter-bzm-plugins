@@ -43,7 +43,7 @@ public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThrea
 
         if (getReader().hasNextRecord()) {
             JMeterVariables variables = JMeterContextService.getContext().getVariables();
-            putVariables(variables, getKeys(), getReader().getNextRecord());
+            putVariables(variables, getDestinationVariableKeys(), getReader().getNextRecord());
         } else {
             // TODO: interrupt iteration
             randomCSVReader = null;
@@ -51,7 +51,7 @@ public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThrea
         }
     }
 
-    private String[] getKeys() {
+    public String[] getDestinationVariableKeys() {
         String vars = getVariableNames();
         return (vars == null || !vars.isEmpty()) ?
                 getReader().getHeader() :
