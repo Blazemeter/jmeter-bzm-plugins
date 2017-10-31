@@ -36,8 +36,8 @@ public class RandomCSVReader {
     // TODO: close readers: 1 - after read header; before reInit
 
     public RandomCSVReader(String filename, String encoding,
-                           String delim, boolean hasVariableNames,
-                           boolean randomOrder, boolean firstLineIsHeader,
+                           String delim, boolean randomOrder,
+                           boolean hasVariableNames, boolean firstLineIsHeader,
                            boolean isRewindOnEndOfList) {
         this.file = new File(filename);
         this.encoding = encoding;

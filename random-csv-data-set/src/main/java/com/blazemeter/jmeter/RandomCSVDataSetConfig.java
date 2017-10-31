@@ -73,8 +73,8 @@ public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThrea
                 getFilename(),
                 getFileEncoding(),
                 getDelimiter(),
-                hasVariablesNames(),
                 isRandomOrder(),
+                hasVariablesNames(),
                 isIgnoreFirstLine(),
                 isRewindOnTheEndOfList()
         );
