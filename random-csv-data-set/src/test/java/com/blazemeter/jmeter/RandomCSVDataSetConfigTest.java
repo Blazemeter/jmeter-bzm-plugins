@@ -34,11 +34,6 @@ public class RandomCSVDataSetConfigTest {
         randomCSV.setIgnoreFirstLine(false);
         assertFalse(randomCSV.isIgnoreFirstLine());
 
-        randomCSV.setAllowQuotedData(true);
-        assertTrue(randomCSV.isAllowQuotedData());
-        randomCSV.setAllowQuotedData(false);
-        assertFalse(randomCSV.isAllowQuotedData());
-
         randomCSV.setRewindOnTheEndOfList(true);
         assertTrue(randomCSV.isRewindOnTheEndOfList());
         randomCSV.setRewindOnTheEndOfList(false);
