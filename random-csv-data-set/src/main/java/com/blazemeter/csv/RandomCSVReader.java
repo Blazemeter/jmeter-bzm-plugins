@@ -40,7 +40,7 @@ public class RandomCSVReader {
                            boolean isRewindOnEndOfList) {
         this.file = new File(filename);
         this.encoding = encoding;
-        this.delim = (delim != null && !delim.isEmpty()) ? delim.charAt(0) : ',';
+        this.delim = checkDelimiter(delim).charAt(0);
         this.isSkipFirstLine = !(!firstLineIsHeader && hasVariableNames);
         this.randomOrder = randomOrder;
         this.isRewindOnEndOfList = isRewindOnEndOfList;
@@ -57,6 +57,16 @@ public class RandomCSVReader {
             LOGGER.error("Cannot initialize RandomCSVReader, because of error: ", ex);
             throw new RuntimeException("Cannot initialize RandomCSVReader, because of error: " + ex.getMessage(), ex);
         }
+    }
+
+    private String checkDelimiter(String delim) {
+        if ("\\t".equals(delim)) {
+            return "\t";
+        } else if (delim.isEmpty()){
+            LOGGER.debug("Empty delimiter, will use ','");
+            return ",";
+        }
+        return delim;
     }
 
     private void initHeader() {

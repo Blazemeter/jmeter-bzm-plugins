@@ -84,13 +84,13 @@ public class RandomCSVReaderTest {
 
         // test consistent
         reader = new RandomCSVReader(path, "UTF-8", ",", false, false, false, false);
-        assertEquals(3, getRecordsCount(reader, 10));
+        assertEquals(3, getRecordsCount(reader, 3));
         reader = new RandomCSVReader(path, "UTF-8", ",", false, true, true, false);
-        assertEquals(3, getRecordsCount(reader, 10));
+        assertEquals(3, getRecordsCount(reader, 3));
         reader = new RandomCSVReader(path, "UTF-8", ",", false, false, true, false);
-        assertEquals(3, getRecordsCount(reader, 10));
+        assertEquals(3, getRecordsCount(reader, 3));
         reader = new RandomCSVReader(path, "UTF-8", ",", false, true, false, false);
-        assertEquals(4, getRecordsCount(reader, 10));
+        assertEquals(4, getRecordsCount(reader, 4));
     }
 
     private int getRecordsCount(RandomCSVReader reader, int maxRecordsCount) {
@@ -104,4 +104,15 @@ public class RandomCSVReaderTest {
         }
         return i;
     }
+
+    @Test
+    public void testTabDelimiter() throws Exception {
+        String path = this.getClass().getResource("/TabDelimiter.csv").getPath();
+
+        RandomCSVReader reader = new RandomCSVReader(path, "UTF-8", "\t", false, false, false, false);
+        assertEquals("Expected 16 columns in csv", 16, reader.getHeader().length);
+        assertEquals("elapsed", reader.getHeader()[1]);
+        assertEquals(10, getRecordsCount(reader, 10));
+    }
+
 }
