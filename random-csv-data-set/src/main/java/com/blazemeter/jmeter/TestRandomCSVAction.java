@@ -4,7 +4,9 @@ import org.apache.jmeter.engine.util.CompoundVariable;
 import org.apache.jmeter.functions.InvalidVariableException;
 import org.apache.jmeter.threads.JMeterContextService;
 import org.apache.jmeter.threads.JMeterVariables;
+import org.apache.jorphan.logging.LoggingManager;
 import org.apache.jorphan.util.JMeterStopThreadException;
+import org.apache.log.Logger;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -16,6 +18,7 @@ import java.util.Map;
 
 public class TestRandomCSVAction implements ActionListener {
 
+    private static final Logger LOGGER = LoggingManager.getLoggerForClass();
     private final RandomCSVDataSetConfigGui randomCSVConfigGui;
 
     public TestRandomCSVAction(RandomCSVDataSetConfigGui randomCSVConfigGui) {
@@ -40,14 +43,14 @@ public class TestRandomCSVAction implements ActionListener {
             compoundVariable.setParameters(config.getVariableNames());
             config.setVariableNames(compoundVariable.execute());
 
-            String[] destinationVariableKeys = config.getDestinationVariableKeys();
-
             JMeterVariables jMeterVariables = new JMeterVariables();
             JMeterContextService.getContext().setVariables(jMeterVariables);
 
             final List<Map<String, String>> result = new ArrayList<>();
 
             config.testStarted();
+
+            String[] destinationVariableKeys = config.getDestinationVariableKeys();
 
             try {
                 while (true) {
@@ -73,7 +76,7 @@ public class TestRandomCSVAction implements ActionListener {
                     builder.append(record.get(key));
                     builder.append("\r\n");
                 }
-                builder.append("------------");
+                builder.append("------------\r\n");
             }
 
             checkArea.setText(builder.toString());
@@ -81,6 +84,7 @@ public class TestRandomCSVAction implements ActionListener {
             checkArea.setCaretPosition(0);
         } catch (RuntimeException | InvalidVariableException ex) {
             checkArea.setText(ex.getMessage());
+            LOGGER.warn("Failed to test CSV Reading ", ex);
         }
     }
 
