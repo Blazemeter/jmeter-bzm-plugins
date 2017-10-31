@@ -115,4 +115,14 @@ public class RandomCSVReaderTest {
         assertEquals(10, getRecordsCount(reader, 10));
     }
 
+    @Test
+    public void testSpaceDelimiter() throws Exception {
+        String path = this.getClass().getResource("/SpaceDelimiter.csv").getPath();
+
+        RandomCSVReader reader = new RandomCSVReader(path, "UTF-8", " ", false, false, false, false);
+        assertEquals("Expected 3 columns in csv", 3, reader.getHeader().length);
+        assertEquals("second", reader.getHeader()[1]);
+        assertEquals(3, getRecordsCount(reader, 3));
+    }
+
 }
