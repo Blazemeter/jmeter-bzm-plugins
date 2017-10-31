@@ -1,6 +1,8 @@
 package com.blazemeter.csv;
 
 import org.apache.jmeter.save.CSVSaveService;
+import org.apache.jorphan.logging.LoggingManager;
+import org.apache.log.Logger;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -13,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Random;
 
 public class RandomCSVReader {
+    private static final Logger LOGGER = LoggingManager.getLoggerForClass();
 
     private File file;
     private String encoding;
@@ -27,22 +30,35 @@ public class RandomCSVReader {
     private Random random;
 
     private BufferedReader consistentReader;
+    private String[] header;
 
-    public RandomCSVReader(File file, String encoding, char delim,
+    public RandomCSVReader(String filename, String encoding, String delim,
                            boolean randomOrder, boolean firstLineIsHeader,
-                           boolean isRewindOnEndOfList) throws IOException {
-        this.file = file;
+                           boolean isRewindOnEndOfList) {
+        this.file = new File(filename);
         this.encoding = encoding;
-        this.delim = delim;
+        this.delim = (delim != null && !delim.isEmpty()) ? delim.charAt(0) : ',';
         this.randomOrder = randomOrder;
         this.firstLineIsHeader = firstLineIsHeader;
         this.isRewindOnEndOfList = isRewindOnEndOfList;
-        initOffsets();
-        if (randomOrder) {
-            rbr = new RandomBufferedReader(createReader(), new RandomAccessFile(file, "r"));
-            initRandom();
-        } else {
-            initConsistentReader();
+        try {
+            initOffsets();
+            if (randomOrder) {
+                rbr = new RandomBufferedReader(createReader(), new RandomAccessFile(file, "r"));
+                initRandom();
+            } else {
+                initConsistentReader();
+            }
+            initHeader();
+        } catch (IOException ex) {
+            LOGGER.error("Cannot initialize RandomCSVReader, because of error: ", ex);
+            throw new RuntimeException("Cannot initialize RandomCSVReader, because of error: ", ex);
+        }
+    }
+
+    private void initHeader() {
+        if (firstLineIsHeader) {
+            header = readHeader();
         }
     }
 
@@ -53,19 +69,25 @@ public class RandomCSVReader {
         }
     }
 
-    public String[] getNextRecord() throws IOException {
-        if (randomOrder) {
-            int pos = getRandomPos();
-            swap(curPos + pos);
-            return readCurrentLineWithSeek();
-        } else {
-            return readCurrentLine();
+    public String[] getNextRecord() {
+        try {
+            if (randomOrder) {
+                int pos = getRandomPos();
+                swap(curPos + pos);
+                return readCurrentLineWithSeek();
+            } else {
+                return readCurrentLine();
+            }
+        } catch (IOException ex) {
+            LOGGER.error("Cannot get next record from csv file: " , ex);
+            throw new RuntimeException("Cannot get next record from csv file: " , ex);
         }
     }
 
-    public boolean hasNextRecord() throws IOException {
+    public boolean hasNextRecord() {
         if (!(curPos < offsets.size()) && isRewindOnEndOfList) {
             reInitialize();
+            LOGGER.debug("Reset cursor position");
             curPos = 0;
             return true;
         } else if (curPos < offsets.size()) {
@@ -74,20 +96,34 @@ public class RandomCSVReader {
         return false;
     }
 
-    private void reInitialize() throws IOException {
+    private void reInitialize() {
         if (randomOrder) {
             initRandom();
         } else {
-            initConsistentReader();
+            try {
+                initConsistentReader();
+            } catch (IOException ex) {
+                LOGGER.error("Cannot reInitialize consistent reader ", ex);
+                throw new RuntimeException("Cannot reInitialize consistent reader ", ex);
+            }
         }
     }
 
-    public String[] getHeader() throws IOException {
-        if (firstLineIsHeader) {
-            BufferedReader reader = new BufferedReader(createReader());
-            return CSVSaveService.csvReadFile(reader, delim);
+    public String[] getHeader() {
+        return (header != null) ? header : readHeader();
+    }
+
+    private String[] readHeader() {
+        try {
+            if (firstLineIsHeader) {
+                BufferedReader reader = new BufferedReader(createReader());
+                return CSVSaveService.csvReadFile(reader, delim);
+            }
+        } catch (IOException ex) {
+            LOGGER.error("Cannot read CSV header ", ex);
+            throw new RuntimeException("Cannot read CSV header ", ex);
         }
-        return null;
+        return new String[0];
     }
 
     private String[] readCurrentLine() throws IOException {
@@ -112,6 +148,7 @@ public class RandomCSVReader {
                 offsets.add(reader.getPos());
             }
         }
+        LOGGER.info("Found " + offsets.size() + " records in your csv file");
     }
 
     private void swap(int pos) {
