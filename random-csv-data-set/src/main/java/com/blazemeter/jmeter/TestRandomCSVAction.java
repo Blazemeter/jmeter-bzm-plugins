@@ -37,6 +37,8 @@ public class TestRandomCSVAction implements ActionListener {
         try {
             config.setFilename(compoundValue(config.getFilename()));
             config.setVariableNames(compoundValue(config.getVariableNames()));
+            config.setFileEncoding(compoundValue(config.getFileEncoding()));
+            config.setDelimiter(compoundValue(config.getDelimiter()));
 
             JMeterVariables jMeterVariables = new JMeterVariables();
             JMeterContextService.getContext().setVariables(jMeterVariables);
