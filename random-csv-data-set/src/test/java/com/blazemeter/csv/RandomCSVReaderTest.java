@@ -20,7 +20,7 @@ public class RandomCSVReaderTest {
     public void testRandomReadWithHeaderAndWithoutRepeat() throws Exception {
         String path = this.getClass().getResource("/JMeterCsvResults.csv").getPath();
 
-        RandomCSVReader reader = new RandomCSVReader(path, "UTF-8", ",", true, true, false, false);
+        RandomCSVReader reader = new RandomCSVReader(path, "UTF-8", ",", true, false, false, false);
 
         assertEquals("[timeStamp, elapsed, label, responseCode, responseMessage, threadName, dataType, success, bytes]",
                 Arrays.toString(reader.getHeader()));
