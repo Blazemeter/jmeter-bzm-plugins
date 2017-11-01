@@ -11,6 +11,7 @@ import java.awt.*;
 
 public class RandomCSVDataSetConfigGui extends AbstractConfigGui {
 
+    // TODO: use full URL and change cmn version to 0.6 after it has been released
     public static final String WIKIPAGE = "RandomCSVDataSetConfig";
 
     private JTextField filenameField;
