@@ -1,6 +1,7 @@
 package com.blazemeter.csv;
 
 import org.apache.jmeter.save.CSVSaveService;
+import org.apache.jmeter.services.FileServer;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 
@@ -38,7 +39,9 @@ public class RandomCSVReader {
                            String delim, boolean randomOrder,
                            boolean hasVariableNames, boolean firstLineIsHeader,
                            boolean isRewindOnEndOfList) {
-        this.file = new File(filename);
+        File f = new File(filename);
+        System.out.println((f.isAbsolute() || f.exists()));
+        this.file = (f.isAbsolute() || f.exists()) ? f : new File(FileServer.getFileServer().getBaseDir(), filename);
         this.encoding = encoding;
         this.delim = checkDelimiter(delim).charAt(0);
         this.isSkipFirstLine = !(!firstLineIsHeader && hasVariableNames);
