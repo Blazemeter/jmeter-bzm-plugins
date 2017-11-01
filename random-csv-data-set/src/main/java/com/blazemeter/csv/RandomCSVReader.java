@@ -40,7 +40,6 @@ public class RandomCSVReader {
                            boolean hasVariableNames, boolean firstLineIsHeader,
                            boolean isRewindOnEndOfList) {
         File f = new File(filename);
-        System.out.println((f.isAbsolute() || f.exists()));
         this.file = (f.isAbsolute() || f.exists()) ? f : new File(FileServer.getFileServer().getBaseDir(), filename);
         this.encoding = encoding;
         this.delim = checkDelimiter(delim).charAt(0);
