@@ -40,6 +40,6 @@ public class TestRandomCSVActionTest {
         config.setFilename("");
         gui.configure(config);
         action.actionPerformed(null);
-        assertTrue(gui.getCheckArea().getText().contains("No such file or directory"));
+        assertTrue(gui.getCheckArea().getText().contains("Is a directory"));
     }
 }
