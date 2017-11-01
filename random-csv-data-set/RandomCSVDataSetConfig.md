@@ -12,4 +12,6 @@ This plugin has following options that affect the behavior:
   * `First line is CSV header` - select this flag to skip header(used only if `Variable Names` is not empty);
   * `Independent list per thread` - determines that CSV data set will be shared for all threads or each thread will be having own local copy.
 
+_In preview area shows only 20 records from CSV file._
+
 ![](randomCSVDataSetConfig.png)

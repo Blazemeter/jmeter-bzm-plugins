@@ -19,6 +19,7 @@ import java.util.Map;
 public class TestRandomCSVAction implements ActionListener {
 
     private static final Logger LOGGER = LoggingManager.getLoggerForClass();
+    private static final int PREVIEW_MAX_SIZE = 20;
     private final RandomCSVDataSetConfigGui randomCSVConfigGui;
 
     public TestRandomCSVAction(RandomCSVDataSetConfigGui randomCSVConfigGui) {
@@ -50,7 +51,7 @@ public class TestRandomCSVAction implements ActionListener {
             String[] destinationVariableKeys = config.getDestinationVariableKeys();
 
             try {
-                while (true) {
+                for (int i = 0; i < PREVIEW_MAX_SIZE; i++) {
                     config.iterationStart(null);
                     Map<String, String> record = new HashMap<>();
                     for (String var : destinationVariableKeys) {
