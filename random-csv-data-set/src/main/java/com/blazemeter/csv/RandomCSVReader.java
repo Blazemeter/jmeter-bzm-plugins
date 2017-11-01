@@ -148,6 +148,7 @@ public class RandomCSVReader {
         if (!isSkipFirstLine) {
             offsets.add(0);
         }
+        LOGGER.info("Start reading the file: " + file.getAbsolutePath());
         try (BufferedReaderExt reader = new BufferedReaderExt(createReader())) {
             long fileSize = file.length();
             while (reader.getPos() <= fileSize) {
@@ -157,7 +158,7 @@ public class RandomCSVReader {
                 }
             }
         }
-        LOGGER.info("Found " + offsets.size() + " records in your csv file");
+        LOGGER.info("Reading finished. Found " + offsets.size() + " records in your csv file");
     }
 
     private void swap(int pos) {
