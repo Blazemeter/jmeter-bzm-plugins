@@ -57,9 +57,9 @@ public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThrea
                 getReader().getHeader();
     }
 
-    // TODO: what we do when user set less columns that in file?
     private void putVariables(JMeterVariables variables, String[] keys, String[] values) {
-        for (int i = 0; i < keys.length; i++) {
+        int minLen = (keys.length > values.length) ? values.length : keys.length;
+        for (int i = 0; i < minLen; i++) {
             variables.put(keys[i], values[i]);
         }
     }
