@@ -123,10 +123,10 @@ public class LoadosophiaClient implements BackendListenerClient {
         } catch (Throwable ex) {
             informer.notifyAbout("Failed to upload results to BM.Sense, see log for detais: " + ex.getMessage());
             log.error("Failed to upload results (file: '" + fileName + "') to BM.Sense", ex);
-        }
-
-        if (isOnlineInitiated) {
-            finishOnline(redirectLink + "#tab=tabTimelines");
+        } finally {
+            if (isOnlineInitiated) {
+                finishOnline(redirectLink + "#tab=tabTimelines");
+            }
         }
 
         resultCollector.clearData();
