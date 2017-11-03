@@ -30,7 +30,7 @@ public class LoadosophiaUploader extends BackendListener implements StatusNotifi
     public static final String STORE_DIR = "storeDir";
     public static final String USE_ONLINE = "useOnline";
 
-    protected static ResultCollector resultCollector = new CorrectedResultCollector();
+    protected static ResultCollector resultCollector;
     private static volatile AtomicBoolean isTestStarted = new AtomicBoolean(false);
     protected String fileName;
     protected LoadosophiaUploaderGui gui;
@@ -57,6 +57,7 @@ public class LoadosophiaUploader extends BackendListener implements StatusNotifi
         final boolean isStarted = isTestStarted.getAndSet(true);
         if (!isStarted) {
             try {
+                resultCollector = new CorrectedResultCollector();
                 setupSaving();
             } catch (IOException ex) {
                 log.error("Unable to set up saving config", ex);
