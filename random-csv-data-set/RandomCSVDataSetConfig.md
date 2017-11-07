@@ -7,10 +7,10 @@ This plugin has following options that affect the behavior:
   * `File encoding` - encoding of this CSV file;
   * `Delimiter` - delimiter that be used to split records in the file;
   * `Variable Names` - list (comma-separated) of variable names;
-  * `Random order`  - reading in random order;
+  * `Random order`  - The plugin will get records from the file in random order. This is the part that provides this element’s added value. If you don’t select this option, the element will work like the regular CSV Data Set Config.;
   * `Rewind on end of list` - if the flag is selected and an iteration loop has reached the end, the new loop will be started;
   * `First line is CSV header` - select this flag to skip header(used only if `Variable Names` is not empty);
-  * `Independent list per thread` - determines that CSV data set will be shared for all threads or each thread will be having own local copy.
+  * `Independent list per thread` - When this is checked with “Random order”, each thread runs its own random sequence instead of all of them going over the same order of variables.
 
 _***At the beginning of the test, the config reads file. There are a delay and a large memory consumption for large files.***_
 
