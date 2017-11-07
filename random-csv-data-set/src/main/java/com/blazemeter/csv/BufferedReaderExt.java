@@ -25,10 +25,9 @@ public class BufferedReaderExt extends BufferedReader {
         int res = super.read();
         if (res <= Byte.MAX_VALUE) {
             pos++;
-        } else if (res <= Short.MAX_VALUE) {
-            pos += 2;
         } else {
-            pos += 4;
+            byte[] buf = new String(new char[]{(char) res}).getBytes();
+            pos += buf.length;
         }
         return res;
     }
