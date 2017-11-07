@@ -1,5 +1,6 @@
 package com.blazemeter.csv;
 
+import com.mchange.util.AssertException;
 import kg.apc.emulators.TestJMeterUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -65,6 +66,53 @@ public class RandomCSVReaderTest {
 
         assertTrue(reader.hasNextRecord());
         assertEquals("1393227741258", reader.getNextRecord()[0]);
+    }
+
+    @Test
+    public void testMultiBytes() throws Exception {
+        String path = this.getClass().getResource("/text.csv").getPath();
+
+        RandomCSVReader reader = new RandomCSVReader(path, "UTF-8", ";", true, false, false, false);
+
+        assertEquals("[firstname, lastname, street, city]",
+                Arrays.toString(reader.getHeader()));
+
+        String[] record;
+
+        for (int i = 0; i < 4; i++) {
+            assertTrue(reader.hasNextRecord());
+            record = reader.getNextRecord();
+            assertRecord(record);
+        }
+
+        assertFalse(reader.hasNextRecord());
+    }
+
+    private void assertRecord(String[] record) {
+        switch (record[0]) {
+            case "Hänsel" :
+                assertEquals("Mustermann", record[1]);
+                assertEquals("Einbahnstraße", record[2]);
+                assertEquals("Hamburg", record[3]);
+                break;
+            case "André" :
+                assertEquals("Lecompte", record[1]);
+                assertEquals("Rue du marché", record[2]);
+                assertEquals("Moÿ-de-l'Aisne", record[3]);
+                break;
+            case "Ἀλέξανδρος" :
+                assertEquals("Павлов", record[1]);
+                assertEquals("Большая Пироговская улица", record[2]);
+                assertEquals("Москва́", record[3]);
+                break;
+            case "בנימין" : // idea shows incorrect this line. firstname is real Benjamin -> 'בנימין'
+                assertEquals("يعقوب", record[1]);
+                assertEquals("Street", record[2]);
+                assertEquals("Megapolis", record[3]);
+                break;
+            default:
+                throw new AssertException("No such firstname in csv file " + record[0]);
+        }
     }
 
     @Test
