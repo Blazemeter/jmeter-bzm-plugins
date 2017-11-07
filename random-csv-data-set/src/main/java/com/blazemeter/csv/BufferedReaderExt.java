@@ -22,8 +22,14 @@ public class BufferedReaderExt extends BufferedReader {
 
     @Override
     public int read() throws IOException {
-        pos++;
-        return super.read();
+        int res = super.read();
+        if (res <= Byte.MAX_VALUE) {
+            pos++;
+        } else {
+            byte[] buf = new String(new char[]{(char) res}).getBytes();
+            pos += buf.length;
+        }
+        return res;
     }
 
     @Override
