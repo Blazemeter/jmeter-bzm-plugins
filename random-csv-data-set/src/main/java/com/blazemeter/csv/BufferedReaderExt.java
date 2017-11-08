@@ -4,29 +4,31 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.CharBuffer;
+import java.nio.charset.Charset;
 
 public class BufferedReaderExt extends BufferedReader {
+
     private int pos;
+    private Charset charset;
 
-    public BufferedReaderExt(Reader in, int sz) {
-        super(in, sz);
-    }
 
-    public BufferedReaderExt(Reader in) {
+    public BufferedReaderExt(Reader in, String encoding) {
         super(in);
+        charset = Charset.forName(encoding);
     }
 
     public int getPos() {
         return pos;
     }
 
+    // JMeter used just this read() method.
     @Override
     public int read() throws IOException {
         int res = super.read();
         if (res <= Byte.MAX_VALUE) {
             pos++;
         } else {
-            byte[] buf = new String(new char[]{(char) res}).getBytes();
+            byte[] buf = new String(new char[]{(char) res}).getBytes(charset);
             pos += buf.length;
         }
         return res;
