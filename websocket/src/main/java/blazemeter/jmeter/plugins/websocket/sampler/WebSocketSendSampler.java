@@ -64,16 +64,22 @@ public class WebSocketSendSampler extends WebSocketAbstractSampler {
     	
     	String connectionId = getThreadName() + getServer() + getPath() + getPort();
     	
+    	try {
+			sampleResult.setRequestHeaders(sampleResult.getRequestHeaders() + "URI: " + this.getUri().toString() + "\n\n");
+		} catch (URISyntaxException e1) {
+			sampleResult.setRequestHeaders(sampleResult.getRequestHeaders() + "URI: " + e1.getMessage() + "\n\n");
+		}
     	sampleResult.sampleStart();
     	
     	Handler handler;
 		try {
-			handler = getConnection (connectionId);
+			handler = getConnection (connectionId, sampleResult);
 		} catch (Exception e) {
 			sampleResult.setSuccessful(false);
 			sampleResult.setResponseMessage(e.getMessage());
 			sampleResult.setResponseData(e.getStackTrace().toString(),"utf-8");
 	    	sampleResult.sampleEnd();
+	    	e.printStackTrace();
 	    	return sampleResult;
 		}
 		
