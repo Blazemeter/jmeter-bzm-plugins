@@ -134,7 +134,11 @@ public abstract class WebSocketAbstractSampler extends AbstractSampler implement
 	    public Handler getConnection (String connectionId, SampleResult sampleResult) throws Exception{
 	    	
 	    	if (connectionList.containsKey(connectionId)){
-	    		return connectionList.get(connectionId);
+	    		Handler h = connectionList.get(connectionId);
+	    		if (h.isConnected())
+	    			return h;
+	    		else 
+	    			connectionList.remove(h);
 	    	}
 	    	
 	    	if(getProtocolWSMQTTComboBox().equals("Mqtt")){
