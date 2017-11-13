@@ -153,9 +153,9 @@ public class RandomCSVReader {
         LOGGER.info("Start reading the file: " + file.getAbsolutePath());
         try (BufferedReaderExt reader = new BufferedReaderExt(createReader(), encoding)) {
             long fileSize = file.length();
-            while (reader.getPos() <= fileSize) {
+            while (reader.getPos() < fileSize) {
                 CSVSaveService.csvReadFile(reader, delim);
-                if (reader.getPos() <= fileSize) {
+                if (reader.getPos() < fileSize) {
                     offsets.add(reader.getPos());
                 }
             }
