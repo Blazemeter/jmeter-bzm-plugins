@@ -49,7 +49,7 @@ public class RandomCSVReader {
         try {
             initOffsets();
             if (randomOrder) {
-                rbr = new RandomBufferedReader(createReader(), new RandomAccessFile(file, "r"));
+                rbr = new RandomBufferedReader(createReader(), new RandomAccessFile(file, "r"), encoding);
                 initRandom();
             } else {
                 initConsistentReader();
