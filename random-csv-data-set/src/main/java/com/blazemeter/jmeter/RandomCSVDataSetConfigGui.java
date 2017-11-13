@@ -63,7 +63,7 @@ public class RandomCSVDataSetConfigGui extends AbstractConfigGui {
         editConstraints.insets = new java.awt.Insets(2, 0, 0, 0);
         labelConstraints.insets = new java.awt.Insets(2, 0, 0, 0);
 
-        browseButton.addActionListener(new BrowseAction(filenameField, true));
+        browseButton.addActionListener(new BrowseAction(filenameField, false));
 
         addToPanel(mainPanel, labelConstraints, 0, row, new JLabel("File encoding: ", JLabel.RIGHT));
         addToPanel(mainPanel, editConstraints, 1, row, fileEncodingField = new JTextField(20));
