@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
 import java.io.Reader;
+import java.nio.channels.ClosedChannelException;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -158,6 +159,9 @@ public class RandomCSVReader {
         try {
             rbr.get().seek(pos);
             return CSVSaveService.csvReadFile(rbr.get(), delim);
+        } catch (ClosedChannelException ex) {
+            LOGGER.warn("The channel has been closed");
+            return new String[0];
         } catch (IOException ex) {
             LOGGER.error("Cannot get next record from csv file: ", ex);
             throw new RuntimeException("Cannot get next record from csv file: " + ex.getMessage(), ex);
