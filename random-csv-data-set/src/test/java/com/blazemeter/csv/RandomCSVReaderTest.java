@@ -5,7 +5,9 @@ import kg.apc.emulators.TestJMeterUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -173,4 +175,35 @@ public class RandomCSVReaderTest {
         assertEquals(3, getRecordsCount(reader, 3));
     }
 
+
+    @Test
+    public void testEmptyLastLine() throws Exception {
+        String path = this.getClass().getResource("/EmptyLastLine.csv").getPath();
+
+        RandomCSVReader reader = new RandomCSVReader(path, "UTF-8", " ", true, true, true, false);
+
+        List<String> results = new ArrayList<>();
+        results.add(Arrays.toString(new String[] {"1","2","3"}));
+        results.add(Arrays.toString(new String[] {"4","5","6"}));
+        results.add(Arrays.toString(new String[] {"7","8","9"}));
+
+
+        assertTrue(reader.hasNextRecord());
+        String record = Arrays.toString(reader.getNextRecord());
+        assertTrue(results.contains(record));
+        results.remove(record);
+
+        assertTrue(reader.hasNextRecord());
+        record = Arrays.toString(reader.getNextRecord());
+        assertTrue(results.contains(record));
+        results.remove(record);
+
+        assertTrue(reader.hasNextRecord());
+        record = Arrays.toString(reader.getNextRecord());
+        assertTrue(results.contains(record));
+        results.remove(record);
+
+        assertFalse(reader.hasNextRecord());
+        assertEquals(0, results.size());
+    }
 }
