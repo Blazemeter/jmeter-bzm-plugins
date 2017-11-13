@@ -29,15 +29,18 @@ public class RandomCSVReaderTest {
                 Arrays.toString(reader.getHeader()));
 
         String timeStamps = "1393227741256,1393227741257,1393227741258";
+        long lineAddr;
+        assertTrue(reader.hasNextRecord());
+        lineAddr = reader.getNextLineAddr();
+        assertTrue(timeStamps.contains(reader.readLineWithSeek(lineAddr)[0]));
 
         assertTrue(reader.hasNextRecord());
-        assertTrue(timeStamps.contains(reader.getNextRecord()[0]));
+        lineAddr = reader.getNextLineAddr();
+        assertTrue(timeStamps.contains(reader.readLineWithSeek(lineAddr)[0]));
 
         assertTrue(reader.hasNextRecord());
-        assertTrue(timeStamps.contains(reader.getNextRecord()[0]));
-
-        assertTrue(reader.hasNextRecord());
-        assertTrue(timeStamps.contains(reader.getNextRecord()[0]));
+        lineAddr = reader.getNextLineAddr();
+        assertTrue(timeStamps.contains(reader.readLineWithSeek(lineAddr)[0]));
 
         assertFalse(reader.hasNextRecord());
     }
@@ -52,22 +55,22 @@ public class RandomCSVReaderTest {
                 Arrays.toString(reader.getHeader()));
 
         assertTrue(reader.hasNextRecord());
-        assertEquals("1393227741256", reader.getNextRecord()[0]);
+        assertEquals("1393227741256", reader.readNextLine()[0]);
 
         assertTrue(reader.hasNextRecord());
-        assertEquals("1393227741257", reader.getNextRecord()[0]);
+        assertEquals("1393227741257", reader.readNextLine()[0]);
 
         assertTrue(reader.hasNextRecord());
-        assertEquals("1393227741258", reader.getNextRecord()[0]);
+        assertEquals("1393227741258", reader.readNextLine()[0]);
 
         assertTrue(reader.hasNextRecord());
-        assertEquals("1393227741256", reader.getNextRecord()[0]);
+        assertEquals("1393227741256", reader.readNextLine()[0]);
 
         assertTrue(reader.hasNextRecord());
-        assertEquals("1393227741257", reader.getNextRecord()[0]);
+        assertEquals("1393227741257", reader.readNextLine()[0]);
 
         assertTrue(reader.hasNextRecord());
-        assertEquals("1393227741258", reader.getNextRecord()[0]);
+        assertEquals("1393227741258", reader.readNextLine()[0]);
     }
 
     @Test
@@ -83,7 +86,8 @@ public class RandomCSVReaderTest {
 
         for (int i = 0; i < 4; i++) {
             assertTrue(reader.hasNextRecord());
-            record = reader.getNextRecord();
+            long addr = reader.getNextLineAddr();
+            record = reader.readLineWithSeek(addr);
             assertRecord(record);
         }
 
@@ -123,31 +127,35 @@ public class RandomCSVReaderTest {
 
         // test random
         RandomCSVReader reader = new RandomCSVReader(path, "UTF-8", ",", true, false, false, false);
-        assertEquals(3, getRecordsCount(reader, 10));
+        assertEquals(3, getRecordsCount(reader, 10, true));
         reader = new RandomCSVReader(path, "UTF-8", ",", true, true, true, false);
-        assertEquals(3, getRecordsCount(reader, 10));
+        assertEquals(3, getRecordsCount(reader, 10, true));
         reader = new RandomCSVReader(path, "UTF-8", ",", true, false, true, false);
-        assertEquals(3, getRecordsCount(reader, 10));
+        assertEquals(3, getRecordsCount(reader, 10, true));
         reader = new RandomCSVReader(path, "UTF-8", ",", true, true, false, false);
-        assertEquals(4, getRecordsCount(reader, 10));
+        assertEquals(4, getRecordsCount(reader, 10, true));
 
 
         // test consistent
         reader = new RandomCSVReader(path, "UTF-8", ",", false, false, false, false);
-        assertEquals(3, getRecordsCount(reader, 3));
+        assertEquals(3, getRecordsCount(reader, 3, false));
         reader = new RandomCSVReader(path, "UTF-8", ",", false, true, true, false);
-        assertEquals(3, getRecordsCount(reader, 3));
+        assertEquals(3, getRecordsCount(reader, 3, false));
         reader = new RandomCSVReader(path, "UTF-8", ",", false, false, true, false);
-        assertEquals(3, getRecordsCount(reader, 3));
+        assertEquals(3, getRecordsCount(reader, 3, false));
         reader = new RandomCSVReader(path, "UTF-8", ",", false, true, false, false);
-        assertEquals(4, getRecordsCount(reader, 4));
+        assertEquals(4, getRecordsCount(reader, 4, false));
     }
 
-    private int getRecordsCount(RandomCSVReader reader, int maxRecordsCount) {
+    private int getRecordsCount(RandomCSVReader reader, int maxRecordsCount, boolean isRandom) {
         int i = 0;
         while (reader.hasNextRecord()) {
             i++;
-            reader.getNextRecord();
+            if (isRandom) {
+                reader.readLineWithSeek(reader.getNextLineAddr());
+            } else {
+                reader.readNextLine();
+            }
             if (i > maxRecordsCount) {
                 throw new AssertionError("File contains no more than " + maxRecordsCount);
             }
@@ -162,7 +170,7 @@ public class RandomCSVReaderTest {
         RandomCSVReader reader = new RandomCSVReader(path, "UTF-8", "\t", false, false, false, false);
         assertEquals("Expected 16 columns in csv", 16, reader.getHeader().length);
         assertEquals("elapsed", reader.getHeader()[1]);
-        assertEquals(10, getRecordsCount(reader, 10));
+        assertEquals(10, getRecordsCount(reader, 10, false));
     }
 
     @Test
@@ -172,7 +180,7 @@ public class RandomCSVReaderTest {
         RandomCSVReader reader = new RandomCSVReader(path, "UTF-8", " ", false, false, false, false);
         assertEquals("Expected 3 columns in csv", 3, reader.getHeader().length);
         assertEquals("second", reader.getHeader()[1]);
-        assertEquals(3, getRecordsCount(reader, 3));
+        assertEquals(3, getRecordsCount(reader, 3, false));
     }
 
 
@@ -187,19 +195,22 @@ public class RandomCSVReaderTest {
         results.add(Arrays.toString(new String[] {"4","5","6"}));
         results.add(Arrays.toString(new String[] {"7","8","9"}));
 
-
+        long addr;
         assertTrue(reader.hasNextRecord());
-        String record = Arrays.toString(reader.getNextRecord());
+        addr = reader.getNextLineAddr();
+        String record = Arrays.toString(reader.readLineWithSeek(addr));
         assertTrue(results.contains(record));
         results.remove(record);
 
         assertTrue(reader.hasNextRecord());
-        record = Arrays.toString(reader.getNextRecord());
+        addr = reader.getNextLineAddr();
+        record = Arrays.toString(reader.readLineWithSeek(addr));
         assertTrue(results.contains(record));
         results.remove(record);
 
         assertTrue(reader.hasNextRecord());
-        record = Arrays.toString(reader.getNextRecord());
+        addr = reader.getNextLineAddr();
+        record = Arrays.toString(reader.readLineWithSeek(addr));
         assertTrue(results.contains(record));
         results.remove(record);
 
