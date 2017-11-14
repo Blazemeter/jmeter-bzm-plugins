@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
 import java.io.Reader;
+import java.nio.channels.ClosedChannelException;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -26,7 +27,17 @@ public class RandomCSVReader {
 
     private ArrayList<Integer> offsets;
     private int curPos = 0;
-    private RandomBufferedReader rbr;
+    private final ThreadLocal<RandomBufferedReader> rbr = new ThreadLocal<RandomBufferedReader>() {
+        @Override
+        protected RandomBufferedReader initialValue() {
+            try {
+                return new RandomBufferedReader(createReader(), new RandomAccessFile(file, "r"), encoding);
+            } catch (IOException e) {
+                LOGGER.error("Cannot create RandomBufferedReader", e);
+                throw new RuntimeException("Cannot create RandomBufferedReader", e);
+            }
+        }
+    };
     private Random random;
 
     private BufferedReader consistentReader;
@@ -49,7 +60,6 @@ public class RandomCSVReader {
         try {
             initOffsets();
             if (randomOrder) {
-                rbr = new RandomBufferedReader(createReader(), new RandomAccessFile(file, "r"));
                 initRandom();
             } else {
                 initConsistentReader();
@@ -64,7 +74,7 @@ public class RandomCSVReader {
     private String checkDelimiter(String delim) {
         if ("\\t".equals(delim)) {
             return "\t";
-        } else if (delim.isEmpty()){
+        } else if (delim.isEmpty()) {
             LOGGER.debug("Empty delimiter, will use ','");
             return ",";
         }
@@ -89,21 +99,6 @@ public class RandomCSVReader {
 
     private void closeConsistentReader() throws IOException {
         consistentReader.close();
-    }
-
-    public String[] getNextRecord() {
-        try {
-            if (randomOrder) {
-                int pos = getRandomPos();
-                swap(curPos + pos);
-                return readCurrentLineWithSeek();
-            } else {
-                return readCurrentLine();
-            }
-        } catch (IOException ex) {
-            LOGGER.error("Cannot get next record from csv file: ", ex);
-            throw new RuntimeException("Cannot get next record from csv file: " + ex.getMessage(), ex);
-        }
     }
 
     public boolean hasNextRecord() {
@@ -136,9 +131,45 @@ public class RandomCSVReader {
         return header;
     }
 
-    private String[] readCurrentLine() throws IOException {
+    public String[] readNextLine() {
+        try {
+            curPos++;
+            return CSVSaveService.csvReadFile(consistentReader, delim);
+        } catch (IOException ex) {
+            LOGGER.error("Cannot get next record from csv file: ", ex);
+            throw new RuntimeException("Cannot get next record from csv file: " + ex.getMessage(), ex);
+        }
+    }
+
+    public long getNextLineAddr() {
+        int pos = getRandomPos();
+        swap(curPos + pos);
+        long lineAddr = offsets.get(curPos);
         curPos++;
-        return CSVSaveService.csvReadFile(consistentReader, delim);
+        return lineAddr;
+    }
+
+    private void swap(int pos) {
+        Integer tmp = offsets.get(curPos);
+        offsets.set(curPos, offsets.get(pos));
+        offsets.set(pos, tmp);
+    }
+
+    public String[] readLineWithSeek(long pos) {
+        try {
+            rbr.get().seek(pos);
+            return CSVSaveService.csvReadFile(rbr.get(), delim);
+        } catch (ClosedChannelException ex) {
+            LOGGER.warn("The channel has been closed");
+            return new String[0];
+        } catch (IOException ex) {
+            LOGGER.error("Cannot get next record from csv file: ", ex);
+            throw new RuntimeException("Cannot get next record from csv file: " + ex.getMessage(), ex);
+        }
+    }
+
+    private int getRandomPos() {
+        return random.nextInt(offsets.size() - curPos);
     }
 
     private void initRandom() {
@@ -161,23 +192,6 @@ public class RandomCSVReader {
             }
         }
         LOGGER.info("Reading finished. Found " + offsets.size() + " records in your csv file");
-    }
-
-    private void swap(int pos) {
-        Integer tmp = offsets.get(curPos);
-        offsets.set(curPos, offsets.get(pos));
-        offsets.set(pos, tmp);
-    }
-
-    private String[] readCurrentLineWithSeek() throws IOException {
-        long lineAddr = offsets.get(curPos);
-        curPos++;
-        rbr.seek(lineAddr);
-        return CSVSaveService.csvReadFile(rbr, delim);
-    }
-
-    private int getRandomPos() {
-        return random.nextInt(offsets.size() - curPos);
     }
 
     private Reader createReader() throws IOException {

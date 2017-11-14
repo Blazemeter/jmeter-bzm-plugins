@@ -40,11 +40,37 @@ public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThrea
             throw new JMeterStopThreadException("All records in the CSV file have been passed.");
         }
 
+        if (isRandomOrder()) {
+            readRandom();
+        } else {
+            readConsistent();
+        }
+    }
+
+    private void readRandom() {
+        final RandomCSVReader reader = getReader();
+        long lineAddr;
+        synchronized (reader) {
+            if (reader.hasNextRecord()) {
+                lineAddr = reader.getNextLineAddr();
+            } else {
+                // TODO: interrupt iteration
+                randomCSVReader = null;
+                throw new JMeterStopThreadException("All records in the CSV file have been passed.");
+            }
+        }
+
+        JMeterVariables variables = JMeterContextService.getContext().getVariables();
+        putVariables(variables, getDestinationVariableKeys(), reader.readLineWithSeek(lineAddr));
+    }
+
+
+    private void readConsistent() {
         final RandomCSVReader reader = getReader();
         synchronized (reader) {
             if (reader.hasNextRecord()) {
                 JMeterVariables variables = JMeterContextService.getContext().getVariables();
-                putVariables(variables, getDestinationVariableKeys(), reader.getNextRecord());
+                putVariables(variables, getDestinationVariableKeys(), reader.readNextLine());
             } else {
                 // TODO: interrupt iteration
                 randomCSVReader = null;
