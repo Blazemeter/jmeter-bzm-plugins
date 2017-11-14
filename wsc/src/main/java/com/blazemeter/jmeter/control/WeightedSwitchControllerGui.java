@@ -86,7 +86,9 @@ public class WeightedSwitchControllerGui extends AbstractControllerGui {
         super.configureTestElement(element);
         if (element instanceof WeightedSwitchController) {
             WeightedSwitchController wsc = (WeightedSwitchController) element;
-            wsc.setData(grid.getModel());
+            if (grid.getModel().getRowCount() > 0){
+                wsc.setData(grid.getModel());
+            }
         }
     }
 
