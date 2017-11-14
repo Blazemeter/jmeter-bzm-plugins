@@ -6,7 +6,7 @@
 
     <groupId>com.blazemeter.jmeter</groupId>
     <artifactId>jmeter-plugins-random-csv-data-set</artifactId>
-    <version>0.3</version>
+    <version>0.4</version>
 
     <developers>
         <developer>
