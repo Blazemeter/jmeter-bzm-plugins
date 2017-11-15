@@ -121,6 +121,7 @@ public class WebSocketConnection extends Handler implements Serializable{
     public void close(int statusCode, String statusText) {
         if (session != null) {
             session.close(statusCode, statusText);
+            this.connected = false;
         } else {
         	log.error("Error closing connection, session wasn't started");
         }
