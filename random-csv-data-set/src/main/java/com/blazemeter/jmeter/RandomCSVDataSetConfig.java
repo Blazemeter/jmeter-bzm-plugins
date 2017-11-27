@@ -11,6 +11,8 @@ import org.apache.jmeter.threads.JMeterVariables;
 import org.apache.jorphan.util.JMeterStopThreadException;
 import org.apache.jorphan.util.JOrphanUtils;
 
+import java.io.Serializable;
+
 public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThreadClone, LoopIterationListener, TestStateListener {
 
     public static final String FILENAME = "filename";
@@ -23,12 +25,15 @@ public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThrea
     public static final String REWIND_ON_THE_END = "rewindOnTheEndOfList";
     public static final String INDEPENDENT_LIST_PER_THREAD = "independentListPerThread";
 
-    private final ThreadLocal<RandomCSVReader> threadLocalRandomCSVReader = new ThreadLocal<RandomCSVReader>() {
+    private final ThreadLocal<RandomCSVReader> threadLocalRandomCSVReader = new ThreadLocalSerializable<RandomCSVReader>() {
         @Override
         protected RandomCSVReader initialValue() {
             return createRandomCSVReader();
         }
     };
+
+    private static class ThreadLocalSerializable<T> extends ThreadLocal<T> implements Serializable {
+    }
 
     private RandomCSVReader randomCSVReader;
 
