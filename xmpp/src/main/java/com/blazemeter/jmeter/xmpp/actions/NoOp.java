@@ -54,7 +54,7 @@ public class NoOp extends AbstractXMPPAction implements PacketListener {
                 subRes.setSuccessful(false);
                 subRes.setResponseCode("500");
                 subRes.setResponseMessage(packet.getError().toString());
-            } else if ((packet instanceof IQ) && (((IQ) packet).getType() == IQ.Type.ERROR)) {
+            } else if ((packet instanceof IQ) && (((IQ) packet).getType() == IQ.Type.error)) {
                 subRes.setSuccessful(false);
                 subRes.setResponseCode("500");
                 subRes.setResponseMessage(packet.getError().toString());

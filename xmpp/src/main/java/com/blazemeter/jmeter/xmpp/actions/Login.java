@@ -8,6 +8,7 @@ import javax.swing.JTextField;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
+import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.XMPPConnection;
 
 public class Login extends AbstractXMPPAction {
@@ -45,10 +46,11 @@ public class Login extends AbstractXMPPAction {
         String pwdStr = sampler.getPropertyAsString(PASSWORD);
         String resStr = sampler.getPropertyAsString(RESOURCE);
         res.setSamplerData("Username: " + loginStr + "\nPassword: " + pwdStr + "\nResource: " + resStr);
+        AbstractXMPPConnection absConn = (AbstractXMPPConnection) conn;
         if (loginStr.isEmpty()) {
-            conn.loginAnonymously();
+            absConn.loginAnonymously();
         } else {
-            conn.login(loginStr, pwdStr, resStr);
+            absConn.login(loginStr, pwdStr, resStr);
         }
         return res;
     }
