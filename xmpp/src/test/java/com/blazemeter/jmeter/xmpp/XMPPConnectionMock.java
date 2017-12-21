@@ -4,10 +4,11 @@ import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 import org.jivesoftware.smack.*;
 import org.jivesoftware.smack.packet.Packet;
+import org.jivesoftware.smack.packet.PlainStreamElement;
 
 import java.io.IOException;
 
-public class XMPPConnectionMock extends XMPPConnection {
+public class XMPPConnectionMock extends AbstractXMPPConnection {
     private static final Logger log = LoggingManager.getLoggerForClass();
 
     public boolean isConnected = true;
@@ -50,6 +51,11 @@ public class XMPPConnectionMock extends XMPPConnection {
     @Override
     protected void sendPacketInternal(Packet packet) throws SmackException.NotConnectedException {
         log.debug("Emul sending packet: " + packet.toXML());
+    }
+
+    @Override
+    public void send(PlainStreamElement element) throws SmackException.NotConnectedException {
+        log.debug("Emul sending packet: " + element.toXML());
     }
 
     @Override

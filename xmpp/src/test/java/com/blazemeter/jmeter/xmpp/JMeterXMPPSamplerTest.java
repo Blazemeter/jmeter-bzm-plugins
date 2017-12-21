@@ -90,7 +90,7 @@ public class JMeterXMPPSamplerTest {
 
         for (int a = 0; a < 2; a++) {
             doAction(obj, Connect.class);
-            SASLAuthentication.getRegisterSASLMechanisms();
+            SASLAuthentication.getRegisterdSASLMechanisms();
             doAction(obj, Login.class);
             //Thread.sleep(500);
             doAction(obj, Disconnect.class);

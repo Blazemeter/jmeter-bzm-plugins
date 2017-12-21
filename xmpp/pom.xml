@@ -57,6 +57,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.7</maven.compiler.source>
         <maven.compiler.target>1.7</maven.compiler.target>
+        <smack.version>4.1.0-alpha3</smack.version>
     </properties>
     <dependencies>
         <dependency>
@@ -68,12 +69,12 @@
         <dependency>
             <groupId>org.igniterealtime.smack</groupId>
             <artifactId>smack-tcp</artifactId>
-            <version>4.0.7</version>
+            <version>${smack.version}</version>
         </dependency>
         <dependency>
             <groupId>org.igniterealtime.smack</groupId>
             <artifactId>smack-bosh</artifactId>
-            <version>4.0.7</version>
+            <version>${smack.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.igniterealtime.jbosh</groupId>
@@ -89,7 +90,22 @@
         <dependency>
             <groupId>org.igniterealtime.smack</groupId>
             <artifactId>smack-extensions</artifactId>
-            <version>4.0.7</version>
+            <version>${smack.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.igniterealtime.smack</groupId>
+            <artifactId>smack-java7</artifactId>
+            <version>${smack.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.igniterealtime.smack</groupId>
+            <artifactId>smack-sasl-provided</artifactId>
+            <version>${smack.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jxmpp</groupId>
+            <artifactId>jxmpp-stringprep-libidn</artifactId>
+            <version>0.4.0</version>
         </dependency>
 
         <dependency>
