@@ -8,9 +8,10 @@ import org.apache.jmeter.threads.ListenerNotifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class ParallelListenerNotifier extends ListenerNotifier {
+public class ParallelListenerNotifier extends ListenerNotifier implements Serializable {
     private static final Logger log = LoggerFactory.getLogger(ParallelListenerNotifier.class);
     private SampleResult container = new SampleResult();
 
