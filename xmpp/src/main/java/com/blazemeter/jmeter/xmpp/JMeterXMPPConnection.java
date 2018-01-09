@@ -38,7 +38,9 @@ public class JMeterXMPPConnection extends JMeterXMPPConnectionBase {
             if (conn.isConnected()) {
                 try {
                     log.debug("Disconnecting: " + conn.getConnectionID());
-                    conn.disconnect();
+                    if(conn instanceof AbstractXMPPConnection){
+                        ((AbstractXMPPConnection)conn).disconnect();
+                    }
                 } catch (SmackException.NotConnectedException e) {
                     log.error("Not connected, nothing to disconnect");
                 }

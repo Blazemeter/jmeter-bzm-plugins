@@ -4,6 +4,8 @@
 
 ### Step to use HTTP2 Sampler
 
+As Java 8 does not have native support for HTTP/2, you will need to ensure you have alpn-boot on your system and edit JVM_ARGS as follows:
+
 1- Download alpn-boot according to your JVM version
 		https://www.eclipse.org/jetty/documentation/9.4.x/alpn-chapter.html
 	

@@ -13,6 +13,7 @@ public class RotatingResultCollector extends ResultCollector {
 
     private int maxSamplesCount;
     private int currentSamplesCount;
+    private String originalFilename;
     protected String filename;
     private boolean isChanging;
 
@@ -23,7 +24,7 @@ public class RotatingResultCollector extends ResultCollector {
             if (currentSamplesCount >= maxSamplesCount) {
                 testEnded();
                 nullifyPrintWriter();   // HACK for previous versions
-                filename = getRotatedFilename(filename);
+                filename = getRotatedFilename(filename, originalFilename);
                 LOGGER.info("Creating new log chunk: " + filename);
                 currentSamplesCount = 0;
                 testStarted();
@@ -50,6 +51,7 @@ public class RotatingResultCollector extends ResultCollector {
     public void testStarted(String host) {
         super.testStarted(host);
         this.maxSamplesCount = getMaxSamplesCountAsInt();
+        this.originalFilename = super.getFilename();
     }
 
     protected int getMaxSamplesCountAsInt() {
@@ -69,8 +71,9 @@ public class RotatingResultCollector extends ResultCollector {
         setProperty(MAX_SAMPLES_COUNT, maxSamplesCount);
     }
 
-    protected static String getRotatedFilename(String origFile) {
-        String[] parts = origFile.split("[.]");
+    protected static String getRotatedFilename(String nameToChange, String originalFilename) {
+        String[] originalParts = originalFilename.split("[.]");
+        String[] parts = nameToChange.split("[.]");
         final int length = parts.length;
 
         if (length > 2) {
@@ -80,8 +83,17 @@ public class RotatingResultCollector extends ResultCollector {
                 LOGGER.debug("Can't cast to integer " + parts[length - 2], ex);
                 parts[length - 1] = "1." + parts[length - 1];
             }
-        } else {
+        } else if (length == 2 && originalParts.length == 1) {
+            try {
+                parts[length - 1] = String.valueOf(Integer.parseInt(parts[length - 1]) + 1);
+            } catch (NumberFormatException ex) {
+                LOGGER.debug("Can't cast to integer " + parts[length - 1], ex);
+                parts[length - 1] = parts[length - 1] + ".1";
+            }
+        } else if (length == 2) {
             parts[length - 1] = "1." + parts[length - 1];
+        } else {
+            parts[length - 1] = parts[length - 1] + ".1";
         }
 
         final StringBuilder builder = new StringBuilder();
