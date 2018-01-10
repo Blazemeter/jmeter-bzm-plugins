@@ -38,7 +38,7 @@ import java.util.concurrent.ThreadFactory;
 public class ParallelSampler extends AbstractSampler implements Controller, ThreadListener, Interruptible, JMeterThreadMonitor, Serializable {
     private static final Logger log = LoggerFactory.getLogger(ParallelSampler.class);
     private static final String GENERATE_PARENT = "PARENT_SAMPLE";
-    protected transient List<TestElement> controllers = new ArrayList<>();
+    protected List<TestElement> controllers = new ArrayList<>();
     protected final ParallelListenerNotifier notifier = new ParallelListenerNotifier();
     private ExecutorService executorService;
 
