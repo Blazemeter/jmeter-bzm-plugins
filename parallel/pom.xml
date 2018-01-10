@@ -7,6 +7,29 @@
     <groupId>com.blazemeter</groupId>
     <artifactId>jmeter-parallel</artifactId>
     <version>0.3</version>
+    <name>Parallel Sampling for JMeter</name>
+    <description>Parallel Sampling for JMeter</description>
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <url>http://jmeter-plugins.org/</url>
+    <scm>
+        <url>https://github.com/blazemeter/jmeter-bzm-plugins</url>
+        <connection>https://github.com/blazemeter/jmeter-bzm-plugins.git</connection>
+        <developerConnection>git@github.com:blazemeter/jmeter-bzm-plugins.git</developerConnection>
+    </scm>
+    <developers>
+        <developer>
+            <id>team</id>
+            <name>jmeter-plugins.org</name>
+            <email>jmeter-plugins@googlegroups.com</email>
+        </developer>
+    </developers>
+
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
