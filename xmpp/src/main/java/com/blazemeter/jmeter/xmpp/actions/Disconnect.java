@@ -2,6 +2,7 @@ package com.blazemeter.jmeter.xmpp.actions;
 
 import com.blazemeter.jmeter.xmpp.JMeterXMPPSampler;
 import org.apache.jmeter.samplers.SampleResult;
+import org.jivesoftware.smack.AbstractXMPPConnection;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,8 +19,8 @@ public class Disconnect extends AbstractXMPPAction {
         if (!sampler.getXMPPConnection().isConnected()) {
             return res;
         }
-
-        sampler.getXMPPConnection().disconnect();
+        AbstractXMPPConnection conn = (AbstractXMPPConnection)sampler.getXMPPConnection();
+        conn.disconnect();
         if (sampler.getXMPPConnectionConfig() != null)
             sampler.getXMPPConnectionConfig().resetConnection();
         return res;

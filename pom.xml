@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>kg.apc</groupId>
+    <groupId>com.blazemeter.jmeter</groupId>
     <artifactId>jmeter-bzm-plugins</artifactId>
     <version>0.0</version>
     <packaging>pom</packaging>
@@ -20,5 +20,6 @@
         <module>hls</module>
         <module>http2</module>
         <module>websocket</module>
+        <module>random-csv-data-set</module>
     </modules>
 </project>

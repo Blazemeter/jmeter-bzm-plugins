@@ -26,7 +26,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.Stack;
-import java.util.TimeZone;
 import java.util.TreeMap;
 
 public class LoadosophiaClient implements BackendListenerClient {
@@ -123,11 +122,11 @@ public class LoadosophiaClient implements BackendListenerClient {
             informer.notifyAbout("<p>Uploaded successfully, go to results: <a href='" + redirectLink + "'>" + redirectLink + "</a></p>");
         } catch (Throwable ex) {
             informer.notifyAbout("Failed to upload results to BM.Sense, see log for detais: " + ex.getMessage());
-            log.error("Failed to upload results to BM.Sense", ex);
-        }
-
-        if (isOnlineInitiated) {
-            finishOnline(redirectLink + "#tab=tabTimelines");
+            log.error("Failed to upload results (file: '" + fileName + "') to BM.Sense", ex);
+        } finally {
+            if (isOnlineInitiated) {
+                finishOnline(redirectLink + "#tab=tabTimelines");
+            }
         }
 
         resultCollector.clearData();

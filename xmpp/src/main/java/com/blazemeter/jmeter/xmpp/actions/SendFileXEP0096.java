@@ -125,7 +125,7 @@ public class SendFileXEP0096 extends AbstractXMPPAction implements FileTransferL
 
     @Override
     public void connected(XMPPConnection connection) {
-        this.mgr = new FileTransferManager(connection);
+        this.mgr = FileTransferManager.getInstanceFor(connection);
         mgr.addFileTransferListener(this);
     }
 

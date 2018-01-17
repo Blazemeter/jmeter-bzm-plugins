@@ -81,6 +81,14 @@ public class BlazeMeterBackendListenerClient implements BackendListenerClient {
 
         accumulator.addAll(list);
         JSONObject data = JSONConverter.convertToJSON(accumulator, list);
+
+        int counter = 0;
+        while (!apiClient.isTestStarted() && counter < 3) {
+            log.debug("Waiting for test starting");
+            makeDelay();
+            counter++;
+        }
+
         try {
             apiClient.sendOnlineData(data);
         } catch (JMeterStopTestException ex) {
@@ -90,6 +98,10 @@ public class BlazeMeterBackendListenerClient implements BackendListenerClient {
             log.warn("Failed to send data: " + data, e);
         }
 
+        makeDelay();
+    }
+
+    private void makeDelay() {
         try {
             Thread.sleep(delay);
         } catch (InterruptedException e) {

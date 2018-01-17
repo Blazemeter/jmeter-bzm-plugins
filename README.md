@@ -3,7 +3,10 @@ Consolidated repository with all CA BlazeMeter's plugins for JMeter. All of the 
 
 Contents:
  - [Directory Listing Data Source](directory-listing/DirectoryListing.md)
+ - [HTTP Live Streaming - HLS](hls/README.md)
+ - [HTTP/2 Protocol](http2/README.md)
  - [Parallel Controller](parallel/Parallel.md)
+ - [Random CSV Data Set Config ](random-csv-data-set/RandomCSVDataSetConfig.md)
  - [Rotating JTL File Listener](rotating-listener/RotatingListener.md)
  - [Weighted Switch Controller](wsc/WeightedSwitchController.md)
  - [XMPP Connection](xmpp/XMPPConnection.md) and [XMPP Sampler](xmpp/XMPPSampler.md)  

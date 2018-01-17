@@ -6,6 +6,7 @@ import kg.apc.jmeter.vizualizers.CorrectedResultCollector;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.gui.MainFrame;
 import org.apache.jmeter.reporters.ResultCollector;
+import org.apache.jmeter.samplers.Clearable;
 import org.apache.jmeter.samplers.SampleEvent;
 import org.apache.jmeter.samplers.SampleSaveConfiguration;
 import org.apache.jmeter.testelement.TestElement;
@@ -17,8 +18,9 @@ import org.apache.log.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-public class LoadosophiaUploader extends BackendListener implements StatusNotifierCallback {
+public class LoadosophiaUploader extends BackendListener implements StatusNotifierCallback, Clearable {
 
     private static final Logger log = LoggingManager.getLoggerForClass();
     public static final String TITLE = "title";
@@ -28,7 +30,8 @@ public class LoadosophiaUploader extends BackendListener implements StatusNotifi
     public static final String STORE_DIR = "storeDir";
     public static final String USE_ONLINE = "useOnline";
 
-    protected ResultCollector resultCollector = new CorrectedResultCollector();
+    protected static ResultCollector resultCollector;
+    private static volatile AtomicBoolean isTestStarted = new AtomicBoolean(false);
     protected String fileName;
     protected LoadosophiaUploaderGui gui;
     public static final String FILE_NAME = "fileName";
@@ -51,14 +54,20 @@ public class LoadosophiaUploader extends BackendListener implements StatusNotifi
 
     @Override
     public void testStarted(String host) {
-        try {
-            setupSaving();
-        } catch (IOException ex) {
-            log.error("Unable to set up saving config", ex);
+        final boolean isStarted = isTestStarted.getAndSet(true);
+        if (!isStarted) {
+            try {
+                resultCollector = new CorrectedResultCollector();
+                setupSaving();
+            } catch (IOException ex) {
+                log.error("Unable to set up saving config", ex);
+            }
         }
         setArguments(createArguments());
         super.testStarted(host);
-        initClient();
+        if (!isStarted) {
+            initClient();
+        }
         resultCollector.testStarted(host);
     }
 
@@ -79,6 +88,7 @@ public class LoadosophiaUploader extends BackendListener implements StatusNotifi
     public void testEnded(String host) {
         super.testEnded(host);
         resultCollector.testEnded(host);
+        isTestStarted.set(false);
     }
 
     @Override
@@ -207,5 +217,17 @@ public class LoadosophiaUploader extends BackendListener implements StatusNotifi
         } catch (IllegalAccessException | NoSuchFieldException e) {
             log.error("Cannot inject links into backend listener client", e);
         }
+    }
+
+
+    // This is required so that
+    // @see org.apache.jmeter.gui.tree.JMeterTreeModel.getNodesOfType()
+    // can find the Clearable nodes - the userObject has to implement the interface.
+    @Override
+    public void clearData() {
+    }
+
+    protected void resetTest() {
+        isTestStarted.set(false);
     }
 }

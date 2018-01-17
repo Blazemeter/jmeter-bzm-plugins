@@ -3,6 +3,7 @@ package com.blazemeter.jmeter.xmpp.actions;
 
 import com.blazemeter.jmeter.xmpp.JMeterXMPPSampler;
 import org.apache.jmeter.samplers.SampleResult;
+import org.jivesoftware.smack.AbstractXMPPConnection;
 
 import javax.swing.*;
 import java.awt.*;
@@ -15,7 +16,8 @@ public class Connect extends AbstractXMPPAction {
 
     @Override
     public SampleResult perform(JMeterXMPPSampler sampler, SampleResult res) throws Exception {
-        sampler.getXMPPConnection().connect();
+        AbstractXMPPConnection conn = (AbstractXMPPConnection)sampler.getXMPPConnection();
+        conn.connect();
         res.setResponseData(sampler.getXMPPConnection().getConnectionID().getBytes());
         return res;
     }

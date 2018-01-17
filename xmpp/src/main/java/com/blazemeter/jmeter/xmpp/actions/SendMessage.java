@@ -10,13 +10,10 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Packet;
-import org.jivesoftware.smack.util.StringUtils;
-import org.jivesoftware.smackx.delay.packet.DelayInfo;
-import org.jivesoftware.smackx.delay.packet.DelayInformation;
+import org.jxmpp.util.XmppStringUtils;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -31,7 +28,7 @@ public class SendMessage extends AbstractXMPPAction implements PacketListener, C
 
     public static final String NEED_RESPONSE_MARKER = "ExpectedResponseMarker";
     public static final String RESPONSE_MARKER = "ProvidedResponseMarker";
-    private final static String NS_DELAYED = (new DelayInfo(new DelayInformation(new Date()))).getNamespace();
+    private final static String NS_DELAYED = "urn:xmpp:delay";
 
     private JTextField msgRecipient;
     private JTextArea msgBody;
@@ -76,7 +73,7 @@ public class SendMessage extends AbstractXMPPAction implements PacketListener, C
             while (packets.hasNext()) {
                 Packet packet = packets.next();
                 Message response = (Message) packet;
-                if (StringUtils.parseBareAddress(response.getFrom()).equals(recipient)) {
+                if (XmppStringUtils.parseBareAddress(response.getFrom()).equals(recipient)) {
                     packets.remove();
                     res.setResponseData(response.toXML().toString().getBytes());
                     if (response.getError() != null) {

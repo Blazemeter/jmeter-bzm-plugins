@@ -2,7 +2,7 @@ package com.blazemeter.api;
 
 import com.blazemeter.api.data.JSONConverter;
 import com.blazemeter.api.http.BlazeMeterHttpUtilsEmul;
-import kg.apc.jmeter.http.HttpUtils;
+import kg.apc.jmeter.http.HttpUtilsEmul;
 import kg.apc.jmeter.reporters.notifier.StatusNotifierCallbackTest;
 import net.sf.json.JSON;
 import net.sf.json.JSONArray;
@@ -18,7 +18,6 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 public class BlazemeterAPIClientTest {
 
@@ -26,9 +25,20 @@ public class BlazemeterAPIClientTest {
     public void testStartAnonTest() throws Exception {
         StatusNotifierCallbackTest.StatusNotifierCallbackImpl callback = new StatusNotifierCallbackTest.StatusNotifierCallbackImpl();
         BlazeMeterReport report = new BlazeMeterReport();
-        BlazeMeterAPIClient apiClient = new BlazeMeterAPIClient(
-                new HttpUtils(callback, "https://a.blazemeter.com/", "https://a.blazemeter.com/"),
-                callback, report);
+        HttpUtilsEmul httpUtils = new HttpUtilsEmul(callback, "https://a.blazemeter.com/", "https://a.blazemeter.com/");
+        httpUtils.addEmul("{}");
+        httpUtils.addEmul("{\"result\": {" +
+                "\"test\": {\"id\": 1, \"name\": \"atest\"}, " +
+                "\"master\": {\"id\": 1, \"name\": \"atest\"}, " +
+                "\"session\": {\"id\": 1, \"name\": \"atest\", \"userId\": \"atest\"}, " +
+                "\"publicTokenUrl\": \"http://\", " +
+                "\"signature\": \"sign\"" +
+                "}}");
+        httpUtils.addEmul("{\"result\": {" +
+                "\"session\": {\"id\": 1, \"name\": \"atest\", \"userId\": \"atest\", \"statusCode\": \"50\"} "+
+                "}}");
+        httpUtils.addEmul("{}");
+        BlazeMeterAPIClient apiClient = new BlazeMeterAPIClient(httpUtils, callback, report);
         apiClient.prepare();
         assertEquals(report, apiClient.getReport());
         String link = apiClient.startOnline();

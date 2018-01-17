@@ -6,7 +6,7 @@
 
     <groupId>kg.apc</groupId>
     <artifactId>jmeter-plugins-wsc</artifactId>
-    <version>0.2</version>
+    <version>0.3</version>
 
     <name>Weighted Switch Controller</name>
     <description>Weighted switch controller plugin</description>

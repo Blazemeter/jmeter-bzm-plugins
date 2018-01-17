@@ -1,0 +1,11 @@
+timeStamp	elapsed	label	responseCode	responseMessage	threadName	dataType	success	failureMessage	bytes	sentBytes	grpThreads	allThreads	Latency	IdleTime	Connect
+1509464779128	131	jp@gc - Dummy Sampler	200	OK	Thread Group 1-1	text	true		114	0	1	1	33	0	4
+1509464779260	478	jp@gc - Dummy Sampler	200	OK	Thread Group 1-1	text	true		114	0	1	1	27	0	2
+1509464779738	175	jp@gc - Dummy Sampler	200	OK	Thread Group 1-1	text	true		114	0	1	1	22	0	1
+1509464779913	186	jp@gc - Dummy Sampler	200	OK	Thread Group 1-1	text	true		114	0	1	1	25	0	5
+1509464780099	87	jp@gc - Dummy Sampler	200	OK	Thread Group 1-1	text	true		114	0	1	1	40	0	4
+1509464780186	484	jp@gc - Dummy Sampler	200	OK	Thread Group 1-1	text	true		114	0	1	1	19	0	5
+1509464780671	480	jp@gc - Dummy Sampler	200	OK	Thread Group 1-1	text	true		114	0	1	1	38	0	1
+1509464781152	207	jp@gc - Dummy Sampler	200	OK	Thread Group 1-1	text	true		114	0	1	1	29	0	1
+1509464781359	102	jp@gc - Dummy Sampler	200	OK	Thread Group 1-1	text	true		114	0	1	1	14	0	4
+1509464781461	407	jp@gc - Dummy Sampler	200	OK	Thread Group 1-1	text	true		114	0	1	1	26	0	5
