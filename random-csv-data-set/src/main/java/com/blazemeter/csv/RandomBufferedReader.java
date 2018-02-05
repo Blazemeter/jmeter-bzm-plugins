@@ -44,4 +44,11 @@ public class RandomBufferedReader extends BufferedReader {
     public void reset() throws IOException {
         raf.seek(markedPosition);
     }
+
+    @Override
+    public void close() throws IOException {
+        super.close();
+        is.close();
+    }
+
 }

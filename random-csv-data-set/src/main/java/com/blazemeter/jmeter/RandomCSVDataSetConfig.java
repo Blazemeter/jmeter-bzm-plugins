@@ -6,14 +6,20 @@ import org.apache.jmeter.engine.event.LoopIterationEvent;
 import org.apache.jmeter.engine.event.LoopIterationListener;
 import org.apache.jmeter.engine.util.NoThreadClone;
 import org.apache.jmeter.testelement.TestStateListener;
+import org.apache.jmeter.testelement.ThreadListener;
 import org.apache.jmeter.threads.JMeterContextService;
 import org.apache.jmeter.threads.JMeterVariables;
+import org.apache.jorphan.logging.LoggingManager;
 import org.apache.jorphan.util.JMeterStopThreadException;
 import org.apache.jorphan.util.JOrphanUtils;
+import org.apache.log.Logger;
 
+import java.io.IOException;
 import java.io.Serializable;
 
-public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThreadClone, LoopIterationListener, TestStateListener {
+public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThreadClone, LoopIterationListener, TestStateListener, ThreadListener {
+
+    private static final Logger LOGGER = LoggingManager.getLoggerForClass();
 
     public static final String FILENAME = "filename";
     public static final String FILE_ENCODING = "fileEncoding";
@@ -60,6 +66,9 @@ public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThrea
                 lineAddr = reader.getNextLineAddr();
             } else {
                 // TODO: interrupt iteration
+                if (randomCSVReader != null) {
+                    randomCSVReader.close();
+                }
                 randomCSVReader = null;
                 throw new JMeterStopThreadException("All records in the CSV file have been passed.");
             }
@@ -78,6 +87,13 @@ public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThrea
                 putVariables(variables, getDestinationVariableKeys(), reader.readNextLine());
             } else {
                 // TODO: interrupt iteration
+                if (randomCSVReader != null) {
+                    try {
+                        randomCSVReader.closeConsistentReader();
+                    } catch (IOException e) {
+                        LOGGER.warn("Failed to close Consistent Reader", e);
+                    }
+                }
                 randomCSVReader = null;
                 throw new JMeterStopThreadException("All records in the CSV file have been passed.");
             }
@@ -119,6 +135,27 @@ public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThrea
         return (vars != null && !vars.isEmpty());
     }
 
+
+    @Override
+    public void threadStarted() {
+
+    }
+
+    @Override
+    public void threadFinished() {
+        RandomCSVReader reader = getReader();
+        if (reader != null) {
+            reader.close();
+            if (!isRandomOrder() && isIndependentListPerThread()) {
+                try {
+                    reader.closeConsistentReader();
+                } catch (IOException e) {
+                    LOGGER.warn("Failed to close Consistent Reader", e);
+                }
+            }
+        }
+    }
+
     @Override
     public void testStarted() {
         testStarted("*local*");
@@ -136,6 +173,13 @@ public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThrea
 
     @Override
     public void testEnded(String s) {
+        try {
+            if (randomCSVReader != null && !isRandomOrder()) {
+                randomCSVReader.closeConsistentReader();
+            }
+        } catch (IOException e) {
+            LOGGER.warn("Failed to close Consistent Reader", e);
+        }
         randomCSVReader = null;
     }
 
