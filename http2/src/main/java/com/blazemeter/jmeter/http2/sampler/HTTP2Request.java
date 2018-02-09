@@ -260,6 +260,7 @@ public class HTTP2Request extends AbstractSampler implements TestStateListener, 
                         }
                     }
                 }
+                http2Connection.reset();
             } else {
                 //request was sent successfully
                 sampleResult.setSuccessful(true);

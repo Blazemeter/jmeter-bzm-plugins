@@ -247,4 +247,10 @@ public class HTTP2Connection {
 		}
 	}
 
+	public void reset() {
+		pendingResponses.clear();
+		streamHandlers.clear();
+		callbackHandler.clear();
+	}
+
 }
