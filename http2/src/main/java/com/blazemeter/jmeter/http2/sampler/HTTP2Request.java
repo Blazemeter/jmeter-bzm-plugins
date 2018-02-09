@@ -13,7 +13,6 @@ import org.apache.jmeter.samplers.AbstractSampler;
 import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.testelement.TestElement;
-import org.apache.jmeter.testelement.TestStateListener;
 import org.apache.jmeter.testelement.ThreadListener;
 import org.apache.jmeter.testelement.property.JMeterProperty;
 import org.apache.jmeter.testelement.property.StringProperty;
@@ -26,13 +25,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-public class HTTP2Request extends AbstractSampler implements TestStateListener, ThreadListener {
+public class HTTP2Request extends AbstractSampler implements ThreadListener {
     private static final long serialVersionUID = 5859387434748163229L;
     private static final Logger log = LoggingManager.getLoggerForClass();
 
@@ -79,7 +78,7 @@ public class HTTP2Request extends AbstractSampler implements TestStateListener, 
     public static final String CONTENT_ENCODING = "HTTP2Request.contentEncoding"; // $NON-NLS-1$
     public static final String PATH = "HTTP2Request.path"; // $NON-NLS-1$
 
-    private static Map<String, HTTP2Connection> connectionList = new ConcurrentHashMap<>();
+    private static ThreadLocal<Map<String, HTTP2Connection>> connections = ThreadLocal.withInitial(HashMap::new);
 
     private HTTP2Connection http2Connection;
 
@@ -183,20 +182,18 @@ public class HTTP2Request extends AbstractSampler implements TestStateListener, 
                 // TODO implement cache Manager
             }
             if (isSyncRequest()) {
-                for (HTTP2Connection h : connectionList.values()) {
-                    if (h.getConnectionId().contains(getThreadName())) {
-                        h.sync();
-                        for (HTTP2SampleResult r : h.getResults()) {
-                            if (!r.isSecondaryRequest()) {
-                                if (sampleResult.getId() != r.getId()) {
-                                    //Is not the response of a sync request and is not a embedded result
-                                    sampleResult.addRawSubResult(r);
-                                }
+                for (HTTP2Connection h : connections.get().values()) {
+                    h.sync();
+                    for (HTTP2SampleResult r : h.getResults()) {
+                        if (!r.isSecondaryRequest()) {
+                            if (sampleResult.getId() != r.getId()) {
+                                //Is not the response of a sync request and is not a embedded result
+                                sampleResult.addRawSubResult(r);
                             }
-                            saveConnectionCookies(r.getHttpFieldsResponse(), r.getURL(), getCookieManager());
                         }
-                        h.reset();
+                        saveConnectionCookies(r.getHttpFieldsResponse(), r.getURL(), getCookieManager());
                     }
+                    h.reset();
                 }
             } else {
                 sampleResult.setSuccessful(true);
@@ -214,7 +211,7 @@ public class HTTP2Request extends AbstractSampler implements TestStateListener, 
     }
 
     public void addConnection(String id, HTTP2Connection connection) {
-        connectionList.put(id, connection);
+        connections.get().put(id, connection);
     }
 
     public void setConnection(URL url, HTTP2SampleResult sampleResult) {
@@ -225,11 +222,12 @@ public class HTTP2Request extends AbstractSampler implements TestStateListener, 
         if (port == -1)
             port = url.getDefaultPort();
 
-        String connectionId = getThreadName() + host + port;
+        String connectionId = buildConnectionId(host, port);
 
         long startConnectTime = sampleResult.currentTimeInMillis();
-        if (connectionList.containsKey(connectionId)) {
-            http2Connection = connectionList.get(connectionId);
+        Map<String, HTTP2Connection> threadConnections = connections.get();
+        http2Connection = threadConnections.get(connectionId);
+        if (http2Connection != null) {
             if (http2Connection.isClosed())
                 try {
                     http2Connection.connect(host, port);
@@ -242,13 +240,17 @@ public class HTTP2Request extends AbstractSampler implements TestStateListener, 
                 //TODO manejar cuando no es SSL
                 http2Connection = new HTTP2Connection(connectionId, true);
                 http2Connection.connect(host, port);
-                connectionList.put(connectionId, http2Connection);
+                threadConnections.put(connectionId, http2Connection);
             } catch (Exception e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }
         sampleResult.setConnectTime(sampleResult.currentTimeInMillis() - startConnectTime);
+    }
+
+    private String buildConnectionId(String host, int port) {
+        return host + ": " + port;
     }
 
     public String getMethod() {
@@ -421,33 +423,6 @@ public class HTTP2Request extends AbstractSampler implements TestStateListener, 
     }
 
     @Override
-    public void testStarted() {
-        testStarted("unknown");
-    }
-
-    @Override
-    public void testStarted(String host) {
-        connectionList.clear();
-    }
-
-    @Override
-    public void testEnded() {
-        testEnded("unknown");
-    }
-
-    @Override
-    public void testEnded(String host) {
-        for (HTTP2Connection connection : connectionList.values()) {
-            try {
-                connection.disconnect();
-            } catch (Exception e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
-    }
-
-    @Override
     public void addTestElement(TestElement el) {
         if (el instanceof HeaderManager) {
             setHeaderManager((HeaderManager) el);
@@ -514,6 +489,15 @@ public class HTTP2Request extends AbstractSampler implements TestStateListener, 
 
     @Override
     public void threadFinished() {
+        for (HTTP2Connection connection : connections.get().values()) {
+            try {
+                connection.disconnect();
+            } catch (Exception e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+        connections.get().clear();
     }
 
     private void saveConnectionCookies(HttpFields hdrsResponse, URL url, CookieManager cookieManager) {

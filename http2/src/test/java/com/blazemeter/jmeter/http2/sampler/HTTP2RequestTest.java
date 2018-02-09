@@ -1,9 +1,5 @@
 package com.blazemeter.jmeter.http2.sampler;
 
-import static org.junit.Assert.*;
-
-import java.net.URL;
-
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.protocol.http.control.CacheManager;
 import org.apache.jmeter.protocol.http.control.CookieManager;
@@ -12,12 +8,16 @@ import org.apache.jmeter.protocol.http.util.HTTPArgument;
 import org.apache.jmeter.protocol.http.util.HTTPConstants;
 import org.apache.jmeter.protocol.http.util.HTTPFileArg;
 import org.apache.jmeter.protocol.http.util.HTTPFileArgs;
-import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.property.BooleanProperty;
 import org.apache.jmeter.testelement.property.TestElementProperty;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+
+import java.net.URL;
+
+import static org.junit.Assert.*;
 
 public class HTTP2RequestTest {
 
@@ -32,17 +32,20 @@ public class HTTP2RequestTest {
         http2Req.setProperty(HTTP2Request.DOMAIN, "www.sprint.com");
     }
 
+    @After
+    public void teardown() {
+        http2Req.threadFinished();
+    }
+
     @Test
     public void sampleTest1() throws Exception {
-        http2Req.testStarted();
-
         URL url = new URL(http2Req.getProtocol(), "www.sprint.com", 443, "/");
 
         HTTP2Connection connection = Mockito.mock(HTTP2Connection.class);
 
         Mockito.when(connection.isClosed()).thenReturn(true);
         Mockito.doNothing().when(connection).connect(Mockito.any(String.class), Mockito.any(Integer.class));
-        Mockito.when(connection.getConnectionId()).thenReturn("10www.sprint.com443");
+        Mockito.when(connection.getConnectionId()).thenReturn("www.sprint.com:443");
 
         http2Req.setProperty(HTTP2Request.METHOD, "GET");
         HTTP2SampleResult sampleResult = new HTTP2SampleResult(url, http2Req.getMethod());
@@ -54,8 +57,6 @@ public class HTTP2RequestTest {
 
     @Test
     public void sampleTest2() throws Exception {
-        http2Req.testStarted();
-
         Arguments args = new Arguments();
         String text = "{\"header\":{\"applicationId\":\"HJS\"},\"initSession\":{}}";
         HTTPArgument arg = new HTTPArgument("", text.replaceAll("\n", "\r\n"), false);
@@ -69,7 +70,7 @@ public class HTTP2RequestTest {
 
         Mockito.when(connection.isClosed()).thenReturn(true);
         Mockito.doNothing().when(connection).connect(Mockito.any(String.class), Mockito.any(Integer.class));
-        Mockito.when(connection.getConnectionId()).thenReturn("10www.sprint.com443");
+        Mockito.when(connection.getConnectionId()).thenReturn("www.sprint.com:443");
 
         HTTP2SampleResult sampleResult = new HTTP2SampleResult(url, "POST");
         http2Req.addConnection("10www.sprint.com443", connection);
