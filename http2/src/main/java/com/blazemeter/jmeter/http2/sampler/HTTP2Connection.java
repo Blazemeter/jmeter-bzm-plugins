@@ -15,7 +15,6 @@ import org.eclipse.jetty.http2.api.Stream;
 import org.eclipse.jetty.http2.client.HTTP2Client;
 import org.eclipse.jetty.http2.frames.DataFrame;
 import org.eclipse.jetty.http2.frames.HeadersFrame;
-import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.eclipse.jetty.util.FuturePromise;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
@@ -23,13 +22,12 @@ import java.net.InetSocketAddress;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 
 public class HTTP2Connection {
 
@@ -37,7 +35,7 @@ public class HTTP2Connection {
     private Session session;
     private HTTP2Client client;
     private SslContextFactory sslContextFactory;
-    private Set<HTTP2StreamHandler> streamHandlers = new ConcurrentHashSet<>();
+    private Queue<HTTP2StreamHandler> streamHandlers = new ConcurrentLinkedQueue<>();
 
     public void setSession(Session session) {
         this.session = session;
@@ -161,46 +159,24 @@ public class HTTP2Connection {
         client.stop();
     }
 
-    public void sync() throws InterruptedException {
-        int expectedSize;
-        int actualSize = streamHandlers.size();
-        do {
-            expectedSize = actualSize;
-            for (HTTP2StreamHandler h : streamHandlers) {
-                try {
-                    // wait to receive all the response of the request
-                    h.getCompletedFuture().get(h.getTimeout(), TimeUnit.MILLISECONDS);
-                } catch (ExecutionException | TimeoutException e) {
-                    // TODO Auto-generated catch block
-                    HTTP2SampleResult sample = h.getHTTP2SampleResult();
-                    // we remove the handler to avoid re checking in a potentially subsequent iteration
-                    streamHandlers.remove(h);
-                    expectedSize--;
-                    if (e instanceof TimeoutException) {
-                        sample = HTTP2SampleResult.errorResult(e, sample);
-                        sample.setResponseHeaders("");
-                    }
+    public List<HTTP2SampleResult> awaitResponses() throws InterruptedException {
+        List<HTTP2SampleResult> results = new ArrayList<>();
+        while (!streamHandlers.isEmpty()) {
+            HTTP2StreamHandler h = streamHandlers.poll();
+            results.add(h.getHTTP2SampleResult());
+            try {
+                // wait to receive all the response of the request
+                h.getCompletedFuture().get(h.getTimeout(), TimeUnit.MILLISECONDS);
+            } catch (ExecutionException | TimeoutException e) {
+                // TODO Auto-generated catch block
+                HTTP2SampleResult sample = h.getHTTP2SampleResult();
+                if (e instanceof TimeoutException) {
+                    sample = HTTP2SampleResult.errorResult(e, sample);
+                    sample.setResponseHeaders("");
                 }
             }
-            actualSize = streamHandlers.size();
-            /*
-            since child requests might have created new handlers while iterating, we need to check if such has happened
-            and re iterate (iterating over already iterated elements would produce immediate response, only penalty is
-            re iteration) to wait for these new streams. Take into consideration that it can't happen a race condition
-            of getting no modification in last iteration and getting a child request afterwards since child requests are
-            marked as completed after adding child handlers.
-             */
-        } while (actualSize != expectedSize);
-    }
-
-    public List<HTTP2SampleResult> getResults() {
-        return streamHandlers.stream()
-                .map(HTTP2StreamHandler::getHTTP2SampleResult)
-                .collect(Collectors.toList());
-    }
-
-    public void reset() {
-        streamHandlers.clear();
+        }
+        return results;
     }
 
 }

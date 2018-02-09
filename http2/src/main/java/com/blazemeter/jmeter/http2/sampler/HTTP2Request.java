@@ -1,6 +1,8 @@
 package com.blazemeter.jmeter.http2.sampler;
 
 import org.apache.jmeter.config.Arguments;
+import org.apache.jmeter.engine.event.LoopIterationEvent;
+import org.apache.jmeter.engine.event.LoopIterationListener;
 import org.apache.jmeter.protocol.http.control.CacheManager;
 import org.apache.jmeter.protocol.http.control.CookieManager;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
@@ -31,7 +33,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-public class HTTP2Request extends AbstractSampler implements ThreadListener {
+public class HTTP2Request extends AbstractSampler implements ThreadListener, LoopIterationListener {
     private static final long serialVersionUID = 5859387434748163229L;
     private static final Logger log = LoggingManager.getLoggerForClass();
 
@@ -183,8 +185,7 @@ public class HTTP2Request extends AbstractSampler implements ThreadListener {
             }
             if (isSyncRequest()) {
                 for (HTTP2Connection h : connections.get().values()) {
-                    h.sync();
-                    for (HTTP2SampleResult r : h.getResults()) {
+                    for (HTTP2SampleResult r : h.awaitResponses()) {
                         if (!r.isSecondaryRequest()) {
                             if (sampleResult.getId() != r.getId()) {
                                 //Is not the response of a sync request and is not a embedded result
@@ -193,7 +194,6 @@ public class HTTP2Request extends AbstractSampler implements ThreadListener {
                         }
                         saveConnectionCookies(r.getHttpFieldsResponse(), r.getURL(), getCookieManager());
                     }
-                    h.reset();
                 }
             } else {
                 sampleResult.setSuccessful(true);
@@ -489,6 +489,7 @@ public class HTTP2Request extends AbstractSampler implements ThreadListener {
 
     @Override
     public void threadFinished() {
+        waitAllResponses();
         for (HTTP2Connection connection : connections.get().values()) {
             try {
                 connection.disconnect();
@@ -515,6 +516,21 @@ public class HTTP2Request extends AbstractSampler implements ThreadListener {
 
     public void setEmbeddedUrlRE(String regex) {
         setProperty(new StringProperty(EMBEDDED_URL_REGEX, regex));
+    }
+
+    @Override
+    public void iterationStart(LoopIterationEvent iterEvent) {
+        waitAllResponses();
+    }
+
+    private void waitAllResponses() {
+        connections.get().values().forEach( c -> {
+            try {
+                c.awaitResponses();
+            } catch (InterruptedException e) {
+                log.warn("Interrupted while waiting for HTTP2 async responses", e);
+            }
+        });
     }
 
 }
