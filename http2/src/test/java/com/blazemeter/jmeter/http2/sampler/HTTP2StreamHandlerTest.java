@@ -1,17 +1,13 @@
 package com.blazemeter.jmeter.http2.sampler;
 
-import static org.junit.Assert.assertEquals;
-
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.ByteBuffer;
-
+import kg.apc.emulators.TestJMeterUtils;
 import org.apache.jmeter.protocol.http.util.HTTPConstants;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.util.JMeterUtils;
 import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpVersion;
 import org.eclipse.jetty.http.MetaData;
+import org.eclipse.jetty.http2.api.Stream;
 import org.eclipse.jetty.http2.frames.DataFrame;
 import org.eclipse.jetty.http2.frames.HeadersFrame;
 import org.eclipse.jetty.http2.frames.PushPromiseFrame;
@@ -19,8 +15,12 @@ import org.eclipse.jetty.util.Callback;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.eclipse.jetty.http2.api.Stream;
-import kg.apc.emulators.TestJMeterUtils;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.ByteBuffer;
+
+import static org.junit.Assert.assertEquals;
 
 public class HTTP2StreamHandlerTest {
 

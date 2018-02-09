@@ -1,16 +1,6 @@
 
 package com.blazemeter.jmeter.http2.sampler;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jmeter.protocol.http.control.CookieManager;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
@@ -29,7 +19,6 @@ import org.apache.oro.text.MalformedCachePatternException;
 import org.apache.oro.text.regex.Pattern;
 import org.apache.oro.text.regex.Perl5Matcher;
 import org.eclipse.jetty.http.HttpField;
-import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.MetaData;
 import org.eclipse.jetty.http2.api.Stream;
 import org.eclipse.jetty.http2.api.Stream.Listener;
@@ -37,6 +26,16 @@ import org.eclipse.jetty.http2.frames.DataFrame;
 import org.eclipse.jetty.http2.frames.HeadersFrame;
 import org.eclipse.jetty.http2.frames.PushPromiseFrame;
 import org.eclipse.jetty.util.Callback;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 public class HTTP2StreamHandler extends Stream.Listener.Adapter {
 
@@ -113,11 +112,10 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
 
         MetaData.Response responseMetadata = ((MetaData.Response) frame.getMetaData());
         // set status line - header[0] is not the status line...
-        StringBuilder header = new StringBuilder(responseMetadata.getHttpVersion() + " " + Integer.toString(responseMetadata.getStatus()) + "\n");
+        StringBuilder headers = new StringBuilder(responseMetadata.getHttpVersion() + " " + Integer.toString(responseMetadata.getStatus()) + "\n");
         result.setResponseCode(Integer.toString(responseMetadata.getStatus()));
-        HttpFields hdrs = new HttpFields();
         for (HttpField h : frame.getMetaData().getFields()) {
-            header.append(h.getName()).append(": ").append(h.getValue()).append("\n");
+            headers.append(h.getName()).append(": ").append(h.getValue()).append("\n");
             switch (h.getName()) {
                 case HTTPConstants.HEADER_CONTENT_TYPE:// TODO adapt to translate gzip, etc
                 case "content-type":
@@ -128,13 +126,12 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
                     result.setDataEncoding(h.getValue());
                     break;
             }
-            hdrs.add(h);
         }
-        header.append("\n");
-        result.setResponseHeaders(header.toString());
-        result.setHeadersSize(header.length());
+        headers.append("\n");
+        result.setResponseHeaders(headers.toString());
+        result.setHeadersSize(headers.length());
         result.setBytes(result.getBytesAsLong() + result.getHeadersSize());
-        result.setHttpFieldsResponse(hdrs);
+        result.setHttpFieldsResponse(frame.getMetaData().getFields());
         if (frame.isEndStream()) {
             result.sampleEnd();
             result.setPendingResponse(false);
