@@ -97,7 +97,7 @@ public class RandomCSVReader {
         }
     }
 
-    private void closeConsistentReader() throws IOException {
+    public void closeConsistentReader() throws IOException {
         consistentReader.close();
     }
 
@@ -196,5 +196,15 @@ public class RandomCSVReader {
 
     private Reader createReader() throws IOException {
         return new InputStreamReader(new FileInputStream(file), encoding);
+    }
+
+    public void close() {
+        try {
+            if (randomOrder) {
+                rbr.get().close();
+            }
+        } catch (IOException ex) {
+            LOGGER.warn("Failed to close readers");
+        }
     }
 }

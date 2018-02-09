@@ -154,7 +154,7 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
             field.setAccessible(true);
             if (thread instanceof JMeterThreadParallel) {
                 JMeterThreadParallel pthr = (JMeterThreadParallel) thread;
-                for (TestElement te : pthr.getParallelCompiler().getKnownSamplers()) {
+                for (TestElement te : pthr.getParallelCompiler().getKnownElements()) {
                     field.set(te, null);
                 }
             }

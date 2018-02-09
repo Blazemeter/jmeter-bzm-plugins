@@ -46,34 +46,86 @@ import com.blazemeter.jmeter.http2.sampler.HTTP2Request;
 
 /**
  * GUI for Http Request defaults
- *
  */
 public class Http2DefaultsGui extends AbstractConfigGui {
 
     private static final long serialVersionUID = 241L;
 
     private HTTP2RequestPanel http2RequestPanel;
-
     private JCheckBox retrieveEmbeddedResources;
-
     private JCheckBox useMD5;
-
-    private JLabeledTextField embeddedRE; // regular expression used to match against embedded resource URLs
-
-    private JTextField sourceIpAddr; // does not apply to Java implementation
-    
+    private JLabeledTextField embeddedResourceUrlRegexFilter;
+    private JTextField sourceIpAddr;
     private JComboBox<String> sourceIpType = new JComboBox<>(HTTPSamplerBase.getSourceTypeList());
 
     public Http2DefaultsGui() {
-        super();
-        init();
+        setLayout(new BorderLayout(0, 5));
+        setBorder(makeBorder());
+
+        http2RequestPanel = new HTTP2RequestPanel(false);
+
+        JPanel advancedPanel = new VerticalPanel();
+        advancedPanel.add(createEmbeddedRsrcPanel());
+        advancedPanel.add(createSourceAddrPanel());
+        advancedPanel.add(createOptionalTasksPanel());
+
+        JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane.add(JMeterUtils
+                .getResString("web_testing_basic"), http2RequestPanel);
+        tabbedPane.add(JMeterUtils
+                .getResString("web_testing_advanced"), advancedPanel);
+
+        JPanel emptyPanel = new JPanel();
+        emptyPanel.setMaximumSize(new Dimension());
+
+        add(makeTitlePanel(), BorderLayout.NORTH);
+        add(tabbedPane, BorderLayout.CENTER);
+        add(emptyPanel, BorderLayout.SOUTH);
+    }
+
+    private JPanel createEmbeddedRsrcPanel() {
+        // retrieve Embedded resources
+        retrieveEmbeddedResources = new JCheckBox(JMeterUtils.getResString("web_testing_retrieve_images")); // $NON-NLS-1$
+
+        final JPanel embeddedRsrcPanel = new HorizontalPanel();
+        embeddedRsrcPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), JMeterUtils
+                .getResString("web_testing_retrieve_title"))); // $NON-NLS-1$
+        embeddedRsrcPanel.add(retrieveEmbeddedResources);
+
+        embeddedResourceUrlRegexFilter = new JLabeledTextField(JMeterUtils.getResString("web_testing_embedded_url_pattern"), 20); // $NON-NLS-1$
+        embeddedRsrcPanel.add(embeddedResourceUrlRegexFilter);
+
+        return embeddedRsrcPanel;
+    }
+
+    private JPanel createSourceAddrPanel() {
+        final JPanel sourceAddrPanel = new HorizontalPanel();
+        sourceAddrPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), JMeterUtils
+                .getResString("web_testing_source_ip"))); // $NON-NLS-1$
+
+        sourceIpType.setSelectedIndex(HTTPSamplerBase.SourceType.HOSTNAME.ordinal()); //default: IP/Hostname
+        sourceAddrPanel.add(sourceIpType);
+
+        sourceIpAddr = new JTextField();
+        sourceAddrPanel.add(sourceIpAddr);
+        return sourceAddrPanel;
+    }
+
+    private JPanel createOptionalTasksPanel() {
+        // OPTIONAL TASKS
+        final JPanel checkBoxPanel = new VerticalPanel();
+        checkBoxPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), JMeterUtils
+                .getResString("optional_tasks"))); // $NON-NLS-1$
+        useMD5 = new JCheckBox(JMeterUtils.getResString("response_save_as_md5")); // $NON-NLS-1$
+        checkBoxPanel.add(useMD5);
+        return checkBoxPanel;
     }
 
     @Override
     public String getLabelResource() {
-        return "HTTP2 Request Defaults"; 
+        return "HTTP2 Request Defaults";
     }
-    
+
     @Override
     public String getStaticLabel() {
         return "HTTP2 Request Defaults";
@@ -96,9 +148,9 @@ public class Http2DefaultsGui extends AbstractConfigGui {
      */
     @Override
     public void modifyTestElement(TestElement config) {
-        ConfigTestElement cfg = (ConfigTestElement ) config;
+        ConfigTestElement cfg = (ConfigTestElement) config;
         ConfigTestElement el = (ConfigTestElement) http2RequestPanel.createTestElement();
-        cfg.clear(); 
+        cfg.clear();
         cfg.addConfigElement(el);
         super.configureTestElement(config);
         if (retrieveEmbeddedResources.isSelected()) {
@@ -106,19 +158,19 @@ public class Http2DefaultsGui extends AbstractConfigGui {
         } else {
             config.removeProperty(HTTP2Request.EMBEDDED_RESOURCES);
         }
-        if(useMD5.isSelected()) {
+        if (useMD5.isSelected()) {
             config.setProperty(new BooleanProperty(HTTP2Request.MD5, true));
         } else {
             config.removeProperty(HTTP2Request.MD5);
         }
-        if (!StringUtils.isEmpty(embeddedRE.getText())) {
-            config.setProperty(new StringProperty(HTTP2Request.EMBEDDED_URL_RE,
-                    embeddedRE.getText()));
+        if (!StringUtils.isEmpty(embeddedResourceUrlRegexFilter.getText())) {
+            config.setProperty(new StringProperty(HTTP2Request.EMBEDDED_URL_REGEX,
+                    embeddedResourceUrlRegexFilter.getText()));
         } else {
-            config.removeProperty(HTTP2Request.EMBEDDED_URL_RE);
+            config.removeProperty(HTTP2Request.EMBEDDED_URL_REGEX);
         }
-        
-        if(!StringUtils.isEmpty(sourceIpAddr.getText())) {
+
+        if (!StringUtils.isEmpty(sourceIpAddr.getText())) {
             config.setProperty(new StringProperty(HTTP2Request.IP_SOURCE,
                     sourceIpAddr.getText()));
             config.setProperty(new IntegerProperty(HTTP2Request.IP_SOURCE_TYPE,
@@ -138,7 +190,7 @@ public class Http2DefaultsGui extends AbstractConfigGui {
         retrieveEmbeddedResources.setSelected(false);
         useMD5.setSelected(false);
         http2RequestPanel.clear();
-        embeddedRE.setText(""); // $NON-NLS-1$
+        embeddedResourceUrlRegexFilter.setText(""); // $NON-NLS-1$
         sourceIpAddr.setText(""); // $NON-NLS-1$
         sourceIpType.setSelectedIndex(HTTPSamplerBase.SourceType.HOSTNAME.ordinal()); //default: IP/Hostname
     }
@@ -150,85 +202,16 @@ public class Http2DefaultsGui extends AbstractConfigGui {
         http2RequestPanel.configure(el);
         retrieveEmbeddedResources.setSelected(http2Sampler.getPropertyAsBoolean(HTTP2Request.EMBEDDED_RESOURCES));
         useMD5.setSelected(http2Sampler.getPropertyAsBoolean(HTTP2Request.MD5, false));
-        embeddedRE.setText(http2Sampler.getPropertyAsString(HTTP2Request.EMBEDDED_URL_RE, ""));//$NON-NLS-1$
+        embeddedResourceUrlRegexFilter.setText(http2Sampler.getPropertyAsString(HTTP2Request.EMBEDDED_URL_REGEX, ""));//$NON-NLS-1$
         sourceIpAddr.setText(http2Sampler.getPropertyAsString(HTTP2Request.IP_SOURCE)); //$NON-NLS-1$
         sourceIpType.setSelectedIndex(
-        		http2Sampler.getPropertyAsInt(HTTP2Request.IP_SOURCE_TYPE,
-        				HTTP2Request.SOURCE_TYPE_DEFAULT));
-    }
-
-    private void init() { // WARNING: called from ctor so must not be overridden (i.e. must be private or final)
-        setLayout(new BorderLayout(0, 5));
-        setBorder(makeBorder());
-
-        // URL CONFIG
-        http2RequestPanel = new HTTP2RequestPanel(false, true, false);
-
-        // AdvancedPanel (embedded resources, source address and optional tasks)
-        JPanel advancedPanel = new VerticalPanel();
-        advancedPanel.add(createEmbeddedRsrcPanel());
-        advancedPanel.add(createSourceAddrPanel());
-        advancedPanel.add(createOptionalTasksPanel());
-
-        JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.add(JMeterUtils
-                .getResString("web_testing_basic"), http2RequestPanel);
-        tabbedPane.add(JMeterUtils
-                .getResString("web_testing_advanced"), advancedPanel);
-
-        JPanel emptyPanel = new JPanel();
-        emptyPanel.setMaximumSize(new Dimension());
-
-        add(makeTitlePanel(), BorderLayout.NORTH);
-        add(tabbedPane, BorderLayout.CENTER);        
-        add(emptyPanel, BorderLayout.SOUTH);
-    }
-    
-    protected JPanel createEmbeddedRsrcPanel() {
-        // retrieve Embedded resources
-        retrieveEmbeddedResources = new JCheckBox(JMeterUtils.getResString("web_testing_retrieve_images")); // $NON-NLS-1$
-  
-        final JPanel embeddedRsrcPanel = new HorizontalPanel();
-        embeddedRsrcPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), JMeterUtils
-                .getResString("web_testing_retrieve_title"))); // $NON-NLS-1$
-        embeddedRsrcPanel.add(retrieveEmbeddedResources);
-        
-        // Embedded URL match regex
-        embeddedRE = new JLabeledTextField(JMeterUtils.getResString("web_testing_embedded_url_pattern"),20); // $NON-NLS-1$
-        embeddedRsrcPanel.add(embeddedRE); 
-        
-        return embeddedRsrcPanel;
-    }
-    
-    protected JPanel createSourceAddrPanel() {
-        final JPanel sourceAddrPanel = new HorizontalPanel();
-        sourceAddrPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), JMeterUtils
-                .getResString("web_testing_source_ip"))); // $NON-NLS-1$
-
-        sourceIpType.setSelectedIndex(HTTPSamplerBase.SourceType.HOSTNAME.ordinal()); //default: IP/Hostname
-        sourceAddrPanel.add(sourceIpType);
-
-        sourceIpAddr = new JTextField();
-        sourceAddrPanel.add(sourceIpAddr);
-        return sourceAddrPanel;
-    }
-    
-    protected JPanel createOptionalTasksPanel() {
-        // OPTIONAL TASKS
-        final JPanel checkBoxPanel = new VerticalPanel();
-        checkBoxPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), JMeterUtils
-                .getResString("optional_tasks"))); // $NON-NLS-1$
-
-        // Use MD5
-        useMD5 = new JCheckBox(JMeterUtils.getResString("response_save_as_md5")); // $NON-NLS-1$
-
-        checkBoxPanel.add(useMD5);
-
-        return checkBoxPanel;
+                http2Sampler.getPropertyAsInt(HTTP2Request.IP_SOURCE_TYPE,
+                        HTTP2Request.SOURCE_TYPE_DEFAULT));
     }
 
     @Override
     public Dimension getPreferredSize() {
         return getMinimumSize();
     }
+
 }

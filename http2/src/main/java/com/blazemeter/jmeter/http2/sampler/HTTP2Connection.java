@@ -1,250 +1,206 @@
 package com.blazemeter.jmeter.http2.sampler;
 
-import java.net.InetSocketAddress;
-import java.net.URL;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
 import org.apache.jmeter.protocol.http.control.CookieManager;
+import org.apache.jmeter.protocol.http.control.Header;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
 import org.apache.jmeter.protocol.http.util.HTTPConstants;
 import org.apache.jmeter.testelement.property.CollectionProperty;
 import org.apache.jmeter.testelement.property.JMeterProperty;
-import org.eclipse.jetty.http.*;
+import org.eclipse.jetty.http.HttpFields;
+import org.eclipse.jetty.http.HttpURI;
+import org.eclipse.jetty.http.HttpVersion;
+import org.eclipse.jetty.http.MetaData;
 import org.eclipse.jetty.http2.api.Session;
 import org.eclipse.jetty.http2.api.Stream;
 import org.eclipse.jetty.http2.client.HTTP2Client;
 import org.eclipse.jetty.http2.frames.DataFrame;
 import org.eclipse.jetty.http2.frames.HeadersFrame;
+import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.eclipse.jetty.util.FuturePromise;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
+import java.net.InetSocketAddress;
+import java.net.URL;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
+
 public class HTTP2Connection {
 
-	String SETTINGS = "settings";
+    private String connectionId;
+    private Session session;
+    private HTTP2Client client;
+    private SslContextFactory sslContextFactory;
+    private Set<HTTP2StreamHandler> streamHandlers = new ConcurrentHashSet<>();
 
-	private String connectionId;
-	private Session session;
-	private boolean isSSL;
-	private HTTP2Client client;
-	private HTTP2SettingsHandler http2SettingsHandler;
-	private SslContextFactory sslContextFactory;
-	private Map<Integer, HTTP2SampleResult> pendingResponses = new HashMap<Integer, HTTP2SampleResult>();
-	private Map<Integer, HTTP2StreamHandler> streamHandlers = new ConcurrentHashMap<>();
-	private List<DataCallBack> callbackHandler = new ArrayList<DataCallBack>();
-	private int frameSize = 1024;
+    public void setSession(Session session) {
+        this.session = session;
+    }
 
-	public synchronized Collection<HTTP2StreamHandler> addPendingResponses(HTTP2SampleResult pendingResponse,
-			HTTP2StreamHandler streamHandler, boolean isSec) {
-		if (!((pendingResponse == null) && (streamHandler == null))) {
-			if (!isSec) {
-				this.pendingResponses.put(pendingResponse.getId(), pendingResponse);
-			}
-			this.streamHandlers.put(pendingResponse.getId(), streamHandler);
-			return null;
-		} else {
-			return this.streamHandlers.values();
-		}
-	}
+    public HTTP2Connection(String connectionId, boolean isSSL) throws Exception {
+        this.session = null;
+        this.connectionId = connectionId;
+        this.client = new HTTP2Client();
+        this.sslContextFactory = null;
+        if (isSSL) {
+            this.sslContextFactory = new SslContextFactory(true);
+        }
+        this.client.addBean(sslContextFactory);
+        this.client.start();
+    }
 
+    public String getConnectionId() {
+        return connectionId;
+    }
 
-	public void setFrameSize(int frameSize) {
-		this.frameSize = frameSize;
-	}
+    public void connect(String hostname, int port) throws InterruptedException, ExecutionException, TimeoutException {
+        FuturePromise<Session> sessionFuture = new FuturePromise<>();
+        this.client.connect(this.sslContextFactory, new InetSocketAddress(hostname, port),
+                new Session.Listener.Adapter(), sessionFuture);
+        setSession(sessionFuture.get(10, TimeUnit.SECONDS));
+    }
 
-	public Map<Integer, HTTP2SampleResult> getPendingResponses() {
-		return this.pendingResponses;
-	}
-	
-	public void setSession(Session session){
-		this.session = session;
-	}
+    public boolean isClosed() {
+        return this.session.isClosed();
+    }
 
-	public HTTP2Connection(String connectionId, boolean isSSL) throws Exception {
-		this.session = null;
-		this.connectionId = connectionId;
-		this.isSSL = isSSL;
-		this.http2SettingsHandler = new HTTP2SettingsHandler(this);
-		this.client = new HTTP2Client();
-		this.sslContextFactory = null;
-		if (this.isSSL) {
-			this.sslContextFactory = new SslContextFactory(true);
-		}
-		this.client.addBean(sslContextFactory);
-		this.client.start();
-	}
+    private synchronized void sendMutExc(String method, HeadersFrame headersFrame, FuturePromise<Stream> streamPromise,
+                                         HTTP2StreamHandler http2StreamHandler, DataPostContent dataPostContent,
+                                         HTTP2SampleResult sampleResult) throws Exception {
+        session.newStream(headersFrame, streamPromise, http2StreamHandler);
+        if (method.equals("POST")) {
+            Stream actualStream = streamPromise.get();
+            int streamID = actualStream.getId();
+            DataFrame data = new DataFrame(streamID,
+                    ByteBuffer.wrap(dataPostContent.getPayload(), 0, dataPostContent.getPayload().length), true);
+            actualStream.data(data, null);
+            sampleResult.setQueryString(data.toString());// TODO review this method
+            // add byte size of the queryString
+            sampleResult.setBytes(sampleResult.getBytesAsLong() + (long) sampleResult.getQueryString().length());
+        }
+    }
 
-	public String getConnectionId() {
-		return connectionId;
-	}
+    public void send(String method, URL url, HeaderManager headerManager, CookieManager cookieManager,
+                     DataPostContent dataPostContent, HTTP2SampleResult sampleResult, int timeout) throws Exception {
+        HttpFields requestFields = new HttpFields();
+        StringBuilder headerString = new StringBuilder();
+        if (headerManager != null) {
+            CollectionProperty headers = headerManager.getHeaders();
+            if (headers != null) {
+                for (JMeterProperty jMeterProperty : headers) {
+                    Header header = (Header) jMeterProperty.getObjectValue();
+                    String n = header.getName();
+                    // Don't allow override of Content-Length
+                    // TODO - what other headers are not allowed?
+                    if (!HTTPConstants.HEADER_CONTENT_LENGTH.equalsIgnoreCase(n)) {
+                        String v = header.getValue();
+                        v = v.replaceFirst(":\\d+$", ""); // remove any port
+                        // specification //
+                        // $NON-NLS-1$
+                        // $NON-NLS-2$
+                        requestFields.put(n, v);
+                        headerString.append(n).append(": ").append(v).append("\n");
+                    }
+                }
+            }
+            // TODO CacheManager
+        }
 
-	public void connect(String hostname, int port) throws InterruptedException, ExecutionException, TimeoutException {
-		FuturePromise<Session> sessionFuture = new FuturePromise<>();
-		this.client.connect(this.sslContextFactory, new InetSocketAddress(hostname, port), this.http2SettingsHandler,
-				sessionFuture);
-		setSession(sessionFuture.get(10, TimeUnit.SECONDS));
-	}
+        sampleResult.sampleStart();
 
-	public boolean isClosed() {
-		return this.session.isClosed();
-	}
+        // Extracts all the required cookies for that particular URL request
+        String cookieHeader = null;
+        if (cookieManager != null) {
+            cookieHeader = cookieManager.getCookieHeaderForURL(url);
+            if (cookieHeader != null) {
+                requestFields.put(HTTPConstants.HEADER_COOKIE, cookieHeader);
+                headerString.append(HTTPConstants.HEADER_COOKIE).append(": ").append(cookieHeader).append("\n");
+            }
+        }
 
-	private synchronized void sendMutExc(String method, HeadersFrame headersFrame, FuturePromise<Stream> streamPromise,
-			HTTP2StreamHandler http2StreamHandler, DataPostContent dataPostContent, HTTP2SampleResult sampleResult)
-			throws Exception {
-		session.newStream(headersFrame, streamPromise, http2StreamHandler);
-		if (method.equals("POST")) {
-			Stream actualStream = streamPromise.get();
-			int streamID = actualStream.getId();
-			DataCallBack dataCallback = new DataCallBack();
-			DataFrame data = new DataFrame(streamID,
-					ByteBuffer.wrap(dataPostContent.getPayload(), 0, dataPostContent.getPayload().length), true);
-			actualStream.data(data, dataCallback);
-			this.addDataCallbackHandler(dataCallback);
-			sampleResult.setQueryString(data.toString());// TODO revisar si es este metodo
-			// add byte size of the queryString
-			sampleResult.setBytes(sampleResult.getBytesAsLong() + (long) sampleResult.getQueryString().length()); 
-		}
+        MetaData.Request metaData = null;
+        boolean endOfStream = true;
+        switch (method) {
+            case "GET":
+                metaData = new MetaData.Request("GET", new HttpURI(url.toString()), HttpVersion.HTTP_2,
+                        requestFields);
+                break;
+            case "POST":
+                metaData = new MetaData.Request("POST", new HttpURI(url.toString()), HttpVersion.HTTP_2,
+                        requestFields);
+                endOfStream = false;
+                break;
+            default:
+                break;
+        }
 
-	}
+        HeadersFrame headersFrame = new HeadersFrame(metaData, null, endOfStream);
+        sampleResult.setRequestHeaders(headerString.toString());
+        sampleResult.setBytes(sampleResult.getBytesAsLong() + (long) headerString.length());
 
-	public void addDataCallbackHandler(DataCallBack dataCallback) {
-		callbackHandler.add(dataCallback);
-	}
+        HTTP2StreamHandler http2StreamHandler = new HTTP2StreamHandler(this, url, headerManager, cookieManager,
+                sampleResult);
+        http2StreamHandler.setTimeout(timeout);
+        sampleResult.setCookies(cookieHeader);
+        addStreamHandler(http2StreamHandler);
 
+        sendMutExc(method, headersFrame, new FuturePromise<>(), http2StreamHandler, dataPostContent, sampleResult);
+    }
 
-	public void send(String method, URL url, HeaderManager headerManager, CookieManager cookieManager,
-			DataPostContent dataPostContent, HTTP2SampleResult sampleResult, boolean secondaryRequest, int timeout)
-			throws Exception {
+    public void addStreamHandler(HTTP2StreamHandler http2StreamHandler) {
+        streamHandlers.add(http2StreamHandler);
+    }
 
-		HttpFields requestFields = new HttpFields();
+    public void disconnect() throws Exception {
+        client.stop();
+    }
 
-		String headerString = "";
+    public void sync() throws InterruptedException {
+        int expectedSize;
+        int actualSize = streamHandlers.size();
+        do {
+            expectedSize = actualSize;
+            for (HTTP2StreamHandler h : streamHandlers) {
+                try {
+                    // wait to receive all the response of the request
+                    h.getCompletedFuture().get(h.getTimeout(), TimeUnit.MILLISECONDS);
+                } catch (ExecutionException | TimeoutException e) {
+                    // TODO Auto-generated catch block
+                    HTTP2SampleResult sample = h.getHTTP2SampleResult();
+                    // we remove the handler to avoid re checking in a potentially subsequent iteration
+                    streamHandlers.remove(h);
+                    expectedSize--;
+                    if (e instanceof TimeoutException) {
+                        sample = HTTP2SampleResult.errorResult(e, sample);
+                        sample.setResponseHeaders("");
+                    }
+                }
+            }
+            actualSize = streamHandlers.size();
+            /*
+            since child requests might have created new handlers while iterating, we need to check if such has happened
+            and re iterate (iterating over already iterated elements would produce immediate response, only penalty is
+            re iteration) to wait for these new streams. Take into consideration that it can't happen a race condition
+            of getting no modification in last iteration and getting a child request afterwards since child requests are
+            marked as completed after adding child handlers.
+             */
+        } while (actualSize != expectedSize);
+    }
 
-		if (headerManager != null) {
-			CollectionProperty headers = headerManager.getHeaders();
-			if (headers != null) {
-				for (JMeterProperty jMeterProperty : headers) {
-					org.apache.jmeter.protocol.http.control.Header header = (org.apache.jmeter.protocol.http.control.Header) jMeterProperty
-							.getObjectValue();
-					String n = header.getName();
-					// Don't allow override of Content-Length
-					// TODO - what other headers are not allowed?
-					if (!HTTPConstants.HEADER_CONTENT_LENGTH.equalsIgnoreCase(n)) {
-						String v = header.getValue();
-						v = v.replaceFirst(":\\d+$", ""); // remove any port
-															// specification //
-															// $NON-NLS-1$
-															// $NON-NLS-2$
-						requestFields.put(n, v);
-						headerString = headerString + n + ": " + v + "\n";
-					}
-				}
-			}
-			// TODO CacheManager
-		}
+    public List<HTTP2SampleResult> getResults() {
+        return streamHandlers.stream()
+                .map(HTTP2StreamHandler::getHTTP2SampleResult)
+                .collect(Collectors.toList());
+    }
 
-		sampleResult.sampleStart();
-
-		// Extracts all the required cookies for that particular URL request
-		String cookieHeader = null;
-		if (cookieManager != null) {
-			cookieHeader = cookieManager.getCookieHeaderForURL(url);
-			if (cookieHeader != null) {
-				requestFields.put(HTTPConstants.HEADER_COOKIE, cookieHeader);
-				headerString = headerString + HTTPConstants.HEADER_COOKIE + ": " + cookieHeader + "\n";
-			}
-		}
-
-		MetaData.Request metaData = null;
-		boolean endOfStream = true;
-		switch (method) {
-			case "GET":
-				metaData = new MetaData.Request("GET", new HttpURI(url.toString()), HttpVersion.HTTP_2, requestFields);
-				break;
-			case "HEAD":
-				break;
-			case "POST":
-				metaData = new MetaData.Request("POST", new HttpURI(url.toString()), HttpVersion.HTTP_2, requestFields);
-				endOfStream = false;
-				break;
-			case "PUT":
-				break;
-			case "DELETE":
-				break;
-			case "CONNECT":
-				break;
-			case "OPTIONS":
-				break;
-			case "TRACE":
-				break;
-			case "PATCH":
-				break;
-			default:
-				break;
-		}
-
-		HeadersFrame headersFrame = new HeadersFrame(metaData, null, endOfStream);
-		sampleResult.setRequestHeaders(headerString);
-		sampleResult.setBytes(sampleResult.getBytesAsLong() + (long) headerString.length());
-
-		FuturePromise<Stream> streamPromise = new FuturePromise<>();
-
-		HTTP2StreamHandler http2StreamHandler = new HTTP2StreamHandler(this, url, headerManager, cookieManager, false, sampleResult);
-		http2StreamHandler.setTimeout(timeout);
-		sampleResult.setCookies(cookieHeader);
-		addPendingResponses(sampleResult, http2StreamHandler, secondaryRequest);
-
-		sendMutExc(method, headersFrame, streamPromise, http2StreamHandler, dataPostContent, sampleResult);
-	}
-
-	public void disconnect() throws Exception {
-		client.stop();
-	}
-
-	public void sync() throws InterruptedException {
-
-		for (DataCallBack d : this.callbackHandler) {
-			try {
-				d.getCompletedFuture().get();
-			} catch (ExecutionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		int check = -1;
-		Collection<HTTP2StreamHandler> handlers = addPendingResponses(null, null, true);
-		int size = handlers.size();
-		while (size != check) {
-			for (HTTP2StreamHandler h : handlers) {
-				try {
-					// wait to receive all the response of the request
-					h.getCompletedFuture().get(h.getTimeout(), TimeUnit.MILLISECONDS);
-				} catch (ExecutionException | TimeoutException e) {
-					// TODO Auto-generated catch block
-					HTTP2SampleResult sample = h.getHTTP2SampleResult();
-					// remove the request that received timeout
-					pendingResponses.remove(sample.getId());  
-					streamHandlers.remove(sample.getId());
-					if (e instanceof TimeoutException) {
-						sample = HTTP2SampleResult.errorResult(e, sample);
-						sample.setResponseHeaders("");
-					}
-
-				}
-			}
-			check = size;
-			handlers = addPendingResponses(null, null, true);
-			size = handlers.size();
-		}
-	}
+    public void reset() {
+        streamHandlers.clear();
+    }
 
 }
