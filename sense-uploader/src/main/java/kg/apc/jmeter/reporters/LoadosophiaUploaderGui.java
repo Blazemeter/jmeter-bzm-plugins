@@ -3,6 +3,8 @@ package kg.apc.jmeter.reporters;
 import kg.apc.jmeter.JMeterPluginsUtils;
 import kg.apc.jmeter.gui.BrowseAction;
 import kg.apc.jmeter.gui.GuiBuilderHelper;
+import org.apache.jmeter.gui.UnsharedComponent;
+import org.apache.jmeter.samplers.Clearable;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.visualizers.gui.AbstractListenerGui;
 import org.apache.jorphan.logging.LoggingManager;
@@ -18,7 +20,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 
-public class LoadosophiaUploaderGui extends AbstractListenerGui implements HyperlinkListener {
+public class LoadosophiaUploaderGui extends AbstractListenerGui implements HyperlinkListener, Clearable, UnsharedComponent {
     private static final Logger log = LoggingManager.getLoggerForClass();
     public static final String WIKIPAGE = "LoadosophiaUploader";
     private JTextField testTitle;
@@ -60,6 +62,7 @@ public class LoadosophiaUploaderGui extends AbstractListenerGui implements Hyper
 
     @Override
     public void modifyTestElement(TestElement te) {
+        super.configureTestElement(te);
         if (te instanceof LoadosophiaUploader) {
             LoadosophiaUploader fw = (LoadosophiaUploader) te;
             fw.setProject(projectKey.getText());
@@ -184,6 +187,7 @@ public class LoadosophiaUploaderGui extends AbstractListenerGui implements Hyper
         initFields();
     }
 
+    @Override
     public void clearData() {
         infoText = "";
         infoArea.setText("");

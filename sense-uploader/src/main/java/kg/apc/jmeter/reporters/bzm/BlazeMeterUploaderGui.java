@@ -2,6 +2,8 @@ package kg.apc.jmeter.reporters.bzm;
 
 import kg.apc.jmeter.JMeterPluginsUtils;
 import kg.apc.jmeter.gui.GuiBuilderHelper;
+import org.apache.jmeter.gui.UnsharedComponent;
+import org.apache.jmeter.samplers.Clearable;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.visualizers.gui.AbstractListenerGui;
 
@@ -10,7 +12,7 @@ import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 import java.awt.*;
 
-public class BlazeMeterUploaderGui extends AbstractListenerGui implements HyperlinkListener {
+public class BlazeMeterUploaderGui extends AbstractListenerGui implements HyperlinkListener, Clearable, UnsharedComponent {
 
     public static final String WIKIPAGE = "BlazeMeterUploader";
     public static final String UPLOAD_TOKEN_PLACEHOLDER = "Replace this text with upload token received at a.blazemeter.com\nCan be used deprecated API keys or new improved keys.\nEmpty token means anonymous report without any other settings required.\nRemember that anyone who has this token can upload files to your account.\nPlease, treat your token as confidential data.\nSee plugin help for details.";
@@ -48,6 +50,7 @@ public class BlazeMeterUploaderGui extends AbstractListenerGui implements Hyperl
 
     @Override
     public void modifyTestElement(TestElement te) {
+        super.configureTestElement(te);
         if (te instanceof BlazeMeterUploader) {
             BlazeMeterUploader uploader = (BlazeMeterUploader) te;
             uploader.setShareTest(shareTest.isSelected());
@@ -132,8 +135,6 @@ public class BlazeMeterUploaderGui extends AbstractListenerGui implements Hyperl
         testTitle.setText("");
         projectKey.setText("Default project");
         uploadToken.setText(UPLOAD_TOKEN_PLACEHOLDER);
-        infoText = "";
-        infoArea.setText("");
     }
 
     private void addToPanel(JPanel panel, GridBagConstraints constraints, int col, int row, JComponent component) {
@@ -146,6 +147,12 @@ public class BlazeMeterUploaderGui extends AbstractListenerGui implements Hyperl
     public void clearGui() {
         super.clearGui();
         initFields();
+    }
+
+    @Override
+    public void clearData() {
+        infoText = "";
+        infoArea.setText("");
     }
 
     public void inform(String string) {

@@ -2,6 +2,7 @@ package kg.apc.jmeter.reporters.bzm;
 
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.gui.MainFrame;
+import org.apache.jmeter.samplers.Clearable;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.util.JMeterUtils;
 import org.apache.jmeter.visualizers.backend.BackendListener;
@@ -10,8 +11,9 @@ import org.apache.log.Logger;
 import kg.apc.jmeter.notifier.StatusNotifierCallback;
 
 import java.lang.reflect.Field;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-public class BlazeMeterUploader extends BackendListener implements StatusNotifierCallback {
+public class BlazeMeterUploader extends BackendListener implements StatusNotifierCallback, Clearable {
 
     private static final Logger log = LoggingManager.getLoggerForClass();
 
@@ -21,6 +23,7 @@ public class BlazeMeterUploader extends BackendListener implements StatusNotifie
     public static final String SHARE_TEST = "share";
 
     protected BlazeMeterUploaderGui gui;
+    private static volatile AtomicBoolean isTestStarted = new AtomicBoolean(false);
 
     public BlazeMeterUploader() {
         super();
@@ -37,7 +40,9 @@ public class BlazeMeterUploader extends BackendListener implements StatusNotifie
     public void testStarted(String host) {
         setArguments(createArguments());
         super.testStarted(host);
-        initClient();
+        if (!isTestStarted.getAndSet(true)) {
+            initClient();
+        }
     }
 
     private Arguments createArguments() {
@@ -55,7 +60,6 @@ public class BlazeMeterUploader extends BackendListener implements StatusNotifie
             gui.inform(info);
         }
         log.info(info);
-        System.out.println(info);
     }
 
     @Override
@@ -68,6 +72,7 @@ public class BlazeMeterUploader extends BackendListener implements StatusNotifie
     @Override
     public void testEnded(String host) {
         super.testEnded(host);
+        isTestStarted.set(false);
     }
 
     @Override
@@ -126,5 +131,12 @@ public class BlazeMeterUploader extends BackendListener implements StatusNotifie
         } catch (IllegalAccessException | NoSuchFieldException e) {
             log.error("Cannot inject links into backend listener client", e);
         }
+    }
+
+    // This is required so that
+    // @see org.apache.jmeter.gui.tree.JMeterTreeModel.getNodesOfType()
+    // can find the Clearable nodes - the userObject has to implement the interface.
+    @Override
+    public void clearData() {
     }
 }

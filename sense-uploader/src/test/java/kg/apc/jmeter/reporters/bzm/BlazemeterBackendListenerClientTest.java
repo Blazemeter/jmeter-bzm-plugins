@@ -40,7 +40,7 @@ public class BlazemeterBackendListenerClientTest {
     @Test
     public void testFlow() throws Exception {
         StatusNotifierCallbackTest.StatusNotifierCallbackImpl notifier = new StatusNotifierCallbackTest.StatusNotifierCallbackImpl();
-        BlazeMeterBackendListenerClient client = new BlazeMeterBackendListenerClient();
+        BlazeMeterBackendListenerClient client = new BLCEmul();
         final Arguments arguments = new Arguments();
         arguments.addArgument(BlazeMeterUploader.SHARE_TEST, Boolean.toString(false));
         arguments.addArgument(BlazeMeterUploader.PROJECT, "project");
