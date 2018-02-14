@@ -189,7 +189,7 @@ public class HTTP2Request extends AbstractSampler implements ThreadListener, Loo
                         if (!r.isSecondaryRequest()) {
                             if (sampleResult.getId() != r.getId()) {
                                 //Is not the response of a sync request and is not a embedded result
-                                sampleResult.addRawSubResult(r);
+                                sampleResult.addPendingResult(r);
                             }
                         }
                         saveConnectionCookies(r.getHttpFieldsResponse(), r.getURL(), getCookieManager());
@@ -489,6 +489,13 @@ public class HTTP2Request extends AbstractSampler implements ThreadListener, Loo
 
     @Override
     public void threadFinished() {
+    	connections.get().values().forEach( c -> {
+            try {
+                c.awaitResponses();
+            } catch (InterruptedException e) {
+                log.warn("Interrupted while waiting for HTTP2 async responses", e);
+            }
+        });
         for (HTTP2Connection connection : connections.get().values()) {
             try {
                 connection.disconnect();

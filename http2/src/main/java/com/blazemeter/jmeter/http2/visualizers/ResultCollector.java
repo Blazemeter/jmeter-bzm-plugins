@@ -9,6 +9,9 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -452,23 +455,22 @@ public class ResultCollector extends org.apache.jmeter.reporters.ResultCollector
 
 			if (!http2Result.isPendingResponse()) {						
 				
-				SampleResult[] subResults = result.getSubResults();
-				
+				List<SampleEvent> events = new ArrayList<> ();
+				events.add(event);
+					
 				//Look into childs to get the response of the message and the response of the secondary requests
-				for (SampleResult child : subResults) {
-
-					if (child instanceof HTTP2SampleResult) {
-						http2Result = (HTTP2SampleResult) child;
-						if (!http2Result.isSecondaryRequest()) {														
-							SampleEvent evtChild = new SampleEvent(child, event.getThreadGroup());	
-							
-							// The method implements the same logic to save as method SampleOcurred of JMeter.
-							saveLine(evtChild);
-						}
+				for (HTTP2SampleResult child : http2Result.getPendingResults()) {
+					if (!http2Result.isSecondaryRequest()) {														
+						SampleEvent evtChild = new SampleEvent(child, event.getThreadGroup());	
+						events.add(evtChild);
 					}
 				}
 				
-				saveLine(event);
+				Collections.sort(events, (e1,e2) -> Long.compare(e1.getResult().getEndTime(), e1.getResult().getEndTime()));
+				
+				for (SampleEvent e : events){
+					saveLine(e);
+				}				
 			}
 		} else {
 			// If it's not an HTTP2SampleResult follow the normal flow

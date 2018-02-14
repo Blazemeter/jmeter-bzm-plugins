@@ -27,6 +27,7 @@ import java.io.PrintStream;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * This is a specialisation of the SampleResult class for the HTTP protocol.
@@ -50,7 +51,8 @@ public class HTTP2SampleResult extends SampleResult {
 	private String method;
 	private transient HttpFields httpFieldsResponse;
 	private boolean embebedResults;
-
+	private transient Queue <HTTP2SampleResult> pendingResults = new ConcurrentLinkedQueue<>();
+	
 	private boolean secondaryRequest;
 
 	private String embeddedUrlRE;
@@ -416,5 +418,13 @@ public class HTTP2SampleResult extends SampleResult {
 	public void setSecondaryRequest(boolean secondaryRequest) {
 		this.secondaryRequest = secondaryRequest;
 	}
-
+	
+	public void addPendingResult (HTTP2SampleResult pendingResult){
+		this.pendingResults.add(pendingResult);
+	}
+	
+	public Queue<HTTP2SampleResult> getPendingResults(){
+		return pendingResults;	
+	}
+ 
 }
