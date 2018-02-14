@@ -489,13 +489,7 @@ public class HTTP2Request extends AbstractSampler implements ThreadListener, Loo
 
     @Override
     public void threadFinished() {
-    	connections.get().values().forEach( c -> {
-            try {
-                c.awaitResponses();
-            } catch (InterruptedException e) {
-                log.warn("Interrupted while waiting for HTTP2 async responses", e);
-            }
-        });
+        waitAllResponses();
         for (HTTP2Connection connection : connections.get().values()) {
             try {
                 connection.disconnect();
@@ -526,6 +520,10 @@ public class HTTP2Request extends AbstractSampler implements ThreadListener, Loo
 
     @Override
     public void iterationStart(LoopIterationEvent iterEvent) {
+        waitAllResponses();
+    }
+
+    private void waitAllResponses() {
         connections.get().values().forEach( c -> {
             try {
                 c.awaitResponses();
