@@ -108,6 +108,12 @@
             <artifactId>jmeter-plugins-emulators</artifactId>
             <version>0.4</version>
             <scope>test</scope>
+            <exclusions>
+            	<exclusion>
+            		<groupId>org.apache.jmeter</groupId>
+            		<artifactId>ApacheJMeter_tcp</artifactId>
+            	</exclusion>
+            </exclusions>
         </dependency>
 
 	</dependencies>
