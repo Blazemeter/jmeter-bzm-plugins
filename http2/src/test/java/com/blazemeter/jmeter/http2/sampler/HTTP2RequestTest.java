@@ -15,6 +15,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import kg.apc.emulators.TestJMeterUtils;
+
 import java.net.URL;
 
 import static org.junit.Assert.*;
@@ -26,6 +28,7 @@ public class HTTP2RequestTest {
 
     @Before
     public void setup() {
+    	TestJMeterUtils.createJmeterEnv();
         http2ConnectionMock = Mockito.mock(HTTP2Connection.class);
         http2Req = new HTTP2Request();
         http2Req.setThreadName("10");

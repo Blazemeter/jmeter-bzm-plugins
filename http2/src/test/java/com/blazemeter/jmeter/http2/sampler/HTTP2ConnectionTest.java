@@ -9,6 +9,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import kg.apc.emulators.TestJMeterUtils;
+
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,6 +27,7 @@ public class HTTP2ConnectionTest {
 
     @Before
     public void setup() throws Exception {
+    	TestJMeterUtils.createJmeterEnv();
         headerManagerMock = Mockito.mock(HeaderManager.class);
         urlMock = Mockito.mock(URL.class);
         cookieManagerMock = Mockito.mock(CookieManager.class);

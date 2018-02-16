@@ -44,6 +44,8 @@ import com.blazemeter.jmeter.http2.visualizers.ResultCollector;
 import com.blazemeter.jmeter.http2.visualizers.SimpleDataWriter;
 import com.blazemeter.jmeter.http2.visualizers.ViewResultsFullVisualizer;
 
+import kg.apc.emulators.TestJMeterUtils;
+
 public class SimpleDataWriterTest {
 	
 	private SimpleDataWriter http2SimpleDataW; 
@@ -51,6 +53,7 @@ public class SimpleDataWriterTest {
 	
 	@Before
     public void setup() {
+		TestJMeterUtils.createJmeterEnv();
 		http2SimpleDataW = new SimpleDataWriter();
     }
 	
