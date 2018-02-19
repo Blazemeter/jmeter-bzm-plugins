@@ -11,12 +11,15 @@ import org.apache.jmeter.samplers.SampleResult;
 import org.junit.Before;
 import org.junit.Test;
 
+import kg.apc.emulators.TestJMeterUtils;
+
 public class HTTP2SampleResultTest {
 	
 	private HTTP2SampleResult http2SampleResult;
 	
 	@Before
     public void setup() {       
+		TestJMeterUtils.createJmeterEnv();
 		http2SampleResult= new HTTP2SampleResult();
     }
 	

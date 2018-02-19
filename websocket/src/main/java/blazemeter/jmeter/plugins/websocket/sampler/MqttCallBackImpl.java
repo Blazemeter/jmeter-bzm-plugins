@@ -1,6 +1,7 @@
 package blazemeter.jmeter.plugins.websocket.sampler;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.TimeUnit;
@@ -15,7 +16,7 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 
 
-public class MqttCallBackImpl extends Handler implements MqttCallback {
+public class MqttCallBackImpl extends Handler implements MqttCallback, Serializable {
 	protected static final Logger log = LoggingManager.getLoggerForClass();	
 	private String clientID;
 	private String logLevel;

@@ -3,23 +3,47 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>jmeter.plugins.websocket.sampler</groupId>
-    <artifactId>WebSocketPlugin</artifactId>
+    <artifactId>jmeter-bzm-websocket-mqtt</artifactId>
     <packaging>jar</packaging>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>WebSocket Sampler as JMeter plugin</name>
 
     <properties>
         <version.org.apache.jmeter.all>3.0</version.org.apache.jmeter.all>
+<!--         <version.org.apache.jmeter.all>2.13</version.org.apache.jmeter.all> -->
 		<version.org.eclipse.jetty.all>9.4.2.v20170220</version.org.eclipse.jetty.all>
     </properties>
 
     <dependencies>
+    
+<!--     	TO BUILD 2.13 -->
+<!--     	<dependency> -->
+<!-- 		    <groupId>org.apache.commons</groupId> -->
+<!-- 		    <artifactId>commons-math3</artifactId> -->
+<!-- 		    <version>3.4.1</version> -->
+<!-- 		</dependency> -->
+<!-- 		<dependency> -->
+<!-- 		    <groupId>org.apache.commons</groupId> -->
+<!-- 		    <artifactId>commons-pool2</artifactId> -->
+<!-- 		    <version>2.3</version> -->
+<!-- 		</dependency> -->
 
         <dependency>
             <groupId>org.apache.jmeter</groupId>
             <artifactId>ApacheJMeter_core</artifactId>
             <version>${version.org.apache.jmeter.all}</version>
             <scope>provided</scope>
+<!--             TO BUILD 2.13 -->
+<!--             <exclusions> -->
+<!-- 				<exclusion> -->
+<!-- 				  <artifactId>commons-math3</artifactId> -->
+<!-- 				  <groupId>commons-math3</groupId> -->
+<!-- 				</exclusion> -->
+<!-- 				<exclusion> -->
+<!-- 				  <artifactId>commons-pool2</artifactId> -->
+<!-- 				  <groupId>commons-pool2</groupId> -->
+<!-- 				</exclusion> -->
+<!-- 			</exclusions> -->
         </dependency>
 
         <dependency>
@@ -27,6 +51,17 @@
             <artifactId>ApacheJMeter_http</artifactId>
             <version>${version.org.apache.jmeter.all}</version>
             <scope>provided</scope>
+<!--              TO BUILD 2.13 -->
+<!--             <exclusions> -->
+<!-- 				<exclusion> -->
+<!-- 				  <artifactId>commons-math3</artifactId> -->
+<!-- 				  <groupId>commons-math3</groupId> -->
+<!-- 				</exclusion> -->
+<!-- 				<exclusion> -->
+<!-- 				  <artifactId>commons-pool2</artifactId> -->
+<!-- 				  <groupId>commons-pool2</groupId> -->
+<!-- 				</exclusion> -->
+<!-- 			</exclusions> -->
         </dependency>
         
         <dependency>
@@ -45,6 +80,37 @@
 		    <artifactId>mqtt-websocket-java</artifactId>
 		    <version>1.0.1</version>
 		</dependency>	
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>2.8.47</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+		    <groupId>org.powermock</groupId>
+		    <artifactId>powermock-api-mockito</artifactId>
+		    <version>1.7.1</version>
+		    <scope>test</scope>
+		</dependency>
+		<dependency>
+            <groupId>kg.apc</groupId>
+            <artifactId>jmeter-plugins-cmn-jmeter</artifactId>
+            <scope>test</scope>
+            <version>0.5</version>
+        </dependency>
+
+        <dependency>
+            <groupId>kg.apc</groupId>
+            <artifactId>jmeter-plugins-emulators</artifactId>
+            <version>0.2</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -56,27 +122,11 @@
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>2.0</version>
-                <configuration>
                     <outputFile>
-                        target/${project.artifactId}-dist-${project.version}.jar
+                        ${project.artifactId}-${project.version}.jar
                     </outputFile>
                 </configuration>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+            </plugin> 
         </plugins>
     </build>
 </project>

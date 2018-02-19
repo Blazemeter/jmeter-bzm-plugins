@@ -1,10 +1,13 @@
 package blazemeter.jmeter.plugins.websocket.sampler;
 
 import java.io.UnsupportedEncodingException;
+import java.net.CookieStore;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.HttpCookie;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,6 +23,7 @@ import org.apache.jmeter.protocol.http.util.EncoderCache;
 import org.apache.jmeter.protocol.http.util.HTTPArgument;
 import org.apache.jmeter.protocol.http.util.HTTPConstants;
 import org.apache.jmeter.samplers.AbstractSampler;
+import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.TestStateListener;
 import org.apache.jmeter.testelement.ThreadListener;
@@ -44,10 +48,7 @@ import io.inventit.dev.mqtt.paho.MqttWebSocketAsyncClient;
 
 public abstract class WebSocketAbstractSampler extends AbstractSampler implements TestStateListener, ThreadListener {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -8645902802126134304L;
+	private Factory factory;
 
 	protected static final Logger log = LoggingManager.getLoggerForClass();
     
@@ -74,6 +75,8 @@ public abstract class WebSocketAbstractSampler extends AbstractSampler implement
     protected static final String DEFAULT_PROTOCOL = "ws";  
     protected static final String WS_PROTOCOL = "ws"; // $NON-NLS-1$
     protected static final String WSS_PROTOCOL = "wss"; // $NON-NLS-1$
+    protected static final int WS_PROTOCOL_DEFAULT_PORT = 80; // $NON-NLS-1$
+    protected static final int WSS_PROTOCOL_DEFAULT_PORT = 443;
     
     
     /** A number to indicate that the port has not been set. */
@@ -88,6 +91,11 @@ public abstract class WebSocketAbstractSampler extends AbstractSampler implement
 	
 	public WebSocketAbstractSampler() {
 		super();
+		this.factory = new Factory();
+	}
+	
+	public void setFactory (Factory factory){
+		this.factory = factory;
 	}
 
 	 @Override
@@ -123,17 +131,21 @@ public abstract class WebSocketAbstractSampler extends AbstractSampler implement
 
 	    }   
 	    
-	    public Handler getConnection (String connectionId) throws Exception{
+	    public Handler getConnection (String connectionId, SampleResult sampleResult) throws Exception{
 	    	
 	    	if (connectionList.containsKey(connectionId)){
-	    		return connectionList.get(connectionId);
+	    		Handler h = connectionList.get(connectionId);
+	    		if (h.isConnected())
+	    			return h;
+	    		else 
+	    			connectionList.remove(h);
 	    	}
 	    	
 	    	if(getProtocolWSMQTTComboBox().equals("Mqtt")){
 	    		return getMqttConnection(connectionId);
 	    	}
 	    	else if (getProtocolWSMQTTComboBox().equals("Web Socket")){
-	    		return getConnectionWS (connectionId);
+	    		return getConnectionWS (connectionId, sampleResult);
 	    	}
 	    	
 	    	return null;
@@ -155,13 +167,8 @@ public abstract class WebSocketAbstractSampler extends AbstractSampler implement
 	    	};
 
     		String mqttUrl = null;
-    		
-    		if(getProtocol().equals("tcp")){
-    			 mqttUrl = "tcp://" + getServer() + ":" + getPort();
-    		}else{
-	    		 mqttUrl = getUri().toString();			
+       		mqttUrl = getUri().toString();			
 
-    		}
 
     		int qos = 0;
 			String topic = getTopic();
@@ -173,14 +180,12 @@ public abstract class WebSocketAbstractSampler extends AbstractSampler implement
 			log.info("PARAMS: "+mqttUrl+" "+topic+" "+clientID);
 			IMqttAsyncClient client = null;
 			
-			if(getProtocol().equals("tcp")){
-				client = new MqttAsyncClient(mqttUrl, clientID, persistence);
-    		}else{
-    			client = new MqttWebSocketAsyncClient (mqttUrl, clientID, persistence);
-    		}
+			
+			client = factory.getMqttAsyncClient (getProtocol(), mqttUrl, clientID, persistence);
 
 			log.info("IMqttAsyncClient CREATED");
-			callBackConnection = new MqttCallBackImpl(client,clientID,getLogLevel(),getContentEncoding());
+			callBackConnection = factory.getMqttHandler(client,clientID,getLogLevel(),getContentEncoding()); 
+					
 			client.setCallback(callBackConnection);
 			log.info("CLIENT CALLBACK SETTED: "+clientID+" "+getLogLevel());
 			
@@ -227,11 +232,11 @@ public abstract class WebSocketAbstractSampler extends AbstractSampler implement
 	    	return callBackConnection;
 	    }
 	    
-	    public WebSocketConnection getConnectionWS (String connectionId) throws Exception{
+	    public WebSocketConnection getConnectionWS (String connectionId, SampleResult sampleResult) throws Exception{
 	    	
 	    	
 	    	
-	    	URI uri = getUri();;
+	    	URI uri = getUri();
 	    
 	    	String closeConnectionPattern = getCloseConnectionPattern();
 	    	int connectionTimeout;
@@ -246,14 +251,28 @@ public abstract class WebSocketAbstractSampler extends AbstractSampler implement
 	    	SslContextFactory sslContexFactory = new SslContextFactory();
 	        sslContexFactory.setTrustAll(true);
 	        WebSocketClient webSocketClient = new WebSocketClient(sslContexFactory);
-	        WebSocketConnection webSocketConnection = new WebSocketConnection(webSocketClient, closeConnectionPattern, getContentEncoding());
+	        WebSocketConnection webSocketConnection = factory.getWebSocketHandler(webSocketClient, closeConnectionPattern, getContentEncoding());
 	        
 			webSocketClient.start();
 	        
 	        ClientUpgradeRequest request = new ClientUpgradeRequest();
 	        setConnectionHeaders(request, getHeaderManager(), null);
-	        setConnectionCookie(request, uri, getCookieManager());
+	        setConnectionCookie(webSocketClient, uri, getCookieManager());
 	        webSocketClient.connect(webSocketConnection, uri, request);
+	        
+	        for (Map.Entry<String, List<String>> entry : request.getHeaders().entrySet()){
+	        	sampleResult.setRequestHeaders(sampleResult.getRequestHeaders() + entry.getKey() + ": ");
+	        	for (String s : entry.getValue()){
+	        		sampleResult.setRequestHeaders(sampleResult.getRequestHeaders() + entry.getValue() + " ");
+	        	}
+	        	sampleResult.setRequestHeaders(sampleResult.getRequestHeaders() + "\n");
+	        }
+	        
+	        sampleResult.setRequestHeaders(sampleResult.getRequestHeaders() + "\n\nCookies: \n\n");
+	        
+	        for (HttpCookie h : webSocketClient.getCookieStore().getCookies()){
+	        	sampleResult.setRequestHeaders(sampleResult.getRequestHeaders() + h);
+	        }
 			
 			webSocketConnection.awaitOpen(connectionTimeout, TimeUnit.MILLISECONDS);
 			
@@ -296,7 +315,7 @@ public abstract class WebSocketAbstractSampler extends AbstractSampler implement
 	           path = "/" + path;
 	        }
 	
-		    String queryString = getQueryString(getContentEncoding());
+//		    String queryString = getQueryString(getContentEncoding());
 //		    if (queryString.length() > 0) {
 //		        if (path.contains(QRY_PFX)) {// Already contains a prefix
 //		            pathAndQuery.append(QRY_SEP);
@@ -305,14 +324,19 @@ public abstract class WebSocketAbstractSampler extends AbstractSampler implement
 //		        }
 //		        pathAndQuery.append(queryString);
 //		    }
-		    
-	        // If default port for protocol is used, we do not include port in URL
-	        if (isProtocolDefaultPort()) {
-	        	return new URI(protocol, null, domain, -1, path, queryString, null);
-//	            return new URL(protocol, domain, pathAndQuery.toString());
-	        }
-	        return new URI(protocol, null, domain, getPort(), path, queryString, null);
+
+	        if (isProtocolDefaultPort()) 
+	        	return new URI (protocol + "://" + domain + path);
+	        else
+	        	return new URI (protocol + "://" + domain + ":" + getPort() + path);	   
+//	        // If default port for protocol is used, we do not include port in URL
+//	        if (isProtocolDefaultPort()) {
+//	        	return new URI(protocol, null, domain, -1, path, null, null);
+////	            return new URL(protocol, domain, pathAndQuery.toString());
+//	        }
+//	        return new URI(protocol, null, domain, getPort(), path, null, null);
 //	        return new URL(protocol, domain, getPort(), pathAndQuery.toString());
+	        
 	    }
 	    
 	    /**
@@ -323,12 +347,12 @@ public abstract class WebSocketAbstractSampler extends AbstractSampler implement
 	    public boolean isProtocolDefaultPort() {
 	        final int port = getPortIfSpecified();
 	        final String protocol = getProtocol();
-	        boolean isDefaultHTTPPort = HTTPConstants.PROTOCOL_HTTP
+	        boolean isDefaultHTTPPort = WebSocketAbstractSampler.WS_PROTOCOL
 	                .equalsIgnoreCase(protocol)
-	                && port == HTTPConstants.DEFAULT_HTTP_PORT;
-	        boolean isDefaultHTTPSPort = HTTPConstants.PROTOCOL_HTTPS
+	                && port == WebSocketAbstractSampler.WS_PROTOCOL_DEFAULT_PORT;
+	        boolean isDefaultHTTPSPort = WebSocketAbstractSampler.WSS_PROTOCOL
 	                .equalsIgnoreCase(protocol)
-	                && port == HTTPConstants.DEFAULT_HTTPS_PORT;
+	                && port == WebSocketAbstractSampler.WSS_PROTOCOL_DEFAULT_PORT;
 	        return port == UNSPECIFIED_PORT ||
 	                isDefaultHTTPPort ||
 	                isDefaultHTTPSPort;
@@ -495,9 +519,11 @@ public abstract class WebSocketAbstractSampler extends AbstractSampler implement
 		protected void setConnectionHeaders(ClientUpgradeRequest request, HeaderManager headerManager, CacheManager cacheManager) {
 	        if (headerManager != null) {
 	            CollectionProperty headers = headerManager.getHeaders();
+	            PropertyIterator p = headers.iterator();
 	            if (headers != null) {
-	                for (JMeterProperty jMeterProperty : headers) {
-	                    org.apache.jmeter.protocol.http.control.Header header
+	            	while (p.hasNext()){
+	            		JMeterProperty jMeterProperty = p.next();
+	            		org.apache.jmeter.protocol.http.control.Header header
 	                    = (org.apache.jmeter.protocol.http.control.Header)
 	                            jMeterProperty.getObjectValue();
 	                    String n = header.getName();
@@ -505,14 +531,14 @@ public abstract class WebSocketAbstractSampler extends AbstractSampler implement
 	                        String v = header.getValue();
 	                		request.setHeader(n, v);
 	                    }
-	                }
+	            	}
 	            }
 	        }
 	        if (cacheManager != null){
 	        }
 	    }
 		
-		protected String setConnectionCookie(ClientUpgradeRequest request, URI uri, CookieManager cookieManager) throws MalformedURLException {
+		protected String setConnectionCookie(WebSocketClient wsClient, URI uri, CookieManager cookieManager) throws MalformedURLException {
 	        String cookieHeader = null;
 	        if (cookieManager != null) {
 	        	URL url;
@@ -527,8 +553,8 @@ public abstract class WebSocketAbstractSampler extends AbstractSampler implement
 	            if (!path.endsWith("/")) { // $NON-NLS-1$
 	            	path= path + "/"; // $NON-NLS-1$
 	            }
-	            
-	        	path = path + uri.getQuery();
+	            if (uri.getQuery() != null)
+	            	path = path + uri.getQuery();
 	        	
 	        	String protocol = getProtocol().equalsIgnoreCase(WS_PROTOCOL) ? "http" : "https";
 	        	if (isProtocolDefaultPort()) {
@@ -537,9 +563,12 @@ public abstract class WebSocketAbstractSampler extends AbstractSampler implement
 	        	url = new URL(protocol, domain, getPort(), path);
 	        	
 	        	
-	            cookieHeader = cookieManager.getCookieHeaderForURL(uri.toURL());
+	            cookieHeader = cookieManager.getCookieHeaderForURL(url);
 	            if (cookieHeader != null) {
-	                request.setHeader(HTTPConstants.HEADER_COOKIE, cookieHeader);
+		            for (String s : cookieHeader.split(";")){
+		            	HttpCookie c = new HttpCookie(s.split("=")[0], s.split("=")[1]);
+		            	wsClient.getCookieStore().add(uri, c);
+		            }
 	            }
 	        }
 	        return cookieHeader;

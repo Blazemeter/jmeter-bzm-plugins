@@ -1,11 +1,12 @@
 package blazemeter.jmeter.plugins.websocket.sampler;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.TimeUnit;
 
-public abstract class Handler {
+public abstract class Handler implements Serializable{
 	
 	private String encoding;
 	protected Queue<String> messages = new LinkedList<String>();

@@ -43,6 +43,8 @@ import org.mockito.Mockito;
 import com.blazemeter.jmeter.http2.visualizers.ResultCollector;
 import com.blazemeter.jmeter.http2.visualizers.ViewResultsFullVisualizer;
 
+import kg.apc.emulators.TestJMeterUtils;
+
 public class ResultCollectorTest {
 	
 	private ResultCollector http2ResultCollector; 
@@ -50,6 +52,7 @@ public class ResultCollectorTest {
 	
 	@Before
     public void setup() {
+		TestJMeterUtils.createJmeterEnv();
 		http2ResultCollector = new ResultCollector();
     }
 	

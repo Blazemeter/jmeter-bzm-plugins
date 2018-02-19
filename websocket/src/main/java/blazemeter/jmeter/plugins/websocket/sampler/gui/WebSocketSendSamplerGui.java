@@ -9,7 +9,6 @@ import org.apache.jmeter.testelement.TestElement;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 
-import blazemeter.jmeter.plugins.websocket.sampler.WebSocketConnectionSampler;
 import blazemeter.jmeter.plugins.websocket.sampler.WebSocketSendSampler;
 
 

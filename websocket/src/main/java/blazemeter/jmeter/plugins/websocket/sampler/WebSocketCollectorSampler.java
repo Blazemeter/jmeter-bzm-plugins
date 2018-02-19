@@ -1,5 +1,6 @@
 package blazemeter.jmeter.plugins.websocket.sampler;
 
+import java.net.URISyntaxException;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.jmeter.samplers.Entry;
@@ -12,11 +13,6 @@ import org.apache.log.Logger;
 
 public class WebSocketCollectorSampler extends WebSocketAbstractSampler {
 
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -4085748361510897426L;
 	private static final Logger log = LoggingManager.getLoggerForClass();
 
     public WebSocketCollectorSampler() {
@@ -43,16 +39,23 @@ public class WebSocketCollectorSampler extends WebSocketAbstractSampler {
     	sampleResult.setSampleLabel(getName());
     	String connectionId = getThreadName() + getServer() + getPath() + getPort();
     	
+    	
+    	try {
+			sampleResult.setRequestHeaders("URI: " + this.getUri().toString() + "\n\n");
+		} catch (URISyntaxException e1) {
+			sampleResult.setRequestHeaders("URI: " + e1.getMessage() + "\n\n");
+		}
     	sampleResult.sampleStart();
     	
     	Handler handler;
 		try {
-			handler = getConnection (connectionId);
+			handler = getConnection (connectionId, sampleResult);
 		} catch (Exception e) {
 			sampleResult.setSuccessful(false);
 			sampleResult.setResponseMessage(e.getMessage());
 			sampleResult.setResponseData(e.getStackTrace().toString(),"utf-8");
 	    	sampleResult.sampleEnd();
+	    	e.printStackTrace();
 	    	return sampleResult;
 		}
 		
@@ -79,12 +82,14 @@ public class WebSocketCollectorSampler extends WebSocketAbstractSampler {
 				if (!handler.awaitMessage(responseTimeout, TimeUnit.MILLISECONDS, getResponsePattern())){
 					sampleResult.setSuccessful(false);
 					sampleResult.setResponseMessage("Response timeout");
+					sampleResult.setResponseData(handler.getMessages(),handler.getContentEncoding());
 					sampleResult.sampleEnd();
 					return sampleResult;
 				}
 			} catch (InterruptedException e) {
 				sampleResult.setSuccessful(false);
 	    		sampleResult.setResponseMessage(e.getMessage());
+	    		sampleResult.setResponseData(handler.getMessages(),handler.getContentEncoding());
 	    		sampleResult.sampleEnd();
 	    		return sampleResult;
 			}

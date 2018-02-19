@@ -18,20 +18,16 @@
 
 package com.blazemeter.jmeter.http2.sampler;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.apache.jmeter.protocol.http.util.HTTPConstants;
 import org.apache.jmeter.samplers.SampleResult;
 import org.eclipse.jetty.http.HttpFields;
+
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * This is a specialisation of the SampleResult class for the HTTP protocol.
@@ -53,9 +49,10 @@ public class HTTP2SampleResult extends SampleResult {
 
 	private int embebedResultsDepth;
 	private String method;
-	private HttpFields httpFieldsResponse;
+	private transient HttpFields httpFieldsResponse;
 	private boolean embebedResults;
-
+	private transient Queue <HTTP2SampleResult> pendingResults = new ConcurrentLinkedQueue<>();
+	
 	private boolean secondaryRequest;
 
 	private String embeddedUrlRE;
@@ -201,7 +198,7 @@ public class HTTP2SampleResult extends SampleResult {
 	}
 
 	public void setHttpFieldsResponse(HttpFields httpFieldsResponse) {
-		this.httpFieldsResponse = new HttpFields(httpFieldsResponse);
+		this.httpFieldsResponse = httpFieldsResponse;
 	}
 
 	public void setRedirectLocation(String redirectLocation) {
@@ -421,5 +418,13 @@ public class HTTP2SampleResult extends SampleResult {
 	public void setSecondaryRequest(boolean secondaryRequest) {
 		this.secondaryRequest = secondaryRequest;
 	}
-
+	
+	public void addPendingResult (HTTP2SampleResult pendingResult){
+		this.pendingResults.add(pendingResult);
+	}
+	
+	public Queue<HTTP2SampleResult> getPendingResults(){
+		return pendingResults;	
+	}
+ 
 }

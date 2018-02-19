@@ -28,7 +28,7 @@
 			<artifactId>ApacheJMeter_http</artifactId>
 			<version>${version.org.apache.jmeter.all}</version>
 		</dependency>
-
+		
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-client</artifactId>
@@ -100,13 +100,20 @@
             <groupId>kg.apc</groupId>
             <artifactId>jmeter-plugins-cmn-jmeter</artifactId>
             <version>0.5</version>
+            <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>kg.apc</groupId>
             <artifactId>jmeter-plugins-emulators</artifactId>
-            <version>0.2</version>
+            <version>0.4</version>
             <scope>test</scope>
+            <exclusions>
+            	<exclusion>
+            		<groupId>org.apache.jmeter</groupId>
+            		<artifactId>ApacheJMeter_tcp</artifactId>
+            	</exclusion>
+            </exclusions>
         </dependency>
 
 	</dependencies>

@@ -35,10 +35,6 @@ import org.eclipse.jetty.websocket.client.WebSocketClient;
 
 public class WebSocketSendSampler extends WebSocketAbstractSampler {
 
-    /**
-	 * 
-	 */
-	private static final long serialVersionUID = -2448936343629837103L;
 
 	public WebSocketSendSampler() {
         super();
@@ -68,16 +64,22 @@ public class WebSocketSendSampler extends WebSocketAbstractSampler {
     	
     	String connectionId = getThreadName() + getServer() + getPath() + getPort();
     	
+    	try {
+			sampleResult.setRequestHeaders(sampleResult.getRequestHeaders() + "URI: " + this.getUri().toString() + "\n\n");
+		} catch (URISyntaxException e1) {
+			sampleResult.setRequestHeaders(sampleResult.getRequestHeaders() + "URI: " + e1.getMessage() + "\n\n");
+		}
     	sampleResult.sampleStart();
     	
     	Handler handler;
 		try {
-			handler = getConnection (connectionId);
+			handler = getConnection (connectionId, sampleResult);
 		} catch (Exception e) {
 			sampleResult.setSuccessful(false);
 			sampleResult.setResponseMessage(e.getMessage());
 			sampleResult.setResponseData(e.getStackTrace().toString(),"utf-8");
 	    	sampleResult.sampleEnd();
+	    	e.printStackTrace();
 	    	return sampleResult;
 		}
 		
@@ -130,12 +132,12 @@ public class WebSocketSendSampler extends WebSocketAbstractSampler {
     		sampleResult.sampleEnd();
     		return sampleResult;
 		}	
-    		sampleResult.setSuccessful(true);
-    		sampleResult.setResponseMessage("");
-    		sampleResult.setRequestHeaders(payload);
-    		sampleResult.sampleEnd();
-    		return sampleResult;
-    	}
+		sampleResult.setSuccessful(true);
+		sampleResult.setResponseMessage("");
+		sampleResult.setRequestHeaders(payload);
+		sampleResult.sampleEnd();
+		return sampleResult;
+	}
 
 	public String getPayloadContent() {
 		return getPropertyAsString("payloadContent");
