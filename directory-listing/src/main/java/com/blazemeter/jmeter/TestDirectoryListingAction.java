@@ -32,13 +32,13 @@ public class TestDirectoryListingAction implements ActionListener {
         JTextArea checkArea = directoryListingConfigGui.getCheckArea();
 
         try {
-            final CompoundVariable compoundVariable = new CompoundVariable();
+            final CompoundVariable compVarSrcDir = new CompoundVariable();
+            compVarSrcDir.setParameters(config.getSourceDirectory());
+            config.setSourceDirectory(compVarSrcDir.execute());
 
-            compoundVariable.setParameters(config.getSourceDirectory());
-            config.setSourceDirectory(compoundVariable.execute());
-
-            compoundVariable.setParameters(config.getDestinationVariableName());
-            config.setDestinationVariableName(compoundVariable.execute());
+            final CompoundVariable compVarDestVar = new CompoundVariable();
+            compVarDestVar.setParameters(config.getDestinationVariableName());
+            config.setDestinationVariableName(compVarDestVar.execute());
 
             String variableName = DirectoryListingConfig.getStringOrDefault(
                     config.getDestinationVariableName(),
