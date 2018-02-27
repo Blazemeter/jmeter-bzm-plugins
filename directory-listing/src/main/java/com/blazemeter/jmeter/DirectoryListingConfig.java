@@ -71,7 +71,10 @@ public class DirectoryListingConfig extends ConfigTestElement implements NoThrea
 
     private String getSubPath(String absolutePath) {
         String rootDir = getSourceDirectory();
-        return absolutePath.substring(rootDir.length());
+        File sourceDir = new File(rootDir);
+        return sourceDir.isAbsolute() ?
+                absolutePath.substring(rootDir.length()) :
+                absolutePath.substring(sourceDir.getAbsolutePath().length());
     }
 
     public DirectoryListingIterator createDirectoryListingIterator() {
