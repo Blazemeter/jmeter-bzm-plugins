@@ -77,12 +77,13 @@ public class HlsSampler extends AbstractSampler {
 
 	private String getPlaylistPath(DataRequest respond, Parser parser) throws MalformedURLException {
 		URL masterURL = new URL(getURLData());
-		playlistUri = parser.extractUriMaster(respond.getResponse(), this.getRESDATA(), this.getNetwordData(),
+		playlistUri = parser.extractMediaUrl(respond.getResponse(), this.getRESDATA(), this.getNetwordData(),
 				this.getBandwidthType(), this.getResolutionType());
 		String auxPath = masterURL.getPath().substring(0, masterURL.getPath().lastIndexOf('/') + 1);
-
-		if(playlistUri.trim().equals(""))
+		
+		if(playlistUri == null)
 			playlistUri = getURLData();
+
 		if (playlistUri.startsWith("http")) {
 			playlist = playlistUri;
 		} else if (playlistUri.indexOf('/') == 0) {
@@ -91,7 +92,7 @@ public class HlsSampler extends AbstractSampler {
 			playlist = getPRotocol() + "://" + masterURL.getHost() + auxPath + playlistUri;
 		}
 
-		auxPath = getPRotocol() + "://" + masterURL.getHost() + auxPath;
+		auxPath = getPRotocol() + "://" + masterURL.getHost() + (masterURL.getPort() > 0 ? ":" + masterURL.getPort() : "") + auxPath;
 
 		return auxPath;
 
@@ -163,8 +164,9 @@ public class HlsSampler extends AbstractSampler {
 
 				if (firstTime) {
 					if (!(((getHlsVideoType().equals("live")) && (parser.isLive(subRespond.getResponse())))
-							|| ((isVod) && (!parser.isLive(subRespond.getResponse())))
-							|| ((getHlsVideoType().equals("event")) && (parser.isLive(subRespond.getResponse()))))) {
+					      || ((isVod) && (!parser.isLive(subRespond.getResponse())))
+					      || ((getHlsVideoType().equals("event")) && (parser.isLive(subRespond.getResponse()))))) {
+					    
 					} else {
 						firstTime = false;
 						out = isVod;
@@ -312,7 +314,8 @@ public class HlsSampler extends AbstractSampler {
 			if ((url != null) && (!uriString.startsWith("http"))) {
 				uriString = url + uriString;
 			}
-
+			log.info("fragment URI: " + uriString);
+			
 			result.sampleStart();
 
 			try {
