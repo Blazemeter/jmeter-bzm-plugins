@@ -87,9 +87,9 @@ public class HlsSampler extends AbstractSampler {
 		if (playlistUri.startsWith("http")) {
 			playlist = playlistUri;
 		} else if (playlistUri.indexOf('/') == 0) {
-			playlist = getPRotocol() + "://" + masterURL.getHost() + playlistUri;// "https://"
+			playlist = getPRotocol() + "://" + masterURL.getHost() + (masterURL.getPort() > 0 ? ":" + masterURL.getPort() : "") + playlistUri;// "https://"
 		} else {
-			playlist = getPRotocol() + "://" + masterURL.getHost() + auxPath + playlistUri;
+			playlist = getPRotocol() + "://" + masterURL.getHost() + (masterURL.getPort() > 0 ? ":" + masterURL.getPort() : "") + auxPath + playlistUri;
 		}
 
 		auxPath = getPRotocol() + "://" + masterURL.getHost() + (masterURL.getPort() > 0 ? ":" + masterURL.getPort() : "") + auxPath;
@@ -314,7 +314,7 @@ public class HlsSampler extends AbstractSampler {
 			if ((url != null) && (!uriString.startsWith("http"))) {
 				uriString = url + uriString;
 			}
-			log.info("fragment URI: " + uriString);
+			//log.info("fragment URI: " + uriString);
 			
 			result.sampleStart();
 
