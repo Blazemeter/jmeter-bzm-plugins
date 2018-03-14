@@ -120,6 +120,7 @@ public class Parser implements Serializable {
     }
 
     private boolean resolutionOK(String streamResolution, String currentResolution, String matchMode, String customResolution){
+	log.info("resolutionOK: " + streamResolution + ", " + currentResolution + ", " + matchMode + ", " + currentResolution);
 	if(matchMode.equalsIgnoreCase("customresolution")){
 	    if (customResolution != null) {
 		return customResolution.equals(streamResolution);
