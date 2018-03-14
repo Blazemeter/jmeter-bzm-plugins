@@ -196,7 +196,7 @@ public class Parser implements Serializable {
 		}
 
 	    } else if (bwSelected.equalsIgnoreCase("maxBandwidth")) {
-		if (curBandwidth == null || Integer.parseInt(mb.group(1)) >= Integer.parseInt(curBandwidth)) {
+		if (curBandwidth == null || (Integer.parseInt(mb.group(1)) >= Integer.parseInt(curBandwidth))) {
 		    if (resolutionOK((rfound?mr.group(1):null), curResolution, resSelected, customResolution)) {
 			curResolution = (rfound?mr.group(1):null);
 			uri = m.group(2);
