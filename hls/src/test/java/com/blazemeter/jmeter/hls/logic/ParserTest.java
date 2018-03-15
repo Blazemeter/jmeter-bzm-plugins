@@ -118,7 +118,7 @@ public class ParserTest {
 		System.out.println("*********");
 		assertEquals(expected, result);
 
-		result = p.extractMediaUrl(res, "720x480", "1395723", "customBandwidth", "customResolution");
+		result = p.extractMediaUrl(res, "640x360", "1395723", "customBandwidth", "customResolution");
 		expected = "/videos/DianaLaufenberg_2010X/video/600k.m3u8?preroll=Thousands&uniqueId=4df94b1d";
 
 		System.out.println(res);
@@ -129,7 +129,7 @@ public class ParserTest {
 		System.out.println("*********");
 		assertEquals(expected, result);
 
-		result = p.extractMediaUrl(res, "640x360", "", "minBandwidth", "customResolution");
+		result = p.extractMediaUrl(res, "320x180", "", "minBandwidth", "customResolution");
 		expected = "/videos/DianaLaufenberg_2010X/video/64k.m3u8?preroll=Thousands&uniqueId=4df94b1d";
 
 		System.out.println(result);
