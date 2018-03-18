@@ -121,20 +121,21 @@ public class Parser implements Serializable {
 
     private boolean resolutionOK(String streamResolution, String currentResolution, String matchMode, String customResolution){
 	log.info("resolutionOK: " + streamResolution + ", " + currentResolution + ", " + matchMode + ", " + currentResolution);
-	if(matchMode.equalsIgnoreCase("customresolution")){
+
+	if(matchMode.equalsIgnoreCase("customResolution")){
 	    if (customResolution != null) {
 		return customResolution.equals(streamResolution);
 	    }
-	    log.error("selection mode is CUSTOM, but no custom resolution set");
+	    log.error("selection mode is customResolution, but no custom resolution set");
 	    return false;
-	} else if(matchMode.equalsIgnoreCase("minresolution")){
+	} else if(matchMode.equalsIgnoreCase("minResolution")){
 	    if (currentResolution == null) {
 		return true;
 	    } else {
 		if (streamResolution == null) return false;
 		return (resolutionCompare(streamResolution,currentResolution) <= 0);
 	    }
-	} else if(matchMode.equalsIgnoreCase("maxresolution")){
+	} else if(matchMode.equalsIgnoreCase("maxResolution")){
 	    if (currentResolution == null) {
 		return true;
 	    } else {
@@ -149,8 +150,8 @@ public class Parser implements Serializable {
     
     public String extractMediaUrl(String playlistData, String customResolution, String customBandwidth, String bwSelected, String resSelected) {
 	String streamPattern = "(EXT-X-STREAM-INF.*)\\n(.*\\.m3u8.*)";
-	String bandwidthPattern = "[:|,]BANDWIDTH=(\\d*)";
-	String resolutionPattern = "[:|,]RESOLUTION=(\\d*x\\d*)";
+	String bandwidthPattern = "[:|,]BANDWIDTH=(\\d+)";
+	String resolutionPattern = "[:|,]RESOLUTION=(\\d+x\\d+)";
 
 	return getMediaUrl(streamPattern, bandwidthPattern, resolutionPattern, playlistData, customResolution, customBandwidth, bwSelected, resSelected);
     }
@@ -190,6 +191,7 @@ public class Parser implements Serializable {
 		}
 	    } else if (bwSelected.equalsIgnoreCase("minBandwidth")) {
 		if (curBandwidth == null || (Integer.parseInt(mb.group(1)) <= Integer.parseInt(curBandwidth))) {
+		    curBandwidth = mb.group(1);
 		    if (resolutionOK((rfound?mr.group(1):null), curResolution, resSelected, customResolution)) {
 			curResolution =(rfound?mr.group(1):null);
 			uri = m.group(2);
@@ -198,6 +200,7 @@ public class Parser implements Serializable {
 
 	    } else if (bwSelected.equalsIgnoreCase("maxBandwidth")) {
 		if (curBandwidth == null || (Integer.parseInt(mb.group(1)) >= Integer.parseInt(curBandwidth))) {
+		    curBandwidth = mb.group(1);
 		    if (resolutionOK((rfound?mr.group(1):null), curResolution, resSelected, customResolution)) {
 			curResolution = (rfound?mr.group(1):null);
 			uri = m.group(2);
