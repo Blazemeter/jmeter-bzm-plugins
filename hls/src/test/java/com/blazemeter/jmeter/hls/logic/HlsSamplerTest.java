@@ -135,7 +135,7 @@ public class HlsSamplerTest {
 			.thenReturn(respond4)
 			.thenReturn(respond5);
 
-		Mockito.when(parserMock.extractUriMaster(Mockito.any(String.class),Mockito.any(String.class),Mockito.any(String.class),Mockito.any(String.class),Mockito.any(String.class)))
+		Mockito.when(parserMock.extractMediaUrl(Mockito.any(String.class),Mockito.any(String.class),Mockito.any(String.class),Mockito.any(String.class),Mockito.any(String.class)))
 			.thenReturn("/videos/DianaLaufenberg_2010X/video/600k.m3u8?preroll=Thousands&uniqueId=4df94b1d");
 		Mockito.when(parserMock.extractVideoUrl(Mockito.any()))
 				.thenReturn(fragments);
