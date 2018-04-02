@@ -10,7 +10,7 @@ This plugin has following options that affect the behavior:
   * `Random order`  - The plugin will get records from the file in random order. This is the part that provides this element’s added value. If you don’t select this option, the element will work like the regular CSV Data Set Config.;
   * `Rewind on end of list` - if the flag is selected and an iteration loop has reached the end, the new loop will be started;
   * `First line is CSV header` - select this flag to skip header(used only if `Variable Names` is not empty);
-  * `Independent list per thread` - When this is checked with “Random order”, each thread runs its own random sequence instead of all of them going over the same order of variables.
+  * `Independent list per thread` - When this is checked with “Random order”, each thread runs its own random sequence instead of all of them going over the same order of values.
 
 _***At the beginning of the test, the config reads file. There are a delay and a large memory consumption for large files.***_
 
