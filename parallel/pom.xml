@@ -6,7 +6,7 @@
 
     <groupId>com.blazemeter</groupId>
     <artifactId>jmeter-parallel</artifactId>
-    <version>0.4</version>
+    <version>0.5</version>
     <name>Parallel Sampling for JMeter</name>
     <description>Parallel Sampling for JMeter</description>
     <licenses>
