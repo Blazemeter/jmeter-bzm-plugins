@@ -7,15 +7,24 @@ import org.apache.jmeter.processor.PostProcessor;
 import org.apache.jmeter.processor.PreProcessor;
 import org.apache.jmeter.samplers.Sampler;
 import org.apache.jmeter.testelement.AbstractTestElement;
+import org.apache.jmeter.testelement.property.CollectionProperty;
+import org.apache.jmeter.testelement.property.JMeterProperty;
 import org.apache.jmeter.threads.SamplePackage;
 import org.apache.jmeter.threads.TestCompiler;
 import org.apache.jmeter.timers.Timer;
 import org.apache.jorphan.collections.HashTree;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class TestCompilerParallel extends TestCompiler {
+    private static final Logger log = LoggerFactory.getLogger(TestCompilerParallel.class);
     private final boolean suppressListeners;
     private Set<AbstractTestElement> knownElements = new HashSet<>();
 
@@ -46,6 +55,7 @@ public class TestCompilerParallel extends TestCompiler {
         }
 
         for (ConfigTestElement config : samplePackage.getConfigs()) {
+            makeAllPropertiesThreadSafe(config);
             knownElements.add(config);
         }
 
@@ -65,6 +75,37 @@ public class TestCompilerParallel extends TestCompiler {
             if (timer instanceof AbstractTestElement) {
                 knownElements.add((AbstractTestElement) timer);
             }
+        }
+    }
+
+    private void makeAllPropertiesThreadSafe(ConfigTestElement config) {
+        Map<String, JMeterProperty> propMap = getProperties(config);
+        for (String key : propMap.keySet()) {
+            JMeterProperty property = propMap.get(key);
+            if (property instanceof CollectionProperty) {
+               synchronizedCollectionProperty((CollectionProperty) property);
+            }
+        }
+    }
+
+    private void synchronizedCollectionProperty(CollectionProperty property) {
+        try {
+            Field field = CollectionProperty.class.getDeclaredField("value");
+            field.setAccessible(true);
+            field.set(property, Collections.synchronizedList((List<JMeterProperty>) field.get(property)));
+        } catch (IllegalAccessException | NoSuchFieldException | ClassCastException e) {
+            log.warn("Failed to make synchronized Collection Property", e);
+        }
+    }
+
+    private Map<String, JMeterProperty> getProperties(ConfigTestElement config) {
+        try {
+            Field propMapField = AbstractTestElement.class.getDeclaredField("propMap");
+            propMapField.setAccessible(true);
+            return (Map<String, JMeterProperty>) propMapField.get(config);
+        } catch (IllegalAccessException | NoSuchFieldException | ClassCastException e) {
+            log.warn("Failed to get propMap from config element", e);
+            return Collections.emptyMap();
         }
     }
 
