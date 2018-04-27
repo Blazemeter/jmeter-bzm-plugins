@@ -1,13 +1,17 @@
 package com.blazemeter.jmeter.controller;
 
+import kg.apc.emulators.EmulatorThreadMonitor;
 import kg.apc.emulators.TestJMeterUtils;
 import kg.apc.jmeter.samplers.DummySampler;
+import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.control.GenericController;
 import org.apache.jmeter.control.LoopController;
 import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.samplers.Sampler;
 import org.apache.jmeter.testelement.TestElement;
+import org.apache.jmeter.testelement.property.CollectionProperty;
+import org.apache.jmeter.testelement.property.JMeterProperty;
 import org.apache.jmeter.threads.JMeterContextService;
 import org.apache.jmeter.threads.JMeterThread;
 import org.apache.jmeter.threads.TestCompiler;
@@ -19,10 +23,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class ParallelSamplerTest {
     private static final Logger log = LoggerFactory.getLogger(ParallelSampler.class);
@@ -140,6 +146,46 @@ public class ParallelSamplerTest {
             ThreadLocalRandom.current().nextInt(10);
             return super.sample(e);
         }
+    }
+
+    public static class ConfigTestElementExt extends ConfigTestElement {
+        public ConfigTestElementExt(JMeterProperty property) {
+            setProperty(property);
+        }
+    }
+
+    @Test
+    public void testThreadSafeCollectionProperty() throws Exception {
+        CollectionProperty collectionProperty = new CollectionProperty();
+        assertTrue(collectionProperty.getObjectValue() instanceof ArrayList);
+
+        ConfigTestElementExt config = new ConfigTestElementExt(collectionProperty);
+        HashTree hashtree = createTestTree(config);
+
+
+        EmulatorThreadMonitor monitor = new EmulatorThreadMonitor();
+        JMeterThread thread = new JMeterThread(hashtree, monitor, null);
+        thread.setThreadName("test thread");
+        JMeterContextService.getContext().setThread(thread);
+
+        ParallelSampler parallel = new ParallelSampler();
+
+        parallel.sample(null);
+
+        assertEquals("java.util.Collections$SynchronizedRandomAccessList", collectionProperty.getObjectValue().getClass().getName());
+
+    }
+
+    private HashTree createTestTree(ConfigTestElement configTestElement) {
+        HashTree hashTree = new HashTree();
+
+        LoopController loopController = new LoopController();
+
+        HashTree loopNode = new HashTree();
+        loopNode.add(loopController, configTestElement);
+
+        hashTree.add(loopNode);
+        return hashTree;
     }
 
     private class LoopControllerTracked extends LoopController {
