@@ -6,16 +6,21 @@ import kg.apc.jmeter.samplers.DummySampler;
 import org.apache.jmeter.config.ConfigTestElement;
 import org.apache.jmeter.control.GenericController;
 import org.apache.jmeter.control.LoopController;
+import org.apache.jmeter.engine.StandardJMeterEngine;
+import org.apache.jmeter.protocol.http.control.Cookie;
+import org.apache.jmeter.protocol.http.control.CookieManager;
+import org.apache.jmeter.protocol.http.control.ThreadSafeCookieManager;
 import org.apache.jmeter.samplers.Entry;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.samplers.Sampler;
 import org.apache.jmeter.testelement.TestElement;
-import org.apache.jmeter.testelement.property.CollectionProperty;
+import org.apache.jmeter.testelement.TestPlan;
 import org.apache.jmeter.testelement.property.JMeterProperty;
 import org.apache.jmeter.threads.JMeterContextService;
 import org.apache.jmeter.threads.JMeterThread;
 import org.apache.jmeter.threads.TestCompiler;
 import org.apache.jorphan.collections.HashTree;
+import org.apache.jorphan.collections.ListedHashTree;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -23,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -148,20 +152,24 @@ public class ParallelSamplerTest {
         }
     }
 
-    public static class ConfigTestElementExt extends ConfigTestElement {
-        public ConfigTestElementExt(JMeterProperty property) {
-            setProperty(property);
-        }
-    }
 
     @Test
-    public void testThreadSafeCollectionProperty() throws Exception {
-        CollectionProperty collectionProperty = new CollectionProperty();
-        assertTrue(collectionProperty.getObjectValue() instanceof ArrayList);
+    public void testThreadSafeCookieManager() throws Exception {
+        CookieManager cookieManager = new CookieManager();
+        Cookie c = new Cookie();
+        c.setName("name");
+        c.setValue("value");
+        c.setDomain("blazedemo.com");
+        c.setPath("");
+        cookieManager.add(c);
+        HashTree hashtree = createTestTree(cookieManager);
 
-        ConfigTestElementExt config = new ConfigTestElementExt(collectionProperty);
-        HashTree hashtree = createTestTree(config);
+        TestPlan testPlan = new TestPlan();
+        HashTree testPlanHashTree = new HashTree();
+        testPlanHashTree.put(testPlan, hashtree);
 
+        StandardJMeterEngine engine = new StandardJMeterEngine();
+        engine.configure(testPlanHashTree);
 
         EmulatorThreadMonitor monitor = new EmulatorThreadMonitor();
         JMeterThread thread = new JMeterThread(hashtree, monitor, null);
@@ -169,11 +177,22 @@ public class ParallelSamplerTest {
         JMeterContextService.getContext().setThread(thread);
 
         ParallelSampler parallel = new ParallelSampler();
+        parallel.testStarted();
 
-        parallel.sample(null);
+        Field field = StandardJMeterEngine.class.getDeclaredField("test");
+        field.setAccessible(true);
+        HashTree testTree = (HashTree) field.get(engine);
 
-        assertEquals("java.util.Collections$SynchronizedRandomAccessList", collectionProperty.getObjectValue().getClass().getName());
+        assertTrue("CookieManager should be changed to ThreadSafeCookieManager", testTree.toString().contains("ThreadSafeCookieManager"));
+        ListedHashTree loop = (ListedHashTree) (testTree.values().toArray()[0]);
+        ListedHashTree threadSafeManager = ((ListedHashTree) (loop.values().toArray()[0]));
 
+        CookieManager mgr = (CookieManager) threadSafeManager.getArray()[0];
+        assertTrue(mgr instanceof ThreadSafeCookieManager);
+        assertEquals(1, mgr.getCookieCount());
+        JMeterProperty property = mgr.getCookies().get(0);
+        assertEquals("name", property.getName());
+        assertEquals("blazedemo.com\tTRUE\t\tFALSE\t0\tname\tvalue", property.getStringValue());
     }
 
     private HashTree createTestTree(ConfigTestElement configTestElement) {
