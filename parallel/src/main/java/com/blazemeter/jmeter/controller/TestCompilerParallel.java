@@ -11,8 +11,6 @@ import org.apache.jmeter.threads.SamplePackage;
 import org.apache.jmeter.threads.TestCompiler;
 import org.apache.jmeter.timers.Timer;
 import org.apache.jorphan.collections.HashTree;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Set;

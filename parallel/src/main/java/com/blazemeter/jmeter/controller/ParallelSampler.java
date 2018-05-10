@@ -1,9 +1,9 @@
 package com.blazemeter.jmeter.controller;
 
-import com.blazemeter.jmeter.controller.traverse.TreeTraverser;
-import org.apache.jmeter.config.ConfigTestElement;
+import com.blazemeter.jmeter.controller.traverse.CustomTreeCloner;
 import org.apache.jmeter.control.Controller;
 import org.apache.jmeter.control.LoopController;
+import org.apache.jmeter.engine.StandardJMeterEngine;
 import org.apache.jmeter.engine.event.LoopIterationListener;
 import org.apache.jmeter.samplers.AbstractSampler;
 import org.apache.jmeter.samplers.Entry;
@@ -12,9 +12,8 @@ import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.samplers.Sampler;
 import org.apache.jmeter.testelement.AbstractTestElement;
 import org.apache.jmeter.testelement.TestElement;
+import org.apache.jmeter.testelement.TestStateListener;
 import org.apache.jmeter.testelement.ThreadListener;
-import org.apache.jmeter.testelement.property.CollectionProperty;
-import org.apache.jmeter.testelement.property.JMeterProperty;
 import org.apache.jmeter.threads.JMeterContext;
 import org.apache.jmeter.threads.JMeterContextServiceAccessorParallel;
 import org.apache.jmeter.threads.JMeterThread;
@@ -28,7 +27,6 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -40,14 +38,12 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 
 // we implement Controller only to enable GUI to add child elements into it
-public class ParallelSampler extends AbstractSampler implements Controller, ThreadListener, Interruptible, JMeterThreadMonitor, Serializable {
+public class ParallelSampler extends AbstractSampler implements Controller, ThreadListener, Interruptible, JMeterThreadMonitor, TestStateListener, Serializable {
     private static final Logger log = LoggerFactory.getLogger(ParallelSampler.class);
     private static final String GENERATE_PARENT = "PARENT_SAMPLE";
     protected List<TestElement> controllers = new ArrayList<>();
     protected final ParallelListenerNotifier notifier = new ParallelListenerNotifier();
     private ExecutorService executorService;
-
-    private transient boolean isPropertiesChanged = false;
 
     @Override
     public void addTestElement(TestElement te) {
@@ -68,11 +64,6 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
 
     @Override
     public SampleResult sample(Entry e) {
-        if (!isPropertiesChanged) {
-            isPropertiesChanged = true;
-            log.debug("Wrap collection properties to thread safe collection");
-            changeCollectionProperties();
-        }
         SampleResult res = new SampleResult();
         res.setResponseCode("200");
         res.setResponseMessage("OK");
@@ -116,75 +107,6 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
             res.sampleEnd();
         }
         return getGenerateParent() ? res : null;
-    }
-
-    private void changeCollectionProperties() {
-        try {
-            JMeterContext context = this.getThreadContext();
-            if (context != null && context.getThread() != null) {
-                JMeterThread thread = context.getThread();
-                HashTree testTree = getTestTree(thread);
-                for (ConfigTestElement config : getConfigs(testTree)) {
-                    makeAllPropertiesThreadSafe(config);
-                }
-            }
-        } catch (Throwable ex) {
-            log.warn("Cannot change Collection properties in config elements", ex);
-        }
-    }
-
-    private List<ConfigTestElement> getConfigs(HashTree testTree) {
-        List<ConfigTestElement> elements = new ArrayList<>();
-        TreeTraverser traverser = new TreeTraverser();
-        testTree.traverse(traverser);
-        for (Object item : traverser.getElements()) {
-            if (item instanceof ConfigTestElement) {
-                elements.add((ConfigTestElement) item);
-            }
-        }
-        return elements;
-    }
-
-    private HashTree getTestTree(JMeterThread thread) {
-        try {
-            Field field = JMeterThread.class.getDeclaredField("testTree");
-            field.setAccessible(true);
-            return (HashTree) field.get(thread);
-        } catch (Throwable ex) {
-            log.warn("Failed to get test tree for JMeter Thread", ex);
-            return new HashTree();
-        }
-    }
-
-    private void makeAllPropertiesThreadSafe(ConfigTestElement config) {
-        Map<String, JMeterProperty> propMap = getProperties(config);
-        for (String key : propMap.keySet()) {
-            JMeterProperty property = propMap.get(key);
-            if (property instanceof CollectionProperty) {
-                synchronizedCollectionProperty((CollectionProperty) property);
-            }
-        }
-    }
-
-    private void synchronizedCollectionProperty(CollectionProperty property) {
-        try {
-            Field field = CollectionProperty.class.getDeclaredField("value");
-            field.setAccessible(true);
-            field.set(property, Collections.synchronizedList((List<JMeterProperty>) field.get(property)));
-        } catch (IllegalAccessException | NoSuchFieldException | ClassCastException e) {
-            log.warn("Failed to make synchronized Collection Property", e);
-        }
-    }
-
-    private Map<String, JMeterProperty> getProperties(ConfigTestElement config) {
-        try {
-            Field propMapField = AbstractTestElement.class.getDeclaredField("propMap");
-            propMapField.setAccessible(true);
-            return (Map<String, JMeterProperty>) propMapField.get(config);
-        } catch (IllegalAccessException | NoSuchFieldException | ClassCastException e) {
-            log.warn("Failed to get propMap from config element", e);
-            return Collections.emptyMap();
-        }
     }
 
     private HashTree getTestTree(TestElement te) {
@@ -306,9 +228,45 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
         executorService = Executors.newCachedThreadPool(new ParallelThreadFactory(this.getName()));
     }
 
+
     @Override
     public void threadFinished() {
         executorService.shutdown();
+    }
+
+    @Override
+    public void testStarted() {
+        testStarted("*local*");
+    }
+
+    @Override
+    public void testStarted(String s) {
+        changeCookieManager();
+    }
+
+    private void changeCookieManager() {
+        try {
+            StandardJMeterEngine engine = getStandardJMeterEngine();
+            Field field = StandardJMeterEngine.class.getDeclaredField("test");
+            field.setAccessible(true);
+            HashTree testTree = (HashTree) field.get(engine);
+            HashTree newHashTree = makeCookieManagerThreadSafe(testTree);
+            field.set(engine, newHashTree);
+        } catch (Throwable ex) {
+            log.warn("Cannot change cookie manager", ex);
+        }
+    }
+
+    private HashTree makeCookieManagerThreadSafe(HashTree testTree) {
+        CustomTreeCloner cloner = new CustomTreeCloner();
+        testTree.traverse(cloner);
+        return cloner.getClonedTree();
+    }
+
+    public StandardJMeterEngine getStandardJMeterEngine() throws IllegalAccessException, NoSuchFieldException {
+        Field engine = StandardJMeterEngine.class.getDeclaredField("engine");
+        engine.setAccessible(true);
+        return (StandardJMeterEngine) engine.get(null);
     }
 
     public static class ParallelThreadFactory implements ThreadFactory {
@@ -334,5 +292,14 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
         }
     }
 
+    @Override
+    public void testEnded() {
+
+    }
+
+    @Override
+    public void testEnded(String s) {
+
+    }
 
 }
