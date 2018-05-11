@@ -1,14 +1,48 @@
+branches:
+  only:
+  - /.*/
+env:
+  global:
+    - MAVEN_OPTS=-Dmaven.repo.local=.m2/repository
+    - XTN5250_VERSION=1.19m
+    - DM3270_VERSION=0.5-beta-37
+    - MQTT_WEBSOCKET_VERSION=1.0.1
+    - USER=root
+    - PASSWORD=password
+    
+cache:
+  directories:
+  - ${project.basedir}/.jmeter
+  - .m2
+
 language: java
 
 jdk:
 - oraclejdk8
 
 before_install: 
-  - curl -O -L https://github.com/inventit/mqtt-websocket-java/releases/download/1.0.1/mqtt-websocket-java-1.0.1.jar
-  - mvn install:install-file -Dfile=mqtt-websocket-java-1.0.1.jar -DgroupId=io.inventit.dev -DartifactId=mqtt-websocket-java -Dversion=1.0.1 -Dpackaging=jar
+  - sudo apt-get -y update
+  - sudo apt-get -y install tightvncserver
+  - sudo apt-get -y install python default-jre-headless python-tk python-pip python-dev libxml2-dev libxslt-dev zlib1g-dev net-tools
+  - sudo pip install bzt==1.11.0
+  - mkdir ~/.vnc
+  - echo $PASSWORD | vncpasswd -f > passwd
+  - mv passwd ~/.vnc/passwd
+  - chmod 0600 ~/.vnc/passwd
+  - chmod -R +x ./.travis
+  - "sh ./.travis/install-maven-dependency.sh https://sourceforge.net/projects/xtn5250/files/xtn5250/$XTN5250_VERSION/xtn5250_${XTN5250_VERSION//.}.jar net.sourceforge.xtn5250 xtn5250 $XTN5250_VERSION"
+  - "sh ./.travis/install-maven-dependency.sh https://github.com/dmolony/dm3270/releases/download/v$DM3270_VERSION/dm3270.jar com.bytezone.dm3270 dm3270 $DM3270_VERSION"
+  - "sh ./.travis/install-maven-dependency.sh https://github.com/inventit/mqtt-websocket-java/releases/download/$MQTT_WEBSOCKET_VERSION/mqtt-websocket-java-$MQTT_WEBSOCKET_VERSION.jar io.inventit.dev mqtt-websocket-java $MQTT_WEBSOCKET_VERSION"
 
-install: "mvn -Dmaven.test.skip=true clean install --batch-mode"
-script: "mvn -Djava.awt.headless=true -Dmaven.test.redirectTestOutputToFile=true -Dcobertura.report.format=xml --fail-at-end --batch-mode cobertura:cobertura test "
+
+script:
+  - "mvn -DskipTests=true clean install --batch-mode"
+  - "mvn -pl !rte -Djava.awt.headless=true -Dmaven.test.redirectTestOutputToFile=true -Dcobertura.report.format=xml --fail-at-end --batch-mode cobertura:cobertura test"
+  - "sh ./.travis/execute-on-vnc.sh mvn -pl rte -Dmaven.test.redirectTestOutputToFile=true --fail-at-end --batch-mode verify"
+  - "sh ./rte/target/jmeter-test/testJMeter.sh 4.0"
+  - "sh ./rte/target/jmeter-test/testJMeter.sh 3.3"
+  - "sh ./rte/target/jmeter-test/testJMeter.sh 3.2"
+  - "sh ./rte/target/jmeter-test/testJMeter.sh 3.1"
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)

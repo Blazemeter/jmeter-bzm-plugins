@@ -1,0 +1,24 @@
+                                   Sign On     Server  . . . . . :   RIKASB     
+                                   RIKAS/B     Subsystem . . . . :   QINTER     
+                                  Production   Display . . . . . :   QPADEV001  
+                                               OS Level. . . . . :   V7R1M0 TR8 
+                                                                                
+                                                                                
+                User  . . . . . . . . . . . . . .                               
+                                                                                
+    **          Password  . . . . . . . . . . . .                               
+    **                                                                          
+  £££££££££     Welcome to the Rikas Communications IBM i Server                
+ £  **   £     Access information can be found at www.rikascom.net              
+ £  **  £       Unauthorized access is Prohibited on this server                
+ £££££££                                                                        
+ £  **              ££££££££  ££££ ££    ££    £££     ££££££                   
+ £  **   £          ££     ££  ££  ££   ££    ££ ££   ££    ££                  
+ £  **  £           ££     ££  ££  ££  ££    ££   ££  ££                        
+  ££££££            ££££££££   ££  £££££    ££     ££  ££££££                   
+    **              ££   ££    ££  ££  ££   £££££££££       ££                  
+    **              ££    ££   ££  ££   ££  ££     ££ ££    ££                  
+                    ££     ££ ££££ ££    ££ ££     ££  ££££££                   
+                                                                                
+                      Copyright© 2016 Rikas Communications                      
+                                        (C) COPYRIGHT IBM CORP. 1980, 2009.     
