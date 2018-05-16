@@ -19,6 +19,7 @@ import org.apache.oro.text.MalformedCachePatternException;
 import org.apache.oro.text.regex.Pattern;
 import org.apache.oro.text.regex.Perl5Matcher;
 import org.eclipse.jetty.http.HttpField;
+import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.http.MetaData;
 import org.eclipse.jetty.http2.api.Stream;
 import org.eclipse.jetty.http2.api.Stream.Listener;
@@ -111,11 +112,8 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
     public void onHeaders(Stream stream, HeadersFrame frame) {
 
         MetaData.Response responseMetadata = ((MetaData.Response) frame.getMetaData());
-        // set status line - header[0] is not the status line...
-        StringBuilder headers = new StringBuilder(responseMetadata.getHttpVersion() + " " + Integer.toString(responseMetadata.getStatus()) + "\n");
         result.setResponseCode(Integer.toString(responseMetadata.getStatus()));
         for (HttpField h : frame.getMetaData().getFields()) {
-            headers.append(h.getName()).append(": ").append(h.getValue()).append("\n");
             switch (h.getName()) {
                 case HTTPConstants.HEADER_CONTENT_TYPE:// TODO adapt to translate gzip, etc
                 case "content-type":
@@ -127,10 +125,17 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
                     break;
             }
         }
-        headers.append("\n");
-        result.setResponseHeaders(headers.toString());
-        result.setHeadersSize(headers.length());
-        result.setBytes(result.getBytesAsLong() + result.getHeadersSize());
+        
+        String messageLine = responseMetadata.getHttpVersion() + " "
+                + responseMetadata.getStatus() + " " + HttpStatus.getMessage(responseMetadata.getStatus());
+
+        result.setResponseMessage(messageLine);
+        String rawHeaders = frame.getMetaData().getFields().toString();
+        // we do this replacement and remove final char to be consistent with jmeter HTTP request sampler
+        String headers = rawHeaders.replaceAll("\r\n", "\n");
+        String responseHeaders = messageLine + "\n" + headers.substring(0, headers.length() - 1);
+        result.setResponseHeaders(responseHeaders);
+        result.setHeadersSize(rawHeaders.length());
         result.setHttpFieldsResponse(frame.getMetaData().getFields());
         if (frame.isEndStream()) {
             result.sampleEnd();
@@ -183,8 +188,6 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
                     result.setSuccessful(isSuccessCode(Integer.parseInt(result.getResponseCode())));
                     result.setResponseData(this.responseBytes);
                     result.setPendingResponse(false);
-                    result.setBodySize((long) this.responseBytes.length);
-                    result.setBytes(result.getBytesAsLong() + result.getBodySizeAsLong());
 
                     if (result.isRedirect()) {
                         // TODO redirect
@@ -278,8 +281,8 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
     /**
      * Download the resources of an HTML page.
      *
-     * @param res        result of the initial request - must contain an HTML response
-     *                   and for storing the results, if any
+     * @param res result of the initial request - must contain an HTML response
+     *            and for storing the results, if any
      */
     private void getPageResources(HTTP2SampleResult res) throws Exception {
         Iterator<URL> urls = null;
@@ -295,8 +298,9 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
             }
         } catch (LinkExtractorParseException e) {
             // Don't break the world just because this failed:
-            System.out.println(e);
-            res.addSubResult(HTTP2SampleResult.errorResult(e, new HTTP2SampleResult(res)));
+            HTTP2SampleResult subRes = new HTTP2SampleResult(res);
+            HTTP2SampleResult.setResultError(subRes, e);
+            res.addSubResult(subRes);
             setParentSampleSuccess(res, false);
         }
 
@@ -325,9 +329,7 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
                         try {
                             url = escapeIllegalURLCharacters(url);
                         } catch (Exception e) {
-                            res.addSubResult(HTTP2SampleResult.errorResult(
-                                    new Exception(url.toString() + " is not a correct URI"),
-                                    new HTTP2SampleResult()));
+                            res.addSubResult(HTTP2SampleResult.errorResult(url.toString() + " is not a correct URI"));
                             setParentSampleSuccess(res, false);
                             continue;
                         }
@@ -339,9 +341,7 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
                         try {
                             url = url.toURI().normalize().toURL();
                         } catch (MalformedURLException | URISyntaxException e) {
-                            res.addSubResult(HTTP2SampleResult.errorResult(
-                                    new Exception(url.toString() + " URI can not be normalized", e),
-                                    new HTTP2SampleResult()));
+                            res.addSubResult(HTTP2SampleResult.errorResult(url.toString() + " URI can not be normalized"));
                             setParentSampleSuccess(res, false);
                             continue;
                         }
@@ -355,8 +355,7 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
 
                     }
                 } catch (ClassCastException e) { // TODO can this happen?
-                    res.addSubResult(HTTP2SampleResult.errorResult(new Exception(binURL + " is not a correct URI"),
-                            new HTTP2SampleResult()));
+                    res.addSubResult(HTTP2SampleResult.errorResult(binURL + " is not a correct URI"));
                     setParentSampleSuccess(res, false);
                 }
             }

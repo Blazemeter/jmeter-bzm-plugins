@@ -17,6 +17,7 @@ import org.mockito.Mockito;
 
 import kg.apc.emulators.TestJMeterUtils;
 
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 
 import static org.junit.Assert.*;
@@ -88,9 +89,9 @@ public class HTTP2RequestTest {
         HTTP2SampleResult sampleRes = new HTTP2SampleResult(url, "GET");
 
         // connection is null so sample fails
-        sampleRes = http2Req.sample(url, "GET", null, sampleRes);
-        assertEquals(false, sampleRes.isPendingResponse());
-        assertEquals(false, sampleRes.isSuccessful());
+        http2Req.sample(url, "GET", null, sampleRes);
+        assertFalse(sampleRes.isPendingResponse());
+        assertFalse(sampleRes.isSuccessful());
     }
 
     @Test
@@ -127,7 +128,6 @@ public class HTTP2RequestTest {
         portExp = 80;
         portRes = http2Req.getPort();
         assertEquals(portExp, portRes);
-
     }
 
     @Test
@@ -146,26 +146,6 @@ public class HTTP2RequestTest {
         http2Req.addTestElement(cachManExp);
         CacheManager cachManRes = http2Req.getCacheManager();
         assertEquals(cachManExp, cachManRes);
-    }
-
-    @Test
-    public void createPostContentTest() {
-        String text = "{\"header\":{\"applicationId\":\"HJS\"},\"initSession\":{}}";
-
-        DataPostContent dataPostExp = new DataPostContent();
-        dataPostExp.setDataPath("/apiservices/framework/initSession");
-        dataPostExp.setPayload(text.getBytes());
-
-        Arguments args = new Arguments();
-
-        HTTPArgument arg = new HTTPArgument("", text.replaceAll("\n", "\r\n"), false);
-        arg.setAlwaysEncoded(false);
-        args.addArgument(arg);
-        http2Req.setProperty(new TestElementProperty(HTTP2Request.ARGUMENTS, args));
-        http2Req.setProperty(HTTP2Request.PATH, "/apiservices/framework/initSession");
-        DataPostContent dataPostRes = http2Req.createPostContent("POST");
-
-        assertEquals(dataPostExp.getDataPath(), dataPostRes.getDataPath());
     }
 
     @Test

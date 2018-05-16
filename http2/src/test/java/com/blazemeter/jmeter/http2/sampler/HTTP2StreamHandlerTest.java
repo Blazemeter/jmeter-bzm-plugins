@@ -20,7 +20,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class HTTP2StreamHandlerTest {
 
@@ -104,7 +104,7 @@ public class HTTP2StreamHandlerTest {
                 .thenReturn(httpFields);
 
 
-        String headers = "HTTP/2.0 200\nHeader1: value1\nHeader2: value2\nHeader3: value3\ncontent-type: application/json\n"
+        String headers = "Header1: value1\r\nHeader2: value2\r\nHeader3: value3\r\ncontent-type: application/json\r\n\r\n"
                 + HTTPConstants.HEADER_CONTENT_ENCODING + ": UTF-8\n\n";
 
         http2SampleResult = new HTTP2SampleResult();
@@ -156,8 +156,8 @@ public class HTTP2StreamHandlerTest {
         resSR = http2StreamHandler.getHTTP2SampleResult();
 
 
-        assertEquals(true, resSR.isSuccessful());
-        assertEquals(false, resSR.isPendingResponse());
+        assertTrue(resSR.isSuccessful());
+        assertFalse(resSR.isPendingResponse());
 
     }
 
@@ -200,7 +200,7 @@ public class HTTP2StreamHandlerTest {
 
         resSR = http2StreamHandler.getHTTP2SampleResult();
 
-        assertEquals(true, resSR.isSuccessful());
+        assertTrue(resSR.isSuccessful());
     }
 
 } 
