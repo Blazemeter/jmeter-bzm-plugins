@@ -68,6 +68,7 @@ public class TestCompilerParallel extends TestCompiler {
         }
     }
 
+
     @Override
     public SamplePackage configureTransactionSampler(TransactionSampler transactionSampler) {
         SamplePackage samplePackage = super.configureTransactionSampler(transactionSampler);

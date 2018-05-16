@@ -1,7 +1,9 @@
 package com.blazemeter.jmeter.controller;
 
+import com.blazemeter.jmeter.controller.traverse.CustomTreeCloner;
 import org.apache.jmeter.control.Controller;
 import org.apache.jmeter.control.LoopController;
+import org.apache.jmeter.engine.StandardJMeterEngine;
 import org.apache.jmeter.engine.event.LoopIterationListener;
 import org.apache.jmeter.samplers.AbstractSampler;
 import org.apache.jmeter.samplers.Entry;
@@ -10,6 +12,7 @@ import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.samplers.Sampler;
 import org.apache.jmeter.testelement.AbstractTestElement;
 import org.apache.jmeter.testelement.TestElement;
+import org.apache.jmeter.testelement.TestStateListener;
 import org.apache.jmeter.testelement.ThreadListener;
 import org.apache.jmeter.threads.JMeterContext;
 import org.apache.jmeter.threads.JMeterContextServiceAccessorParallel;
@@ -35,7 +38,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 
 // we implement Controller only to enable GUI to add child elements into it
-public class ParallelSampler extends AbstractSampler implements Controller, ThreadListener, Interruptible, JMeterThreadMonitor, Serializable {
+public class ParallelSampler extends AbstractSampler implements Controller, ThreadListener, Interruptible, JMeterThreadMonitor, TestStateListener, Serializable {
     private static final Logger log = LoggerFactory.getLogger(ParallelSampler.class);
     private static final String GENERATE_PARENT = "PARENT_SAMPLE";
     protected List<TestElement> controllers = new ArrayList<>();
@@ -225,9 +228,45 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
         executorService = Executors.newCachedThreadPool(new ParallelThreadFactory(this.getName()));
     }
 
+
     @Override
     public void threadFinished() {
         executorService.shutdown();
+    }
+
+    @Override
+    public void testStarted() {
+        testStarted("*local*");
+    }
+
+    @Override
+    public void testStarted(String s) {
+        changeCookieManager();
+    }
+
+    private void changeCookieManager() {
+        try {
+            StandardJMeterEngine engine = getStandardJMeterEngine();
+            Field field = StandardJMeterEngine.class.getDeclaredField("test");
+            field.setAccessible(true);
+            HashTree testTree = (HashTree) field.get(engine);
+            HashTree newHashTree = makeCookieManagerThreadSafe(testTree);
+            field.set(engine, newHashTree);
+        } catch (Throwable ex) {
+            log.warn("Cannot change cookie manager", ex);
+        }
+    }
+
+    private HashTree makeCookieManagerThreadSafe(HashTree testTree) {
+        CustomTreeCloner cloner = new CustomTreeCloner();
+        testTree.traverse(cloner);
+        return cloner.getClonedTree();
+    }
+
+    public StandardJMeterEngine getStandardJMeterEngine() throws IllegalAccessException, NoSuchFieldException {
+        Field engine = StandardJMeterEngine.class.getDeclaredField("engine");
+        engine.setAccessible(true);
+        return (StandardJMeterEngine) engine.get(null);
     }
 
     public static class ParallelThreadFactory implements ThreadFactory {
@@ -253,5 +292,14 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
         }
     }
 
+    @Override
+    public void testEnded() {
+
+    }
+
+    @Override
+    public void testEnded(String s) {
+
+    }
 
 }

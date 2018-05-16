@@ -103,4 +103,60 @@ public class TestDirectoryListingConfigActionTest {
         System.out.println(gui.getCheckArea().getText());
         assertTrue(gui.getCheckArea().getText().startsWith("Listing of directory successfully finished, "));
     }
+
+    @Test
+    public void testRelativePathSubString() throws Exception {
+        File tmpDir = new File("aaa");
+        tmpDir.mkdirs();
+        File tmpFile = File.createTempFile("tmpFile1_", ".csv", tmpDir);
+        try {
+            DirectoryListingConfig config = new DirectoryListingConfig();
+            config.setSourceDirectory("aaa");
+            config.setRecursiveListing(true);
+            config.setDestinationVariableName("fname");
+
+            DirectoryListingConfigGui gui = new DirectoryListingConfigGui();
+
+            gui.configure(config);
+
+            TestDirectoryListingAction action = new TestDirectoryListingAction(gui);
+
+            action.actionPerformed(null);
+
+            String text = gui.getCheckArea().getText();
+            assertTrue(text, text.startsWith("Listing of directory successfully finished, 1 files found:\r\n" +
+                    "${fname} = /tmpFile1_"));
+        } finally {
+            tmpFile.delete();
+            tmpDir.delete();
+        }
+    }
+
+    // tests that CompoundVariable does not change default value
+    @Test
+    public void testCompoundVariable() throws Exception {
+        File tmpDir = new File("bbb");
+        tmpDir.mkdirs();
+        File tmpFile = File.createTempFile("tmpFile1_", ".csv", tmpDir);
+        try {
+            DirectoryListingConfig config = new DirectoryListingConfig();
+            config.setSourceDirectory("bbb");
+            config.setRecursiveListing(true);
+
+            DirectoryListingConfigGui gui = new DirectoryListingConfigGui();
+
+            gui.configure(config);
+
+            TestDirectoryListingAction action = new TestDirectoryListingAction(gui);
+
+            action.actionPerformed(null);
+
+            String text = gui.getCheckArea().getText();
+            assertTrue(text, text.startsWith("Listing of directory successfully finished, 1 files found:\r\n" +
+                    "${filename} = /tmpFile1_"));
+        } finally {
+            tmpFile.delete();
+            tmpDir.delete();
+        }
+    }
 }
