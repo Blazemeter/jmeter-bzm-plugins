@@ -205,7 +205,7 @@
         <profile>
             <id>jdk8_131</id>
             <activation>
-                <jdk>1.8.0_121</jdk>
+                <jdk>1.8.0_131</jdk>
             </activation>
             <properties>
                 <alpn-boot.version>8.1.11.v20170118</alpn-boot.version>
@@ -214,7 +214,7 @@
         <profile>
             <id>jdk8_141</id>
             <activation>
-                <jdk>1.8.0_121</jdk>
+                <jdk>1.8.0_141</jdk>
             </activation>
             <properties>
                 <alpn-boot.version>8.1.11.v20170118</alpn-boot.version>
@@ -223,7 +223,7 @@
         <profile>
             <id>jdk8_144</id>
             <activation>
-                <jdk>1.8.0_121</jdk>
+                <jdk>1.8.0_144</jdk>
             </activation>
             <properties>
                 <alpn-boot.version>8.1.11.v20170118</alpn-boot.version>
@@ -232,7 +232,7 @@
         <profile>
             <id>jdk8_151</id>
             <activation>
-                <jdk>1.8.0_121</jdk>
+                <jdk>1.8.0_151</jdk>
             </activation>
             <properties>
                 <alpn-boot.version>8.1.11.v20170118</alpn-boot.version>
@@ -241,7 +241,7 @@
         <profile>
             <id>jdk8_152</id>
             <activation>
-                <jdk>1.8.0_121</jdk>
+                <jdk>1.8.0_152</jdk>
             </activation>
             <properties>
                 <alpn-boot.version>8.1.11.v20170118</alpn-boot.version>
