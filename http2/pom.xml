@@ -35,6 +35,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <version.org.apache.jmeter.all>3.2</version.org.apache.jmeter.all>
         <netty.version>9.4.0.v20161208</netty.version>
+        <alpn-boot.version>8.1.12.v20180117</alpn-boot.version>
     </properties>
 
     <dependencies>
@@ -171,7 +172,7 @@
                         <artifactItem>
                             <groupId>org.mortbay.jetty.alpn</groupId>
                             <artifactId>alpn-boot</artifactId>
-                            <version>8.1.12.v20180117</version>
+                            <version>${alpn-boot.version}</version>
                             <type>jar</type>
                             <overWrite>false</overWrite>
                         </artifactItem>
@@ -190,4 +191,61 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>jdk8_121</id>
+            <activation>
+                <jdk>1.8.0_121</jdk>
+            </activation>
+            <properties>
+                <alpn-boot.version>8.1.11.v20170118</alpn-boot.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>jdk8_131</id>
+            <activation>
+                <jdk>1.8.0_121</jdk>
+            </activation>
+            <properties>
+                <alpn-boot.version>8.1.11.v20170118</alpn-boot.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>jdk8_141</id>
+            <activation>
+                <jdk>1.8.0_121</jdk>
+            </activation>
+            <properties>
+                <alpn-boot.version>8.1.11.v20170118</alpn-boot.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>jdk8_144</id>
+            <activation>
+                <jdk>1.8.0_121</jdk>
+            </activation>
+            <properties>
+                <alpn-boot.version>8.1.11.v20170118</alpn-boot.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>jdk8_151</id>
+            <activation>
+                <jdk>1.8.0_121</jdk>
+            </activation>
+            <properties>
+                <alpn-boot.version>8.1.11.v20170118</alpn-boot.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>jdk8_152</id>
+            <activation>
+                <jdk>1.8.0_121</jdk>
+            </activation>
+            <properties>
+                <alpn-boot.version>8.1.11.v20170118</alpn-boot.version>
+            </properties>
+        </profile>
+    </profiles>
 </project>

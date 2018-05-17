@@ -58,9 +58,9 @@ public class RequestBody {
                  * Added a warning message so can track whether it is necessary
                  */
                 Object objectValue = iter.next().getObjectValue();
-                try {
+                if (objectValue instanceof HTTPArgument) {
                     item = (HTTPArgument) objectValue;
-                } catch (ClassCastException e) {
+                } else {
                     LOG.warn("Unexpected argument type: " + objectValue.getClass().getName());
                     item = new HTTPArgument((Argument) objectValue);
                 }

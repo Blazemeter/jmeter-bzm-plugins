@@ -125,7 +125,7 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
                     break;
             }
         }
-        
+
         String messageLine = responseMetadata.getHttpVersion() + " "
                 + responseMetadata.getStatus() + " " + HttpStatus.getMessage(responseMetadata.getStatus());
 
@@ -320,46 +320,35 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
             }
 
             while (urls.hasNext()) {
-                Object binURL = urls.next(); // See catch clause below
+                URL url = urls.next();
                 try {
-                    URL url = (URL) binURL;
-                    if (url == null) {
-                        //TODO Log
-                    } else {
-                        try {
-                            url = escapeIllegalURLCharacters(url);
-                        } catch (Exception e) {
-                            res.addSubResult(HTTP2SampleResult.errorResult(url.toString() + " is not a correct URI"));
-                            setParentSampleSuccess(res, false);
-                            continue;
-                        }
-                        // I don't think localMatcher can be null here, but
-                        // check just in case
-                        if (pattern != null && localMatcher != null && !localMatcher.matches(url.toString(), pattern)) {
-                            continue; // we have a pattern and the URL does not match, so skip it
-                        }
-                        try {
-                            url = url.toURI().normalize().toURL();
-                        } catch (MalformedURLException | URISyntaxException e) {
-                            res.addSubResult(HTTP2SampleResult.errorResult(url.toString() + " URI can not be normalized"));
-                            setParentSampleSuccess(res, false);
-                            continue;
-                        }
-
-                        HTTP2SampleResult subResult = new HTTP2SampleResult(url, "GET");
-                        subResult.setSecondaryRequest(true);
-                        subResult.setEmbebedResultsDepth(res.getEmbebedResultsDepth() - 1);
-                        res.addSubResult(subResult);
-
-                        parent.send("GET", url, headerManager, cookieManager, null, subResult, this.timeout);
-
-                    }
-                } catch (ClassCastException e) { // TODO can this happen?
-                    res.addSubResult(HTTP2SampleResult.errorResult(binURL + " is not a correct URI"));
+                    url = escapeIllegalURLCharacters(url);
+                } catch (Exception e) {
+                    res.addSubResult(HTTP2SampleResult.errorResult(url.toString() + " is not a correct URI"));
                     setParentSampleSuccess(res, false);
+                    continue;
                 }
-            }
+                // I don't think localMatcher can be null here, but
+                // check just in case
+                if (pattern != null && localMatcher != null && !localMatcher.matches(url.toString(), pattern)) {
+                    continue; // we have a pattern and the URL does not match, so skip it
+                }
+                try {
+                    url = url.toURI().normalize().toURL();
+                } catch (MalformedURLException | URISyntaxException e) {
+                    res.addSubResult(HTTP2SampleResult.errorResult(url.toString() + " URI can not be normalized"));
+                    setParentSampleSuccess(res, false);
+                    continue;
+                }
 
+                HTTP2SampleResult subResult = new HTTP2SampleResult(url, "GET");
+                subResult.setSecondaryRequest(true);
+                subResult.setEmbebedResultsDepth(res.getEmbebedResultsDepth() - 1);
+                res.addSubResult(subResult);
+
+                parent.send("GET", url, headerManager, cookieManager, null, subResult, this.timeout);
+
+            }
         }
     }
 
