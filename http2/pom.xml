@@ -33,8 +33,10 @@
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <version.org.apache.jmeter.all>3.2</version.org.apache.jmeter.all>
-        <netty.version>9.4.0.v20161208</netty.version>
+        <jetty.version>9.4.9.v20180320</jetty.version>
         <alpn-boot.version>8.1.12.v20180117</alpn-boot.version>
     </properties>
 
@@ -54,57 +56,14 @@
         </dependency>
 
         <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-client</artifactId>
-            <version>${netty.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-util</artifactId>
-            <version>${netty.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.eclipse.jetty.http2</groupId>
             <artifactId>http2-client</artifactId>
-            <version>${netty.version}</version>
+            <version>${jetty.version}</version>
         </dependency>
-
-        <dependency>
-            <groupId>org.eclipse.jetty.http2</groupId>
-            <artifactId>http2-common</artifactId>
-            <version>${netty.version}</version>
-        </dependency>
-
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-http</artifactId>
-            <version>${netty.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-io</artifactId>
-            <version>${netty.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.eclipse.jetty.http2</groupId>
-            <artifactId>http2-hpack</artifactId>
-            <version>${netty.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.eclipse.jetty.osgi</groupId>
-            <artifactId>jetty-osgi-alpn</artifactId>
-            <version>${netty.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-alpn-client</artifactId>
-            <version>${netty.version}</version>
+            <artifactId>jetty-alpn-openjdk8-client</artifactId>
+            <version>${jetty.version}</version>
         </dependency>
 
         <dependency>
