@@ -503,7 +503,8 @@ public class HTTP2Request extends AbstractSampler implements ThreadListener, Loo
     }
 
     private void saveConnectionCookies(HttpFields hdrsResponse, URL url, CookieManager cookieManager) {
-        if (cookieManager != null) {
+        // hdrsResponse might be null if the request failed before getting any response
+        if (cookieManager != null && hdrsResponse != null) {
             List<String> hdrs = hdrsResponse.getValuesList(HTTPConstants.HEADER_SET_COOKIE);
             for (String hdr : hdrs) {
                 cookieManager.addCookieFromHeader(hdr, url);
