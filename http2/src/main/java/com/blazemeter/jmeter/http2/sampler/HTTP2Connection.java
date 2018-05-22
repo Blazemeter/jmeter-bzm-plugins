@@ -15,6 +15,7 @@ import org.eclipse.jetty.http2.api.Stream;
 import org.eclipse.jetty.http2.client.HTTP2Client;
 import org.eclipse.jetty.http2.frames.DataFrame;
 import org.eclipse.jetty.http2.frames.HeadersFrame;
+import org.eclipse.jetty.util.Callback;
 import org.eclipse.jetty.util.FuturePromise;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
@@ -69,57 +70,29 @@ public class HTTP2Connection {
     }
 
     private synchronized void sendMutExc(String method, HeadersFrame headersFrame, FuturePromise<Stream> streamPromise,
-                                         HTTP2StreamHandler http2StreamHandler, DataPostContent dataPostContent,
-                                         HTTP2SampleResult sampleResult) throws Exception {
+                                         HTTP2StreamHandler http2StreamHandler, RequestBody requestBody) throws Exception {
         session.newStream(headersFrame, streamPromise, http2StreamHandler);
-        if (method.equals("POST")) {
+        if (HTTPConstants.POST.equals(method)) {
             Stream actualStream = streamPromise.get();
             int streamID = actualStream.getId();
-            DataFrame data = new DataFrame(streamID,
-                    ByteBuffer.wrap(dataPostContent.getPayload(), 0, dataPostContent.getPayload().length), true);
-            actualStream.data(data, null);
-            sampleResult.setQueryString(data.toString());// TODO review this method
-            // add byte size of the queryString
-            sampleResult.setBytes(sampleResult.getBytesAsLong() + (long) sampleResult.getQueryString().length());
+            DataFrame data = new DataFrame(streamID, ByteBuffer.wrap(requestBody.getPayloadBytes()), true);
+            actualStream.data(data, Callback.NOOP);
         }
     }
 
     public void send(String method, URL url, HeaderManager headerManager, CookieManager cookieManager,
-                     DataPostContent dataPostContent, HTTP2SampleResult sampleResult, int timeout) throws Exception {
-        HttpFields requestFields = new HttpFields();
-        StringBuilder headerString = new StringBuilder();
-        if (headerManager != null) {
-            CollectionProperty headers = headerManager.getHeaders();
-            if (headers != null) {
-                for (JMeterProperty jMeterProperty : headers) {
-                    Header header = (Header) jMeterProperty.getObjectValue();
-                    String n = header.getName();
-                    // Don't allow override of Content-Length
-                    // TODO - what other headers are not allowed?
-                    if (!HTTPConstants.HEADER_CONTENT_LENGTH.equalsIgnoreCase(n)) {
-                        String v = header.getValue();
-                        v = v.replaceFirst(":\\d+$", ""); // remove any port
-                        // specification //
-                        // $NON-NLS-1$
-                        // $NON-NLS-2$
-                        requestFields.put(n, v);
-                        headerString.append(n).append(": ").append(v).append("\n");
-                    }
-                }
-            }
-            // TODO CacheManager
-        }
+                     RequestBody requestBody, HTTP2SampleResult sampleResult, int timeout) throws Exception {
+        HttpFields headers = buildHeaders(url, headerManager, cookieManager);
 
-        sampleResult.sampleStart();
-
-        // Extracts all the required cookies for that particular URL request
-        String cookieHeader = null;
-        if (cookieManager != null) {
-            cookieHeader = cookieManager.getCookieHeaderForURL(url);
-            if (cookieHeader != null) {
-                requestFields.put(HTTPConstants.HEADER_COOKIE, cookieHeader);
-                headerString.append(HTTPConstants.HEADER_COOKIE).append(": ").append(cookieHeader).append("\n");
+        if (requestBody != null) {
+            headers.put(HTTPConstants.HEADER_CONTENT_LENGTH, Long.toString(requestBody.getPayloadBytes().length));
+            // Check if the header manager had a content type header
+            // This allows the user to specify his own content-type for a POST request
+            String contentTypeHeader = headers.get(HTTPConstants.HEADER_CONTENT_TYPE);
+            if (contentTypeHeader == null || contentTypeHeader.isEmpty()) {
+                headers.put(HTTPConstants.HEADER_CONTENT_TYPE, HTTPConstants.APPLICATION_X_WWW_FORM_URLENCODED);
             }
+            sampleResult.setQueryString(requestBody.getPayload());
         }
 
         MetaData.Request metaData = null;
@@ -127,11 +100,11 @@ public class HTTP2Connection {
         switch (method) {
             case "GET":
                 metaData = new MetaData.Request("GET", new HttpURI(url.toString()), HttpVersion.HTTP_2,
-                        requestFields);
+                        headers);
                 break;
             case "POST":
                 metaData = new MetaData.Request("POST", new HttpURI(url.toString()), HttpVersion.HTTP_2,
-                        requestFields);
+                        headers);
                 endOfStream = false;
                 break;
             default:
@@ -139,16 +112,49 @@ public class HTTP2Connection {
         }
 
         HeadersFrame headersFrame = new HeadersFrame(metaData, null, endOfStream);
-        sampleResult.setRequestHeaders(headerString.toString());
-        sampleResult.setBytes(sampleResult.getBytesAsLong() + (long) headerString.length());
+        // we do this replacement and remove final char to be consistent with jmeter HTTP request sampler
+        String headersString = headers.toString().replaceAll("\r\n", "\n");
+        sampleResult.setRequestHeaders(headersString.substring(0, headersString.length() - 1));
 
         HTTP2StreamHandler http2StreamHandler = new HTTP2StreamHandler(this, url, headerManager, cookieManager,
                 sampleResult);
         http2StreamHandler.setTimeout(timeout);
-        sampleResult.setCookies(cookieHeader);
+        sampleResult.setCookies(headers.get(HTTPConstants.HEADER_COOKIE));
         addStreamHandler(http2StreamHandler);
 
-        sendMutExc(method, headersFrame, new FuturePromise<>(), http2StreamHandler, dataPostContent, sampleResult);
+        sampleResult.sampleStart();
+
+        sendMutExc(method, headersFrame, new FuturePromise<>(), http2StreamHandler, requestBody);
+    }
+
+    private HttpFields buildHeaders(URL url, HeaderManager headerManager, CookieManager cookieManager) {
+        HttpFields headers = new HttpFields();
+        if (headerManager != null) {
+            CollectionProperty headersProps = headerManager.getHeaders();
+            if (headersProps != null) {
+                for (JMeterProperty prop : headersProps) {
+                    Header header = (Header) prop.getObjectValue();
+                    String n = header.getName();
+                    // Don't allow override of Content-Length
+                    // TODO - what other headers are not allowed?
+                    if (!HTTPConstants.HEADER_CONTENT_LENGTH.equalsIgnoreCase(n)) {
+                        String v = header.getValue();
+                        v = v.replaceFirst(":\\d+$", ""); // remove any port
+                        headers.put(n, v);
+                    }
+                }
+            }
+            // TODO CacheManager
+        }
+
+        if (cookieManager != null) {
+            String cookieHeader = cookieManager.getCookieHeaderForURL(url);
+            if (cookieHeader != null) {
+                headers.put(HTTPConstants.HEADER_COOKIE, cookieHeader);
+            }
+        }
+
+        return headers;
     }
 
     public void addStreamHandler(HTTP2StreamHandler http2StreamHandler) {
@@ -168,12 +174,9 @@ public class HTTP2Connection {
                 // wait to receive all the response of the request
                 h.getCompletedFuture().get(h.getTimeout(), TimeUnit.MILLISECONDS);
             } catch (ExecutionException | TimeoutException e) {
-                // TODO Auto-generated catch block
                 HTTP2SampleResult sample = h.getHTTP2SampleResult();
-                if (e instanceof TimeoutException) {
-                    sample = HTTP2SampleResult.errorResult(e, sample);
-                    sample.setResponseHeaders("");
-                }
+                HTTP2SampleResult.setResultError(sample, e);
+                sample.setResponseHeaders("");
             }
         }
         return results;

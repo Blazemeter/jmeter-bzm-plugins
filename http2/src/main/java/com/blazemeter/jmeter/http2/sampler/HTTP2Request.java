@@ -27,13 +27,15 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 public class HTTP2Request extends AbstractSampler implements ThreadListener, LoopIterationListener {
+
+    public static final String ENCODING = StandardCharsets.ISO_8859_1.name();
+
     private static final long serialVersionUID = 5859387434748163229L;
     private static final Logger log = LoggingManager.getLoggerForClass();
 
@@ -111,19 +113,20 @@ public class HTTP2Request extends AbstractSampler implements ThreadListener, Loo
      * @return results of the sampling
      */
     public SampleResult sample() {
-        SampleResult res = null;
+        HTTP2SampleResult sampleResult = new HTTP2SampleResult(getName());
         try {
             URL url = getUrl();
-            HTTP2SampleResult sampleResult = new HTTP2SampleResult(url, getMethod());
+            sampleResult.setURL(url);
+            sampleResult.setHTTPMethod(getMethod());
             setConnection(url, sampleResult);
-            res = sample(url, getMethod(), getConnection(), sampleResult);
-            if (res != null) {
-                res.setSampleLabel(getName());
-            }
-            return res;
+            sample(url, getMethod(), getConnection(), sampleResult);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            errorResult(e, sampleResult);
         } catch (Exception e) {
-            return res;
+            errorResult(e, sampleResult);
         }
+        return sampleResult;
     }
 
     /**
@@ -134,7 +137,7 @@ public class HTTP2Request extends AbstractSampler implements ThreadListener, Loo
      * @param res SampleResult to be modified
      * @return the modified sampling result containing details of the Exception.
      */
-    private HTTP2SampleResult errorResult(Throwable e, HTTP2SampleResult res) {
+    private void errorResult(Throwable e, HTTP2SampleResult res) {
         res.setSampleLabel(res.getSampleLabel());
         res.setDataType(SampleResult.TEXT);
         ByteArrayOutputStream text = new ByteArrayOutputStream(200);
@@ -144,40 +147,24 @@ public class HTTP2Request extends AbstractSampler implements ThreadListener, Loo
         res.setResponseMessage(NON_HTTP_RESPONSE_MESSAGE + ": " + e.getMessage());
         res.setSuccessful(false);
         res.setPendingResponse(false);
-        return res;
     }
 
-    public DataPostContent createPostContent(String method) {
-        DataPostContent dpc = null;
-        if (method.equals("POST")) {
-            dpc = new DataPostContent();
-            //TODO set things
-            Arguments args = getArguments();
-            String valor = "";
-            for (JMeterProperty jmp : args) {
-                valor = ((HTTPArgument) jmp.getObjectValue()).getEncodedValue();
-            }
-            dpc.setPayload(valor.getBytes());
-
-            // TODO Code to send a file, need to figure out where is goes
-
-            dpc.setDataPath(getProperty(HTTP2Request.PATH).getStringValue());
-        }
-        return dpc;
-    }
-
-    protected HTTP2SampleResult sample(URL url, String method, HTTP2Connection http2Connection, HTTP2SampleResult sampleResult) {
+    protected void sample(URL url, String method, HTTP2Connection http2Connection, HTTP2SampleResult sampleResult) {
 
         sampleResult.setEmbebedResults(isEmbeddedResources());
         sampleResult.setEmbeddedUrlRE(getEmbeddedUrlRE());
 
         try {
-            DataPostContent dpc = createPostContent(method);
             int timeout = Integer.parseInt(DEFAULT_RESPONSE_TIMEOUT);
             if (!getResponseTimeout().equals("")) {
                 timeout = Integer.parseInt(getResponseTimeout());
             }
-            http2Connection.send(method, url, getHeaderManager(), getCookieManager(), dpc, sampleResult, timeout);
+            RequestBody body = null;
+            if (HTTPConstants.POST.equals(method) || HTTPConstants.PUT.equals(method)) {
+                body = RequestBody.from(method, getContentEncoding(), getArguments(), getSendParameterValuesAsPostBody());
+            }
+
+            http2Connection.send(method, url, getHeaderManager(), getCookieManager(), body, sampleResult, timeout);
 
             final CacheManager cacheManager = getCacheManager();
             if (cacheManager != null && HTTPConstants.GET.equalsIgnoreCase(method)) {
@@ -200,10 +187,33 @@ public class HTTP2Request extends AbstractSampler implements ThreadListener, Loo
             }
         } catch (Exception e) {
             // TODO Auto-generated catch block
-            return errorResult(e, sampleResult);
+            errorResult(e, sampleResult);
         }
+    }
 
-        return sampleResult;
+    private boolean getSendParameterValuesAsPostBody() {
+        if (getPostBodyRaw()) {
+            return true;
+        } else {
+            boolean hasArguments = false;
+            for (JMeterProperty jMeterProperty : getArguments()) {
+                hasArguments = true;
+                HTTPArgument arg = (HTTPArgument) jMeterProperty.getObjectValue();
+                if (arg.getName() != null && arg.getName().length() > 0) {
+                    return false;
+                }
+            }
+            return hasArguments;
+        }
+    }
+
+    private boolean getPostBodyRaw() {
+        return getPropertyAsBoolean(POST_BODY_RAW, POST_BODY_RAW_DEFAULT);
+    }
+
+    private String getContentEncoding() {
+        String prop = getPropertyAsString(HTTP2Request.CONTENT_ENCODING);
+        return (prop == null || prop.isEmpty()) ? ENCODING : prop;
     }
 
     public HTTP2Connection getConnection() {
@@ -214,7 +224,7 @@ public class HTTP2Request extends AbstractSampler implements ThreadListener, Loo
         connections.get().put(id, connection);
     }
 
-    public void setConnection(URL url, HTTP2SampleResult sampleResult) {
+    public void setConnection(URL url, HTTP2SampleResult sampleResult) throws Exception {
 
         String host = url.getHost().replaceAll("\\[", "").replaceAll("]", "");
         int port = url.getPort();
@@ -228,23 +238,14 @@ public class HTTP2Request extends AbstractSampler implements ThreadListener, Loo
         Map<String, HTTP2Connection> threadConnections = connections.get();
         http2Connection = threadConnections.get(connectionId);
         if (http2Connection != null) {
-            if (http2Connection.isClosed())
-                try {
-                    http2Connection.connect(host, port);
-                } catch (InterruptedException | ExecutionException | TimeoutException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-        } else {
-            try {
-                //TODO manejar cuando no es SSL
-                http2Connection = new HTTP2Connection(connectionId, true);
+            if (http2Connection.isClosed()) {
                 http2Connection.connect(host, port);
-                threadConnections.put(connectionId, http2Connection);
-            } catch (Exception e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
             }
+        } else {
+            //TODO handle no SSL connection
+            http2Connection = new HTTP2Connection(connectionId, true);
+            http2Connection.connect(host, port);
+            threadConnections.put(connectionId, http2Connection);
         }
         sampleResult.setConnectTime(sampleResult.currentTimeInMillis() - startConnectTime);
     }
@@ -502,7 +503,8 @@ public class HTTP2Request extends AbstractSampler implements ThreadListener, Loo
     }
 
     private void saveConnectionCookies(HttpFields hdrsResponse, URL url, CookieManager cookieManager) {
-        if (cookieManager != null) {
+        // hdrsResponse might be null if the request failed before getting any response
+        if (cookieManager != null && hdrsResponse != null) {
             List<String> hdrs = hdrsResponse.getValuesList(HTTPConstants.HEADER_SET_COOKIE);
             for (String hdr : hdrs) {
                 cookieManager.addCookieFromHeader(hdr, url);
@@ -524,7 +526,7 @@ public class HTTP2Request extends AbstractSampler implements ThreadListener, Loo
     }
 
     private void waitAllResponses() {
-        connections.get().values().forEach( c -> {
+        connections.get().values().forEach(c -> {
             try {
                 c.awaitResponses();
             } catch (InterruptedException e) {
