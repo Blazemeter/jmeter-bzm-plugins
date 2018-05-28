@@ -18,6 +18,7 @@
 
 package com.blazemeter.jmeter.http2.sampler;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.thoughtworks.xstream.XStream;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -57,14 +58,11 @@ public class HTTP2SampleResult extends HTTPSampleResult {
   private static final Set<String> METHODS_WITHOUT_BODY = new HashSet<>(
       Arrays.asList(HTTPConstants.HEAD, HTTPConstants.OPTIONS, HTTPConstants.TRACE));
 
-  private String cookies = ""; // never null
-
   private static int idCount = 0;
 
   private int id;
 
   private int embebedResultsDepth;
-  private String method;
   private HttpFields httpFieldsResponse;
   private boolean embebedResults;
   private transient Queue<HTTP2SampleResult> pendingResults = new ConcurrentLinkedQueue<>();
@@ -76,9 +74,9 @@ public class HTTP2SampleResult extends HTTPSampleResult {
   private boolean isPushed;
 
   private transient ListenerNotifier listenerNotifier = new ListenerNotifier();
+
   private transient JMeterVariables threadVars;
   private transient SamplePackage pack;
-
   /**
    * The raw value of the Location: header; may be null. This is supposed to be an absolute URL: <a
    * href= "http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.30">RFC2616 sec14.30</a>
@@ -86,14 +84,12 @@ public class HTTP2SampleResult extends HTTPSampleResult {
    */
   private String redirectLocation;
 
-  private String queryString = ""; // never null
-
   protected static final String NON_HTTP_RESPONSE_CODE = "Non HTTP response code";
+
   protected static final String NON_HTTP_RESPONSE_MESSAGE = "Non HTTP response message";
   protected static final String HTTP2_PENDING_RESPONSE = "Pending";
   protected static final String HTTP2_RESPONSE_RECEIVED = "Received";
   protected static final String HTTP2_RESPONSE_CODE_4 = "Not Found";
-
   private boolean pendingResponse;
 
   private String requestId;
@@ -149,9 +145,6 @@ public class HTTP2SampleResult extends HTTPSampleResult {
    */
   public HTTP2SampleResult(HTTP2SampleResult res) {
     super(res);
-    method = res.method;
-    cookies = res.cookies;
-    queryString = res.queryString;
     redirectLocation = res.redirectLocation;
   }
 
@@ -184,14 +177,6 @@ public class HTTP2SampleResult extends HTTPSampleResult {
     res.setSuccessful(false);
     res.setPendingResponse(false);
     // res.setMonitor(this.isMonitor()); // TODO see if applies to http2
-  }
-
-  public void setHTTPMethod(String method) {
-    this.method = method;
-  }
-
-  public String getHTTPMethod() {
-    return method;
   }
 
   public static synchronized int getNextId() {
@@ -297,75 +282,7 @@ public class HTTP2SampleResult extends HTTPSampleResult {
    * <p>
    * {@inheritDoc}
    */
-  @Override
-  public String getSamplerData() {
-    StringBuilder sb = new StringBuilder();
-    sb.append(method);
-    URL u = super.getURL();
-    if (u != null) {
-      sb.append(' ');
-      sb.append(u.toString());
-      sb.append('\n');
-      // Include request body if it can have one
-      if (!METHODS_WITHOUT_BODY.contains(method)) {
-        sb.append("\n").append(method).append(" data:\n");
-        sb.append(queryString);
-        sb.append('\n');
-      }
-      if (cookies.length() > 0) {
-        sb.append("\nCookie Data:\n");
-        sb.append(cookies);
-      } else {
-        sb.append("\n[no cookies]");
-      }
-      sb.append('\n');
-    }
-    final String sampData = super.getSamplerData();
-    if (sampData != null) {
-      sb.append(sampData);
-    }
-    return sb.toString();
-  }
 
-  /**
-   * @return cookies as a string
-   */
-  public String getCookies() {
-    return cookies;
-  }
-
-  /**
-   * @param string representing the cookies
-   */
-  public void setCookies(String string) {
-    if (string == null) {
-      cookies = "";// $NON-NLS-1$
-    } else {
-      cookies = string;
-    }
-  }
-
-  /**
-   * Fetch the query string
-   *
-   * @return the query string
-   */
-  public String getQueryString() {
-    return queryString;
-  }
-
-  /**
-   * Save the query string
-   *
-   * @param string the query string
-   */
-  public void setQueryString(String string) {
-    if (string == null) {
-      queryString = "";// $NON-NLS-1$
-    } else {
-      queryString = string;
-    }
-  }
 
   /**
    * Overrides the method from SampleResult - so the encoding can be extracted from the Meta
@@ -501,5 +418,10 @@ public class HTTP2SampleResult extends HTTPSampleResult {
         listenerNotifier.notifyListeners(event, pack.getSampleListeners());
       }
     }
+  }
+
+  @VisibleForTesting
+  public void setListenerNotifier(ListenerNotifier listenerNotifier) {
+    this.listenerNotifier = listenerNotifier;
   }
 }
