@@ -95,6 +95,10 @@ public class HTTP2SampleResult extends HTTPSampleResult {
   private String requestId;
 
   static {
+    registerHTTP2ResultConverter();
+  }
+
+  public static void registerHTTP2ResultConverter (){
     try {
       Method method = SaveService.class
           .getDeclaredMethod("registerConverter", String.class, XStream.class, boolean.class);
@@ -353,19 +357,6 @@ public class HTTP2SampleResult extends HTTPSampleResult {
   }
 
   public boolean isPendingResponse() {
-    /*boolean ret = pendingResponse;
-    SampleResult[] sons = this.getSubResults();
-    int i = 0;
-    if (sons.length != 0) {
-      while ((i < sons.length) && (!ret)) {
-        HTTP2SampleResult h = (HTTP2SampleResult) sons[i];
-        i++;
-        if (h.isSecondaryRequest()) {
-          ret = ret || (h.isPendingResponse());
-        }
-      }
-    }
-    return ret;*/
     return pendingResponse;
   }
 
@@ -403,7 +394,7 @@ public class HTTP2SampleResult extends HTTPSampleResult {
     if (parent != null) {
       parent.notifySample();
     }
-    if (parent == null && !isPendingResponse()) {
+    else if (!isPendingResponse()) {
       boolean sonsArePendingResponse = false;
       for (SampleResult s : getSubResults()) {
         HTTP2SampleResult h = (HTTP2SampleResult) s;

@@ -39,9 +39,9 @@ public class HTTP2StreamHandlerTest {
   private MetaData.Response responseMetadata;
   private Callback callback;
   private DataFrame dataFrame;
-  JMeterVariables threadVars;
-  ListenerNotifier listener;
-  SamplePackage pack;
+  private JMeterVariables threadVars;
+  private ListenerNotifier listener;
+  private SamplePackage pack;
 
   @Before
   public void setup() throws MalformedURLException {

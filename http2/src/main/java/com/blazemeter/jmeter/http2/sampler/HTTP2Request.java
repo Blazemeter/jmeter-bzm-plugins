@@ -137,6 +137,9 @@ public class HTTP2Request extends AbstractSampler implements ThreadListener, Loo
     } catch (Exception e) {
       errorResult(e, sampleResult);
     }
+    /*How HTTP2 protocol is async then when the Sampler finish there is a possibility that the
+     response did not come yet, so this method returns null because when the response finish a
+     notifier method is called from HTTP2SampleResult.*/
     return null;
   }
 
