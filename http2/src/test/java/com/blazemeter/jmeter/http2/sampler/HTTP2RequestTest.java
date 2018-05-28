@@ -42,59 +42,6 @@ public class HTTP2RequestTest {
     }
 
     @Test
-    public void sampleTest1() throws Exception {
-        URL url = new URL(http2Req.getProtocol(), "www.sprint.com", 443, "/");
-
-        HTTP2Connection connection = Mockito.mock(HTTP2Connection.class);
-
-        Mockito.when(connection.isClosed()).thenReturn(true);
-        Mockito.doNothing().when(connection).connect(Mockito.any(String.class), Mockito.any(Integer.class));
-        Mockito.when(connection.getConnectionId()).thenReturn("www.sprint.com:443");
-
-        http2Req.setProperty(HTTP2Request.METHOD, "GET");
-        HTTP2SampleResult sampleResult = new HTTP2SampleResult(url, http2Req.getMethod());
-        http2Req.addConnection("10www.sprint.com443", connection);
-        http2Req.setConnection(url, sampleResult);
-        http2Req.setProperty(new BooleanProperty(HTTP2Request.SYNC_REQUEST, true));
-        http2Req.sample(url, "GET", http2ConnectionMock, sampleResult);
-    }
-
-    @Test
-    public void sampleTest2() throws Exception {
-        Arguments args = new Arguments();
-        String text = "{\"header\":{\"applicationId\":\"HJS\"},\"initSession\":{}}";
-        HTTPArgument arg = new HTTPArgument("", text.replaceAll("\n", "\r\n"), false);
-        arg.setAlwaysEncoded(false);
-        args.addArgument(arg);
-        http2Req.setProperty(new TestElementProperty(HTTP2Request.ARGUMENTS, args));
-
-        URL url = new URL("https", "www.sprint.com", 443, "/apiservices/framework/initSession");
-
-        HTTP2Connection connection = Mockito.mock(HTTP2Connection.class);
-
-        Mockito.when(connection.isClosed()).thenReturn(true);
-        Mockito.doNothing().when(connection).connect(Mockito.any(String.class), Mockito.any(Integer.class));
-        Mockito.when(connection.getConnectionId()).thenReturn("www.sprint.com:443");
-
-        HTTP2SampleResult sampleResult = new HTTP2SampleResult(url, "POST");
-        http2Req.addConnection("10www.sprint.com443", connection);
-        http2Req.setConnection(url, sampleResult);
-        http2Req.setProperty(new BooleanProperty(HTTP2Request.SYNC_REQUEST, true));
-        http2Req.sample(url, "POST", http2Req.getConnection(), sampleResult);
-    }
-
-    @Test
-    public void sampleTest3() throws Exception {
-        URL url = new URL(http2Req.getProtocol(), "www.sprint.com", 443, "/");
-        HTTP2SampleResult sampleRes = new HTTP2SampleResult(url, "GET");
-
-        // connection is null so sample fails
-        http2Req.sample(url, "GET", null, sampleRes);
-        assertFalse(sampleRes.isPendingResponse());
-        assertFalse(sampleRes.isSuccessful());
-    }
-
-    @Test
     public void getUrlTest() throws Exception {
         http2Req.setProperty(HTTP2Request.PATH, "/shop/device/list/PHONE");
 
