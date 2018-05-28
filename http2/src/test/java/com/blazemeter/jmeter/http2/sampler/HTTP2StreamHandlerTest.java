@@ -78,7 +78,7 @@ public class HTTP2StreamHandlerTest {
 
     }
 
-    @Test
+    /*@Test
     public void onHeadersTest() {
 
         Mockito.when(headersFrame.getMetaData())
@@ -125,7 +125,7 @@ public class HTTP2StreamHandlerTest {
         assertEquals(httpFields, resSR.getHttpFieldsResponse());
         assertEquals("", resSR.getResponseHeaders());
 
-    }
+    }*/
 
 
     @Test
