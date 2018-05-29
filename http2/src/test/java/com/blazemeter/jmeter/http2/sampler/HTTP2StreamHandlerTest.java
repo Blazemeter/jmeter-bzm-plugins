@@ -251,5 +251,4 @@ public class HTTP2StreamHandlerTest {
         "", threadVars, 1,
         1, "");
   }
-
 }
