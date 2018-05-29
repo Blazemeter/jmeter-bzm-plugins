@@ -18,14 +18,15 @@ import org.apache.jmeter.threads.JMeterVariables;
 import org.apache.jmeter.threads.ListenerNotifier;
 import org.apache.jmeter.threads.SamplePackage;
 import org.apache.jmeter.util.JMeterUtils;
-import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpURI;
 import org.eclipse.jetty.http.HttpVersion;
+import org.eclipse.jetty.http2.ErrorCode;
 import org.eclipse.jetty.http2.api.Stream;
 import org.eclipse.jetty.http2.frames.DataFrame;
 import org.eclipse.jetty.http2.frames.HeadersFrame;
 import org.eclipse.jetty.http2.frames.PushPromiseFrame;
+import org.eclipse.jetty.http2.frames.ResetFrame;
 import org.eclipse.jetty.util.Callback;
 import org.junit.Before;
 import org.junit.Test;
@@ -239,4 +240,17 @@ public class HTTP2StreamHandlerTest {
     assertTrue(resSR.isSuccessful());
   }
 
-} 
+  @Test
+  public void onResetTest() {
+
+    ResetFrame resetFrame = new ResetFrame(0, ErrorCode.REFUSED_STREAM_ERROR.code);
+    http2SampleResult = new HTTP2SampleResult();
+    http2StreamHandler = new HTTP2StreamHandler(http2Connection, url, null,
+        null, http2SampleResult);
+    http2SampleResult.sampleStart();
+    http2StreamHandler.onReset(stream, resetFrame);
+    http2SampleResult = http2StreamHandler.getHTTP2SampleResult();
+    assertEquals(String.valueOf(ErrorCode.REFUSED_STREAM_ERROR.code), http2SampleResult.getResponseCode());
+  }
+
+}
