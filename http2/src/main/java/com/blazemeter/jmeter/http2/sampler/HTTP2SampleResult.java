@@ -30,7 +30,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
- * This is a specialisation of the SampleResult class for the HTTP protocol.
+ * This is a specialization of the SampleResult class for the HTTP protocol.
  */
 public class HTTP2SampleResult extends SampleResult {
 
