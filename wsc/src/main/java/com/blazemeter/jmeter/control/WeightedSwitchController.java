@@ -14,6 +14,7 @@ import org.apache.log.Logger;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 public class WeightedSwitchController extends GenericController implements Serializable {
     private static final Logger log = LoggingManager.getLoggerForClass();
@@ -49,10 +50,7 @@ public class WeightedSwitchController extends GenericController implements Seria
                 reset();
                 for (TestElement element : super.getSubControllers()) {
                     if (element instanceof Controller) {
-                        if (element instanceof TransactionController) {
-                            nullifyRes((TransactionController) element);
-                        }
-                        ((Controller) element).triggerEndOfLoop();
+                        resetController((Controller) element);
                     }
                 }
                 return null;
@@ -62,6 +60,37 @@ public class WeightedSwitchController extends GenericController implements Seria
             chosen = true;
             choose();
             return super.next();
+        }
+    }
+
+    private void resetController(Controller element) {
+        if (element instanceof TransactionController) {
+            if (element.getPropertyAsBoolean("TransactionController.parent")) {
+                // we should skip org.apache.jmeter.control.TransactionController.triggerEndOfLoop(),
+                // because org.apache.jmeter.control.TransactionController.transactionSampler is NULL,
+                // but we should call GenericController.triggerEndOfLoop() or GenericController.reInitialize()
+                // for reInit this controller
+                reInitializeController((TransactionController) element);
+                return;
+            } else {
+                // when currentCopy != current && result != null we should
+                // set org.apache.jmeter.control.TransactionController.res = null
+                // because if it is not null org.apache.jmeter.control.TransactionController.triggerEndOfLoop()
+                // will generate new parent Sample
+                nullifyRes((TransactionController) element);
+            }
+        }
+
+        element.triggerEndOfLoop();
+    }
+
+    private void reInitializeController(TransactionController element) {
+        try {
+            Method reInitialize = GenericController.class.getDeclaredMethod("reInitialize");
+            reInitialize.setAccessible(true);
+            reInitialize.invoke(element);
+        } catch (Throwable ex) {
+            log.warn("Failed to reInitialize TransactionController", ex);
         }
     }
 
