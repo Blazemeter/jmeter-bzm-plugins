@@ -47,9 +47,9 @@ public class WeightedSwitchControllerGui extends AbstractControllerGui {
                 final Component cellComponent = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 try {
                     String val = table.getModel().getValueAt(row, 2).toString();
-                    cellComponent.setBackground(Boolean.parseBoolean(val) ? Color.white : Color.lightGray);
+                    cellComponent.setEnabled(Boolean.parseBoolean(val));
                 } catch (Exception ex) {
-                    cellComponent.setBackground(Color.white);
+                    cellComponent.setEnabled(true);
                 }
                 return cellComponent;
             }
