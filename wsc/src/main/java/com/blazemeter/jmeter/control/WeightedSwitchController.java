@@ -13,6 +13,7 @@ import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
 
 public class WeightedSwitchController extends GenericController implements Serializable {
     private static final Logger log = LoggingManager.getLoggerForClass();
@@ -44,11 +45,13 @@ public class WeightedSwitchController extends GenericController implements Seria
         if (chosen) {
             Sampler result = super.next();
 
-            if (result == null || currentCopy != current ||
-                    (super.getSubControllers().get(current) instanceof TransactionController)) {
+            if (result == null || currentCopy != current) {
                 reset();
                 for (TestElement element : super.getSubControllers()) {
                     if (element instanceof Controller) {
+                        if (element instanceof TransactionController) {
+                            nullifyRes((TransactionController) element);
+                        }
                         ((Controller) element).triggerEndOfLoop();
                     }
                 }
@@ -59,6 +62,16 @@ public class WeightedSwitchController extends GenericController implements Seria
             chosen = true;
             choose();
             return super.next();
+        }
+    }
+
+    private void nullifyRes(TransactionController element) {
+        try {
+            Field res = TransactionController.class.getDeclaredField("res");
+            res.setAccessible(true);
+            res.set(element, null);
+        } catch (Throwable ex) {
+            log.warn("Failed to nullify TransactionController.res field", ex);
         }
     }
 
