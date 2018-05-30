@@ -316,7 +316,7 @@ public class WeightedSwitchControllerTest {
 
         // main loop
         LoopController loop = new LoopController();
-        loop.setLoops(60);
+        loop.setLoops(3);
         loop.setContinueForever(false);
 
         // test tree
@@ -356,11 +356,13 @@ public class WeightedSwitchControllerTest {
             }
         }
 
-        assertEquals(120, listener.events.size());
-        assertEquals(20, (int) totalResults.get("example1_1"));
-        assertEquals(40, (int) totalResults.get("example2_1"));
-        assertEquals(20, (int) totalResults.get("ex1")); // transaction result
-        assertEquals(40, (int) totalResults.get("ex2")); // transaction result
+        assertEquals(9, listener.events.size());
+        assertEquals(1, (int) totalResults.get("example1_1"));
+        assertEquals(1, (int) totalResults.get("example1_2"));
+        assertEquals(2, (int) totalResults.get("example2_1"));
+        assertEquals(2, (int) totalResults.get("example2_2"));
+        assertEquals(1, (int) totalResults.get("ex1")); // transaction result
+        assertEquals(2, (int) totalResults.get("ex2")); // transaction result
     }
 
 
@@ -446,12 +448,15 @@ public class WeightedSwitchControllerTest {
             }
         }
 
-        assertEquals(160, listener.events.size());
+        assertEquals(240, listener.events.size());
         assertEquals(20, (int) totalResults.get("example1_1"));
+        assertEquals(20, (int) totalResults.get("example1_2"));
         assertEquals(60, (int) totalResults.get("example3_1"));
+        assertEquals(60, (int) totalResults.get("example3_2"));
         assertEquals(20, (int) totalResults.get("ex1")); // transaction result
         assertEquals(60, (int) totalResults.get("ex3")); // transaction result
     }
+
     public class TestSampleListener extends ResultCollector implements SampleListener {
         public List<SampleEvent> events = new ArrayList<>();
 
