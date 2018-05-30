@@ -45,7 +45,7 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
   private static final String RESPONSE_PARSERS = // list of parsers
       JMeterUtils.getProperty("HTTPResponse.parsers");//$NON-NLS-1$
 
-  private static final Logger log = LoggingManager.getLoggerForClass();
+  private static final Logger LOG = LoggingManager.getLoggerForClass();
 
   private static final boolean IGNORE_FAILED_EMBEDDED_RESOURCES = JMeterUtils
       .getPropDefault("httpsampler.ignore_failed_embedded_resources", false); // $NON-NLS-1$
@@ -55,7 +55,7 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
     for (final String parser : parsers) {
       String classname = JMeterUtils.getProperty(parser + ".className");//$NON-NLS-1$
       if (classname == null) {
-        log.error(
+        LOG.error(
             "Cannot find .className property for " + parser + ", ensure you set property:'" + parser
                 + ".className'");
         continue;
@@ -64,11 +64,11 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
       if (typeList != null) {
         String[] types = JOrphanUtils.split(typeList, " ", true);
         for (final String type : types) {
-          log.info("Parser for " + type + " is " + classname);
+          LOG.info("Parser for " + type + " is " + classname);
           PARSERS_FOR_CONTENT_TYPE.put(type, classname);
         }
       } else {
-        log.warn("Cannot find .types property for " + parser
+        LOG.warn("Cannot find .types property for " + parser
             + ", as a consequence parser will not be used, to make it usable, define property:'"
             + parser
             + ".types'");
@@ -101,15 +101,48 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
 
   @Override
   public Listener onPush(Stream stream, PushPromiseFrame frame) {
+    MetaData.Request requestMetadata = ((MetaData.Request) frame.getMetaData());
+
+    URL url = null;
+    try {
+      url = requestMetadata.getURI().toURI().toURL();
+    } catch (MalformedURLException | URISyntaxException e ) {
+      LOG.error("Failed when parsed Push URL", e);
+    }
+
+
+
     HTTP2SampleResult sampleResult = new HTTP2SampleResult(url,
-        "PUSHED FROM " + frame.getStreamId(), result.getThreadVars(), result.getGroupThreads(),
+        "PUSHED FROM " + frame.getStreamId() + " " + requestMetadata.getMethod(), result.getThreadVars(), result.getGroupThreads(),
         result.getAllThreads(), result.getThreadName());
 
-    sampleResult.setRequestHeaders(frame.toString());
+    for (HttpField h : requestMetadata.getFields()) {
+      switch (h.getName()) {
+        case HTTPConstants.HEADER_CONTENT_TYPE:// TODO adapt to translate gzip, etc
+        case "content-type":
+          sampleResult.setContentType(h.getValue());
+          sampleResult.setEncodingAndType(h.getValue());
+          break;
+        case HTTPConstants.HEADER_CONTENT_ENCODING:
+          sampleResult.setDataEncoding(h.getValue());
+          break;
+      }
+    }
+
+    String rawHeaders = requestMetadata.getFields().toString();
+    // we do this replacement and remove final char to be consistent with jmeter HTTP request sampler
+    String headers = rawHeaders.replaceAll("\r\n", "\n");
+    sampleResult.setRequestHeaders(headers);
+    sampleResult.setHttpFieldsResponse(requestMetadata.getFields());
+
     sampleResult.setPushed(true);
     sampleResult.setEmbebedResults(false);
-    HTTP2StreamHandler hTTP2StreamHandler = new HTTP2StreamHandler(this.parent, null, headerManager,
+    sampleResult.setSecondaryRequest(true);
+    sampleResult.sampleStart();
+    result.addSubResult(sampleResult);
+    HTTP2StreamHandler hTTP2StreamHandler = new HTTP2StreamHandler(this.parent, url, headerManager,
         cookieManager, sampleResult);
+
     this.parent.addStreamHandler(hTTP2StreamHandler);
     return hTTP2StreamHandler;
   }
@@ -167,55 +200,49 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
 
       if (frame.isEndStream()) {
         result.sampleEnd();
-        if (!result.isPushed()) {
+        // Now collect the results into the HTTP2SampleResult:
+        // TODO Collect connect time and sent bytes
+        int responseLevel = Integer.parseInt(result.getResponseCode()) / 100;
+        switch (responseLevel) {
+          case 3:
+            break;
+          case 4:
+            result.setResponseMessage(HTTP2SampleResult.HTTP2_RESPONSE_CODE_4);
+            // TODO message depends on the code number
+            break;
+          case 5:
+            break;
+          default:
+            result.setResponseMessage(HTTP2SampleResult.HTTP2_RESPONSE_RECEIVED);
+            break;
+        }
 
-          // Now collect the results into the HTTP2SampleResult:
-          // TODO Collect connect time and sent bytes
-          int responseLevel = Integer.parseInt(result.getResponseCode()) / 100;
-          switch (responseLevel) {
-            case 3:
-              break;
-            case 4:
-              result.setResponseMessage(HTTP2SampleResult.HTTP2_RESPONSE_CODE_4);
-              // TODO message depends on the code number
-              break;
-            case 5:
-              break;
-            default:
-              result.setResponseMessage(HTTP2SampleResult.HTTP2_RESPONSE_RECEIVED);
-              break;
-          }
+        result.setSuccessful(isSuccessCode(Integer.parseInt(result.getResponseCode())));
+        result.setResponseData(this.responseBytes);
+        result.setPendingResponse(false);
 
-          result.setSuccessful(isSuccessCode(Integer.parseInt(result.getResponseCode())));
-          result.setResponseData(this.responseBytes);
-          result.setPendingResponse(false);
+        if (result.isRedirect()) {
+          // TODO redirect
+        }
 
-          if (result.isRedirect()) {
-            // TODO redirect
-          }
+        if ((result.isEmbebedResults()) && (result.getEmbebedResultsDepth() > 0)
+            && (result.getDataType().equals(SampleResult.TEXT))) {
+          getPageResources(result);
+        }
 
-          if ((result.isEmbebedResults()) && (result.getEmbebedResultsDepth() > 0)
-              && (result.getDataType().equals(SampleResult.TEXT))) {
-            getPageResources(result);
-          }
-
-          if (result.isSecondaryRequest()) {
-            HTTP2SampleResult parent = (HTTP2SampleResult) result.getParent();
+        if (result.isSecondaryRequest()) {
+          HTTP2SampleResult parent = (HTTP2SampleResult) result.getParent();
                         /*TODO  Review this, If the subResult have a reference to the parent then when 
                         the parent is serialized throw an exception. The JMeter's HTTP Sampler dont set 
                         the parent null, research why?*/
-            //result.setParent(null);
-            // set primary request failed if at least one secondary
-            // request fail
-            setParentSampleSuccess(parent,
-                parent.isSuccessful() && (result == null || result.isSuccessful()));
-          }
-          completedFuture.complete(null);
-          result.notifySample();
-
-        } else {
-          // TODO support push
+          //result.setParent(null);
+          // set primary request failed if at least one secondary
+          // request fail
+          setParentSampleSuccess(parent,
+              parent.isSuccessful() && (result == null || result.isSuccessful()));
         }
+        completedFuture.complete(null);
+        result.notifySample();
       }
     } catch (Exception e) {
       e.printStackTrace(); // TODO

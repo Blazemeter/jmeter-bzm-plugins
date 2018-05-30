@@ -1,23 +1,27 @@
 package com.blazemeter.jmeter.http2.sampler;
 
+import static org.eclipse.jetty.http.MetaData.Request;
+import static org.eclipse.jetty.http.MetaData.Response;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import kg.apc.emulators.TestJMeterUtils;
 import org.apache.jmeter.protocol.http.util.HTTPConstants;
 import org.apache.jmeter.samplers.SampleResult;
-import org.apache.jmeter.threads.JMeterThread;
 import org.apache.jmeter.threads.JMeterVariables;
 import org.apache.jmeter.threads.ListenerNotifier;
 import org.apache.jmeter.threads.SamplePackage;
 import org.apache.jmeter.util.JMeterUtils;
+import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpFields;
+import org.eclipse.jetty.http.HttpURI;
 import org.eclipse.jetty.http.HttpVersion;
-import org.eclipse.jetty.http.MetaData;
 import org.eclipse.jetty.http2.api.Stream;
 import org.eclipse.jetty.http2.frames.DataFrame;
 import org.eclipse.jetty.http2.frames.HeadersFrame;
@@ -36,12 +40,14 @@ public class HTTP2StreamHandlerTest {
   private Stream stream;
   private PushPromiseFrame pushPromisFrame;
   private HeadersFrame headersFrame;
-  private MetaData.Response responseMetadata;
+  private Response responseMetadata;
   private Callback callback;
   private DataFrame dataFrame;
   private JMeterVariables threadVars;
   private ListenerNotifier listener;
   private SamplePackage pack;
+  private Request mockRequestMetadata;
+  private HttpURI mockHttpURI;
 
   @Before
   public void setup() throws MalformedURLException {
@@ -56,24 +62,32 @@ public class HTTP2StreamHandlerTest {
     stream = Mockito.mock(Stream.class);
     pushPromisFrame = Mockito.mock(PushPromiseFrame.class);
     headersFrame = Mockito.mock(HeadersFrame.class);
-    responseMetadata = Mockito.mock(MetaData.Response.class);
+    responseMetadata = Mockito.mock(Response.class);
     callback = Mockito.mock(Callback.class);
     dataFrame = Mockito.mock(DataFrame.class);
     threadVars = Mockito.mock(JMeterVariables.class);
     listener = Mockito.mock(ListenerNotifier.class);
     pack = Mockito.mock(SamplePackage.class);
+    mockRequestMetadata = Mockito.mock(Request.class);
+    mockHttpURI = Mockito.mock(HttpURI.class);
   }
 
   @Test
-  public void onPushTest() {
+  public void onPushTest() throws URISyntaxException, MalformedURLException {
 
-    Mockito.when(pushPromisFrame.getStreamId())
-        .thenReturn(5);
+    Mockito.when(pushPromisFrame.getStreamId()).thenReturn(5);
+    Mockito.when(pushPromisFrame.toString()).thenReturn("TestString");
+    Mockito.when(pushPromisFrame.getMetaData()).thenReturn(mockRequestMetadata);
+    Mockito.when(mockRequestMetadata.getURI()).thenReturn(mockHttpURI);
+    URI uri = new URI("http://www.test.com");
+    Mockito.when(mockHttpURI.toURI()).thenReturn(uri);
+    HttpFields httpFields = new HttpFields();
+    httpFields.add("name1","value1");
+    httpFields.add("name2","value2");
+    Mockito.when(mockRequestMetadata.getFields()).thenReturn(httpFields);
+    Mockito.when(mockRequestMetadata.getMethod()).thenReturn("GET");
 
-    Mockito.when(pushPromisFrame.toString())
-        .thenReturn("TestString");
-
-    http2SampleResult = new HTTP2SampleResult(url,
+    http2SampleResult = new HTTP2SampleResult(uri.toURL(),
         "", threadVars, 1,
         1, "");
 
@@ -86,14 +100,13 @@ public class HTTP2StreamHandlerTest {
 
     HTTP2SampleResult resSR = res.getHTTP2SampleResult();
 
-    assertEquals(url, resSR.getURL());
-    assertEquals(url.toString(), resSR.getSampleLabel());
-    assertEquals("PUSHED FROM " + 5, resSR.getHTTPMethod());
+    assertEquals(uri.toURL(), resSR.getURL());
+    assertEquals(uri.toURL().toString(), resSR.getSampleLabel());
+    assertEquals("PUSHED FROM " + 5 + " GET", resSR.getHTTPMethod());
     assertEquals(1, resSR.getEmbebedResultsDepth());
     assertEquals("Pending", resSR.getResponseCode());
     assertEquals("Pending", resSR.getResponseMessage());
-    assertEquals("TestString", resSR.getRequestHeaders());
-
+    assertEquals("name1: value1\nname2: value2\n\n", resSR.getRequestHeaders());
   }
 
   @Test
