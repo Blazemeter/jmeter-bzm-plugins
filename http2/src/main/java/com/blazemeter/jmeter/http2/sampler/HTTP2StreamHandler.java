@@ -113,7 +113,7 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
 
 
     HTTP2SampleResult sampleResult = new HTTP2SampleResult(url,
-        "PUSHED FROM " + frame.getStreamId() + requestMetadata.getMethod(), result.getThreadVars(), result.getGroupThreads(),
+        "PUSHED FROM " + frame.getStreamId() + " " + requestMetadata.getMethod(), result.getThreadVars(), result.getGroupThreads(),
         result.getAllThreads(), result.getThreadName());
 
     for (HttpField h : requestMetadata.getFields()) {
