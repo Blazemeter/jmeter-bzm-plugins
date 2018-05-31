@@ -175,7 +175,7 @@ public class HTTP2Connection {
                 h.getCompletedFuture().get(h.getTimeout(), TimeUnit.MILLISECONDS);
             } catch (ExecutionException | TimeoutException e) {
                 HTTP2SampleResult sample = h.getHTTP2SampleResult();
-                HTTP2SampleResult.setResultError(sample, e);
+                sample.setErrorResult("Error while await for response", e);
                 sample.setResponseHeaders("");
             }
         }

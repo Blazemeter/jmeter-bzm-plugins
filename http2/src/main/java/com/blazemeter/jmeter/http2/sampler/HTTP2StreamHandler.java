@@ -135,7 +135,6 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
     sampleResult.setRequestHeaders(headers);
     sampleResult.setHttpFieldsResponse(requestMetadata.getFields());
 
-    sampleResult.setPushed(true);
     sampleResult.setEmbebedResults(false);
     sampleResult.setSecondaryRequest(true);
     sampleResult.sampleStart();
@@ -327,8 +326,7 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
     } catch (LinkExtractorParseException e) {
       // Don't break the world just because this failed:
       HTTP2SampleResult subRes = new HTTP2SampleResult(res);
-      HTTP2SampleResult.setResultError(subRes, e);
-      res.addSubResult(subRes);
+      subRes.setErrorResult("Error while getting the embebed resources",e);
       setParentSampleSuccess(res, false);
     }
 
@@ -352,7 +350,7 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
         try {
           url = escapeIllegalURLCharacters(url);
         } catch (Exception e) {
-          res.addSubResult(HTTP2SampleResult.errorResult(url.toString() + " is not a correct URI"));
+          res.addSubResult(HTTP2SampleResult.createErrorResult(url.toString() + " is not a correct URI", e));
           setParentSampleSuccess(res, false);
           continue;
         }
@@ -366,7 +364,7 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
           url = url.toURI().normalize().toURL();
         } catch (MalformedURLException | URISyntaxException e) {
           res.addSubResult(
-              HTTP2SampleResult.errorResult(url.toString() + " URI can not be normalized"));
+              HTTP2SampleResult.createErrorResult(url.toString() + " URI can not be normalized", e));
           setParentSampleSuccess(res, false);
           continue;
         }

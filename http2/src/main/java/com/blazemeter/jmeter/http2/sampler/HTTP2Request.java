@@ -190,12 +190,6 @@ public class HTTP2Request extends AbstractSampler implements ThreadListener, Loo
       if (isSyncRequest()) {
         for (HTTP2Connection h : connections.get().values()) {
           for (HTTP2SampleResult r : h.awaitResponses()) {
-            if (!r.isSecondaryRequest()) {
-              if (sampleResult.getId() != r.getId()) {
-                //Is not the response of a sync request and is not a embedded result
-                sampleResult.addPendingResult(r);
-              }
-            }
             saveConnectionCookies(r.getHttpFieldsResponse(), r.getURL(), getCookieManager());
           }
         }
