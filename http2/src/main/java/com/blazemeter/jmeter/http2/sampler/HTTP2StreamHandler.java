@@ -39,6 +39,8 @@ import org.eclipse.jetty.util.Callback;
 
 public class HTTP2StreamHandler extends Stream.Listener.Adapter {
 
+  private static final String HTTP2_RESPONSE_CODE_4 = "Not Found";
+  private static final String HTTP2_RESPONSE_RECEIVED = "Received";
   private static final String USER_AGENT = "User-Agent";
   private static final Map<String, String> PARSERS_FOR_CONTENT_TYPE = new HashMap<>();
 
@@ -106,14 +108,13 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
     URL url = null;
     try {
       url = requestMetadata.getURI().toURI().toURL();
-    } catch (MalformedURLException | URISyntaxException e ) {
+    } catch (MalformedURLException | URISyntaxException e) {
       LOG.error("Failed when parsed Push URL", e);
     }
 
-
-
     HTTP2SampleResult sampleResult = new HTTP2SampleResult(url,
-        "PUSHED FROM " + frame.getStreamId() + " " + requestMetadata.getMethod(), result.getThreadVars(), result.getGroupThreads(),
+        "PUSHED FROM " + frame.getStreamId() + " " + requestMetadata.getMethod(),
+        result.getThreadVars(), result.getGroupThreads(),
         result.getAllThreads(), result.getThreadName());
 
     for (HttpField h : requestMetadata.getFields()) {
@@ -135,7 +136,6 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
     sampleResult.setRequestHeaders(headers);
     sampleResult.setHttpFieldsResponse(requestMetadata.getFields());
 
-    sampleResult.setPushed(true);
     sampleResult.setEmbebedResults(false);
     sampleResult.setSecondaryRequest(true);
     sampleResult.sampleStart();
@@ -207,13 +207,13 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
           case 3:
             break;
           case 4:
-            result.setResponseMessage(HTTP2SampleResult.HTTP2_RESPONSE_CODE_4);
+            result.setResponseMessage(HTTP2_RESPONSE_CODE_4);
             // TODO message depends on the code number
             break;
           case 5:
             break;
           default:
-            result.setResponseMessage(HTTP2SampleResult.HTTP2_RESPONSE_RECEIVED);
+            result.setResponseMessage(HTTP2_RESPONSE_RECEIVED);
             break;
         }
 
@@ -327,8 +327,7 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
     } catch (LinkExtractorParseException e) {
       // Don't break the world just because this failed:
       HTTP2SampleResult subRes = new HTTP2SampleResult(res);
-      HTTP2SampleResult.setResultError(subRes, e);
-      res.addSubResult(subRes);
+      subRes.setErrorResult("Error while getting the embebed resources", e);
       setParentSampleSuccess(res, false);
     }
 
@@ -352,7 +351,8 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
         try {
           url = escapeIllegalURLCharacters(url);
         } catch (Exception e) {
-          res.addSubResult(HTTP2SampleResult.errorResult(url.toString() + " is not a correct URI"));
+          res.addSubResult(
+              HTTP2SampleResult.createErrorResult(url.toString() + " is not a correct URI", e));
           setParentSampleSuccess(res, false);
           continue;
         }
@@ -366,7 +366,8 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
           url = url.toURI().normalize().toURL();
         } catch (MalformedURLException | URISyntaxException e) {
           res.addSubResult(
-              HTTP2SampleResult.errorResult(url.toString() + " URI can not be normalized"));
+              HTTP2SampleResult
+                  .createErrorResult(url.toString() + " URI can not be normalized", e));
           setParentSampleSuccess(res, false);
           continue;
         }

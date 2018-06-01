@@ -184,7 +184,6 @@ public class HTTP2StreamHandlerTest {
 
     HTTP2SampleResult resSR = http2StreamHandler.getHTTP2SampleResult();
     resSR.sampleStart();
-    resSR.setPushed(false);
     resSR.setPendingResponse(true);
     resSR.setResponseCode("200");
     resSR.setEmbebedResults(false);
@@ -219,7 +218,6 @@ public class HTTP2StreamHandlerTest {
 
     HTTP2SampleResult resSR = http2StreamHandler.getHTTP2SampleResult();
     resSR.sampleStart();
-    resSR.setPushed(false);
     resSR.setPendingResponse(true);
     resSR.setResponseCode("200");
     resSR.setEmbebedResults(true);

@@ -58,7 +58,6 @@ public class HTTP2ConnectionTest {
     public void addPendingResponsesTest() throws InterruptedException {
         HTTP2SampleResult pendingResponse = new HTTP2SampleResult();
         pendingResponse.setPendingResponse(false);
-        pendingResponse.setId(10);
         HTTP2StreamHandler streamHandler = new HTTP2StreamHandler(http2Connection, urlMock, headerManagerMock, cookieManagerMock, pendingResponse);
         http2Connection.addStreamHandler(streamHandler);
         assertEquals(Collections.singletonList(pendingResponse), http2Connection.awaitResponses());
