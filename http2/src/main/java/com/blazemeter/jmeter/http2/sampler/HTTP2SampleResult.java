@@ -22,8 +22,6 @@ import org.slf4j.LoggerFactory;
 
 public class HTTP2SampleResult extends HTTPSampleResult {
 
-  static final String HTTP2_RESPONSE_CODE_4 = "Not Found";
-  static final String HTTP2_RESPONSE_RECEIVED = "Received";
   private static final String HTTP2_PENDING_RESPONSE = "Pending";
   private int embebedResultsDepth;
   private HttpFields httpFieldsResponse;
@@ -58,7 +56,6 @@ public class HTTP2SampleResult extends HTTPSampleResult {
   }
 
   public HTTP2SampleResult() {
-    super();
   }
 
   public HTTP2SampleResult(String sampleName, JMeterVariables threadVars,
