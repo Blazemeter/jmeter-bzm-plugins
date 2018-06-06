@@ -30,11 +30,13 @@ import org.apache.oro.text.regex.Perl5Matcher;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.http.MetaData;
+import org.eclipse.jetty.http2.ErrorCode;
 import org.eclipse.jetty.http2.api.Stream;
 import org.eclipse.jetty.http2.api.Stream.Listener;
 import org.eclipse.jetty.http2.frames.DataFrame;
 import org.eclipse.jetty.http2.frames.HeadersFrame;
 import org.eclipse.jetty.http2.frames.PushPromiseFrame;
+import org.eclipse.jetty.http2.frames.ResetFrame;
 import org.eclipse.jetty.util.Callback;
 
 public class HTTP2StreamHandler extends Stream.Listener.Adapter {
@@ -229,11 +231,11 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
             && (result.getDataType().equals(SampleResult.TEXT))) {
           getPageResources(result);
         }
-
+        
         if (result.isSecondaryRequest()) {
           HTTP2SampleResult parent = (HTTP2SampleResult) result.getParent();
                         /*TODO  Review this, If the subResult have a reference to the parent then when 
-                        the parent is serialized throw an exception. The JMeter's HTTP Sampler dont set 
+                        the parent is serialized throw an exception. The JMeter's HTTP Sampler dont set
                         the parent null, research why?*/
           //result.setParent(null);
           // set primary request failed if at least one secondary
@@ -248,6 +250,18 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
       e.printStackTrace(); // TODO
     }
 
+  }
+
+  @Override
+  public void onReset(Stream stream, ResetFrame frame) {
+    result.setResponseCode(String.valueOf(frame.getError()));
+    result.setResponseMessage(ErrorCode.from(frame.getError()).name());
+    result.sampleEnd();
+    result.setSuccessful(((frame.getError() == ErrorCode.NO_ERROR.code))
+        ||(frame.getError() == ErrorCode.CANCEL_STREAM_ERROR.code));
+    result.setPendingResponse(false);
+    completedFuture.complete(null);
+    result.notifySample();
   }
 
   /**

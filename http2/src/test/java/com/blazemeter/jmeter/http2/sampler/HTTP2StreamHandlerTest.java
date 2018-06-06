@@ -18,14 +18,15 @@ import org.apache.jmeter.threads.JMeterVariables;
 import org.apache.jmeter.threads.ListenerNotifier;
 import org.apache.jmeter.threads.SamplePackage;
 import org.apache.jmeter.util.JMeterUtils;
-import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.http.HttpURI;
 import org.eclipse.jetty.http.HttpVersion;
+import org.eclipse.jetty.http2.ErrorCode;
 import org.eclipse.jetty.http2.api.Stream;
 import org.eclipse.jetty.http2.frames.DataFrame;
 import org.eclipse.jetty.http2.frames.HeadersFrame;
 import org.eclipse.jetty.http2.frames.PushPromiseFrame;
+import org.eclipse.jetty.http2.frames.ResetFrame;
 import org.eclipse.jetty.util.Callback;
 import org.junit.Before;
 import org.junit.Test;
@@ -87,9 +88,7 @@ public class HTTP2StreamHandlerTest {
     Mockito.when(mockRequestMetadata.getFields()).thenReturn(httpFields);
     Mockito.when(mockRequestMetadata.getMethod()).thenReturn("GET");
 
-    http2SampleResult = new HTTP2SampleResult(uri.toURL(),
-        "", threadVars, 1,
-        1, "");
+    http2SampleResult = buildThreadVarsResult();
 
     http2SampleResult.setThreadName("");
     http2StreamHandler = new HTTP2StreamHandler(http2Connection, url, null, null,
@@ -124,8 +123,6 @@ public class HTTP2StreamHandlerTest {
     Mockito.when(responseMetadata.getHttpVersion())
         .thenReturn(HttpVersion.HTTP_2);
 
-    Mockito.when(threadVars.getObject(Mockito.any(String.class))).thenReturn(pack);
-
     Mockito.when(pack.getSampleListeners()).thenReturn(null);
 
     HttpFields httpFields = new HttpFields();
@@ -142,9 +139,7 @@ public class HTTP2StreamHandlerTest {
         "HTTP/2.0 200 OK\nHeader1: value1\nHeader2: value2\nHeader3: value3\ncontent-type: application/json\n"
             + HTTPConstants.HEADER_CONTENT_ENCODING + ": UTF-8\n";
 
-    http2SampleResult = new HTTP2SampleResult(url,
-        "", threadVars, 1,
-        1, "");
+    http2SampleResult = buildThreadVarsResult();
 
     http2SampleResult.setThreadName("");
     http2StreamHandler = new HTTP2StreamHandler(http2Connection, url, null, null,
@@ -175,9 +170,7 @@ public class HTTP2StreamHandlerTest {
     Mockito.when(dataFrame.isEndStream())
         .thenReturn(true);
 
-    http2SampleResult = new HTTP2SampleResult(url,
-        "", threadVars, 1,
-        1, "");
+    http2SampleResult = buildThreadVarsResult();
 
     http2StreamHandler = new HTTP2StreamHandler(http2Connection, url, null, null,
         http2SampleResult);
@@ -239,4 +232,24 @@ public class HTTP2StreamHandlerTest {
     assertTrue(resSR.isSuccessful());
   }
 
-} 
+  @Test
+  public void onResetTest() {
+
+    ResetFrame resetFrame = new ResetFrame(0, ErrorCode.REFUSED_STREAM_ERROR.code);
+    http2SampleResult = buildThreadVarsResult();
+    http2StreamHandler = new HTTP2StreamHandler(http2Connection, url, null,
+        null, http2SampleResult);
+    http2SampleResult.sampleStart();
+    http2StreamHandler.onReset(stream, resetFrame);
+    http2SampleResult = http2StreamHandler.getHTTP2SampleResult();
+    assertEquals(String.valueOf(ErrorCode.REFUSED_STREAM_ERROR.code), http2SampleResult.getResponseCode());
+  }
+
+  public HTTP2SampleResult buildThreadVarsResult(){
+    Mockito.when(threadVars.getObject(Mockito.any(String.class))).thenReturn(pack);
+    return new HTTP2SampleResult(url,
+        "", threadVars, 1,
+        1, "");
+  }
+
+}
