@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 public class HTTP2Connection {
 
+    private static Logger LOG = LoggerFactory.getLogger(HTTP2Connection.class);
     private String connectionId;
     private Session session;
     private HTTP2Client client;
@@ -130,7 +131,6 @@ public class HTTP2Connection {
     }
 
     private HttpFields buildHeaders(URL url, HeaderManager headerManager, CookieManager cookieManager) {
-        Logger LOG = LoggerFactory.getLogger(HTTP2Connection.class);
         HttpFields headers = new HttpFields();
         if (headerManager != null) {
             CollectionProperty headersProps = headerManager.getHeaders();
@@ -140,9 +140,9 @@ public class HTTP2Connection {
                     String n = header.getName();
                     // Don't allow override of Content-Length
                     // TODO - what other headers are not allowed?
-                    if(n.startsWith(":")){
-                        LOG.warn("The specified pseudo header "+ n +" may not be supported by the"
-                            + " HTTP2 server and will be ignored");
+                    if(n.contains(":")){
+                        LOG.warn("The specified pseudo header {} is not allowed "
+                            + "and will be ignored", n);
                     }
                     else if (!HTTPConstants.HEADER_CONTENT_LENGTH.equalsIgnoreCase(n)) {
                         String v = header.getValue();
