@@ -255,12 +255,13 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
   @Override
   public void onReset(Stream stream, ResetFrame frame) {
     result.setResponseCode(String.valueOf(frame.getError()));
-    result.setResponseMessage(frame.toString());
+    result.setResponseMessage(ErrorCode.from(frame.getError()).name());
     result.sampleEnd();
     result.setSuccessful(((frame.getError() == ErrorCode.NO_ERROR.code))
         ||(frame.getError() == ErrorCode.CANCEL_STREAM_ERROR.code));
     result.setPendingResponse(false);
     completedFuture.complete(null);
+    result.notifySample();
   }
 
   /**
