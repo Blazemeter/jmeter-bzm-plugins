@@ -182,7 +182,7 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
       result.sampleEnd();
       result.setPendingResponse(false);
       completedFuture.complete(null);
-      result.notifySample();
+      result.completeAsyncSample();
 
     }
   }
@@ -244,7 +244,7 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
               parent.isSuccessful() && (result == null || result.isSuccessful()));
         }
         completedFuture.complete(null);
-        result.notifySample();
+        result.completeAsyncSample();
       }
     } catch (Exception e) {
       e.printStackTrace(); // TODO
@@ -261,7 +261,7 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
         ||(frame.getError() == ErrorCode.CANCEL_STREAM_ERROR.code));
     result.setPendingResponse(false);
     completedFuture.complete(null);
-    result.notifySample();
+    result.completeAsyncSample();
   }
 
   /**

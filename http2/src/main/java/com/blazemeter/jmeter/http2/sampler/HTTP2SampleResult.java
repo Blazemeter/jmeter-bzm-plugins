@@ -8,14 +8,26 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.util.List;
+
+import org.apache.jmeter.assertions.Assertion;
+import org.apache.jmeter.assertions.AssertionResult;
+import org.apache.jmeter.processor.PostProcessor;
 import org.apache.jmeter.protocol.http.sampler.HTTPSampleResult;
 import org.apache.jmeter.samplers.SampleEvent;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.save.SaveService;
+import org.apache.jmeter.testbeans.TestBeanHelper;
+import org.apache.jmeter.testelement.AbstractScopedAssertion;
+import org.apache.jmeter.testelement.AbstractTestElement;
+import org.apache.jmeter.testelement.TestElement;
+import org.apache.jmeter.threads.JMeterContext;
+import org.apache.jmeter.threads.JMeterContextService;
 import org.apache.jmeter.threads.JMeterThread;
 import org.apache.jmeter.threads.JMeterVariables;
 import org.apache.jmeter.threads.ListenerNotifier;
 import org.apache.jmeter.threads.SamplePackage;
+import org.apache.jorphan.util.JMeterError;
 import org.eclipse.jetty.http.HttpFields;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -167,7 +179,15 @@ public class HTTP2SampleResult extends HTTPSampleResult {
     return threadVars;
   }
 
-  public void notifySample() {
+  public void completeAsyncSample(){
+    HTTP2SampleResult parent = (HTTP2SampleResult) this.getParent();
+    JMeterContext threadContext = JMeterContextService.getContext();
+    checkAssertions(pack.getAssertions(), parent, threadContext);
+    runPostProcessors(pack.getPostProcessors());
+    notifySample();
+  }
+
+  private void notifySample() {
     HTTP2SampleResult parent = (HTTP2SampleResult) this.getParent();
     if (parent != null) {
       parent.notifySample();
@@ -186,6 +206,73 @@ public class HTTP2SampleResult extends HTTPSampleResult {
         listenerNotifier.notifyListeners(event, pack.getSampleListeners());
       }
     }
+  }
+
+  private void runPostProcessors(List<PostProcessor> extractors) {
+    for (PostProcessor ex : extractors) {
+      TestBeanHelper.prepare((TestElement) ex);
+      ex.process();
+    }
+  }
+
+  private void checkAssertions(List<Assertion> assertions, SampleResult parent, JMeterContext threadContext) {
+    for (Assertion assertion : assertions) {
+      TestBeanHelper.prepare((TestElement) assertion);
+      if (assertion instanceof AbstractScopedAssertion) {
+        AbstractScopedAssertion scopedAssertion = (AbstractScopedAssertion) assertion;
+        String scope = scopedAssertion.fetchScope();
+        if (scopedAssertion.isScopeParent(scope)
+            || scopedAssertion.isScopeAll(scope)
+            || scopedAssertion.isScopeVariable(scope)) {
+          processAssertion(parent, assertion);
+        }
+        if (scopedAssertion.isScopeChildren(scope)
+            || scopedAssertion.isScopeAll(scope)) {
+          SampleResult[] children = parent.getSubResults();
+          boolean childError = false;
+          for (SampleResult childSampleResult : children) {
+            processAssertion(childSampleResult, assertion);
+            if (!childSampleResult.isSuccessful()) {
+              childError = true;
+            }
+          }
+          // If parent is OK, but child failed, add a message and flag the parent as failed
+          if (childError && parent.isSuccessful()) {
+            AssertionResult assertionResult = new AssertionResult(((AbstractTestElement) assertion).getName());
+            assertionResult.setResultForFailure("One or more sub-samples failed");
+            parent.addAssertionResult(assertionResult);
+            parent.setSuccessful(false);
+          }
+        }
+      } else {
+        processAssertion(parent, assertion);
+      }
+    }
+    threadContext.getVariables().put("JMeterThread.last_sample_ok", Boolean.toString(parent.isSuccessful()));
+  }
+
+  private void processAssertion(SampleResult result, Assertion assertion) {
+    AssertionResult assertionResult;
+    try {
+      assertionResult = assertion.getResult(result);
+    } catch (AssertionError e) {
+      LOG.debug("Error processing Assertion.", e);
+      assertionResult = new AssertionResult("Assertion failed! See log file (debug level, only).");
+      assertionResult.setFailure(true);
+      assertionResult.setFailureMessage(e.toString());
+    } catch (JMeterError e) {
+      LOG.error("Error processing Assertion.", e);
+      assertionResult = new AssertionResult("Assertion failed! See log file.");
+      assertionResult.setError(true);
+      assertionResult.setFailureMessage(e.toString());
+    } catch (Exception e) {
+      LOG.error("Exception processing Assertion.", e);
+      assertionResult = new AssertionResult("Assertion failed! See log file.");
+      assertionResult.setError(true);
+      assertionResult.setFailureMessage(e.toString());
+    }
+    result.setSuccessful(result.isSuccessful() && !(assertionResult.isError() || assertionResult.isFailure()));
+    result.addAssertionResult(assertionResult);
   }
 
   @VisibleForTesting
