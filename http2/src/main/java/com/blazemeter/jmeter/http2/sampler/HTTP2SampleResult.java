@@ -45,6 +45,8 @@ public class HTTP2SampleResult extends HTTPSampleResult {
   private transient SamplePackage pack;
   private String redirectLocation;
   private boolean pendingResponse;
+  private List<Assertion> assertions;
+  private List<PostProcessor> postProcessors;
 
   private static final Logger LOG = LoggerFactory.getLogger(HTTP2SampleResult.class);
 
@@ -79,6 +81,8 @@ public class HTTP2SampleResult extends HTTPSampleResult {
     setThreadName(threadGroupName);
     this.threadVars = threadVars;
     this.pack = (SamplePackage) threadVars.getObject(JMeterThread.PACKAGE_OBJECT);
+    this.assertions = pack.getAssertions();
+    this.postProcessors = pack.getPostProcessors();
     setSampleLabel(sampleName);
     this.setPendingResponse(true);
     this.setEmbebedResultsDepth(1);
@@ -180,10 +184,8 @@ public class HTTP2SampleResult extends HTTPSampleResult {
   }
 
   public void completeAsyncSample(){
-    HTTP2SampleResult parent = (HTTP2SampleResult) this.getParent();
-    JMeterContext threadContext = JMeterContextService.getContext();
-    checkAssertions(pack.getAssertions(), parent, threadContext);
-    runPostProcessors(pack.getPostProcessors());
+    checkAssertions(assertions, this);
+    runPostProcessors(postProcessors);
     notifySample();
   }
 
@@ -215,7 +217,7 @@ public class HTTP2SampleResult extends HTTPSampleResult {
     }
   }
 
-  private void checkAssertions(List<Assertion> assertions, SampleResult parent, JMeterContext threadContext) {
+  private void checkAssertions(List<Assertion> assertions, SampleResult sampleResult) {
     for (Assertion assertion : assertions) {
       TestBeanHelper.prepare((TestElement) assertion);
       if (assertion instanceof AbstractScopedAssertion) {
@@ -224,11 +226,11 @@ public class HTTP2SampleResult extends HTTPSampleResult {
         if (scopedAssertion.isScopeParent(scope)
             || scopedAssertion.isScopeAll(scope)
             || scopedAssertion.isScopeVariable(scope)) {
-          processAssertion(parent, assertion);
+          processAssertion(sampleResult, assertion);
         }
         if (scopedAssertion.isScopeChildren(scope)
             || scopedAssertion.isScopeAll(scope)) {
-          SampleResult[] children = parent.getSubResults();
+          SampleResult[] children = sampleResult.getSubResults();
           boolean childError = false;
           for (SampleResult childSampleResult : children) {
             processAssertion(childSampleResult, assertion);
@@ -236,19 +238,19 @@ public class HTTP2SampleResult extends HTTPSampleResult {
               childError = true;
             }
           }
-          // If parent is OK, but child failed, add a message and flag the parent as failed
-          if (childError && parent.isSuccessful()) {
+          // If sampleResult is OK, but child failed, add a message and flag the sampleResult as failed
+          if (childError && sampleResult.isSuccessful()) {
             AssertionResult assertionResult = new AssertionResult(((AbstractTestElement) assertion).getName());
             assertionResult.setResultForFailure("One or more sub-samples failed");
-            parent.addAssertionResult(assertionResult);
-            parent.setSuccessful(false);
+            sampleResult.addAssertionResult(assertionResult);
+            sampleResult.setSuccessful(false);
           }
         }
       } else {
-        processAssertion(parent, assertion);
+        processAssertion(sampleResult, assertion);
       }
     }
-    threadContext.getVariables().put("JMeterThread.last_sample_ok", Boolean.toString(parent.isSuccessful()));
+    threadVars.put("JMeterThread.last_sample_ok", Boolean.toString(sampleResult.isSuccessful()));
   }
 
   private void processAssertion(SampleResult result, Assertion assertion) {

@@ -10,6 +10,8 @@ import org.apache.jmeter.protocol.http.util.HTTPFileArg;
 import org.apache.jmeter.protocol.http.util.HTTPFileArgs;
 import org.apache.jmeter.testelement.property.BooleanProperty;
 import org.apache.jmeter.testelement.property.TestElementProperty;
+import org.apache.jmeter.threads.JMeterVariables;
+import org.apache.jmeter.threads.SamplePackage;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,6 +28,8 @@ public class HTTP2RequestTest {
 
     private HTTP2Connection http2ConnectionMock;
     private HTTP2Request http2Req;
+    private JMeterVariables threadVars;
+    private SamplePackage pack;
 
     @Before
     public void setup() {
@@ -34,6 +38,8 @@ public class HTTP2RequestTest {
         http2Req = new HTTP2Request();
         http2Req.setThreadName("10");
         http2Req.setProperty(HTTP2Request.DOMAIN, "www.sprint.com");
+        threadVars = Mockito.mock(JMeterVariables.class);
+        pack = Mockito.mock(SamplePackage.class);
     }
 
     @After
