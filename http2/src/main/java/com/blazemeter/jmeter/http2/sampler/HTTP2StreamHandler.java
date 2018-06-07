@@ -146,6 +146,7 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
         cookieManager, sampleResult);
 
     this.parent.addStreamHandler(hTTP2StreamHandler);
+    hTTP2StreamHandler.setTimeout(timeout);
     return hTTP2StreamHandler;
   }
 
