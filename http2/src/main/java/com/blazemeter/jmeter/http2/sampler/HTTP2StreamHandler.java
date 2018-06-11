@@ -146,6 +146,7 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
         cookieManager, sampleResult);
 
     this.parent.addStreamHandler(hTTP2StreamHandler);
+    hTTP2StreamHandler.setTimeout(timeout);
     return hTTP2StreamHandler;
   }
 
@@ -231,7 +232,7 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
             && (result.getDataType().equals(SampleResult.TEXT))) {
           getPageResources(result);
         }
-        
+
         if (result.isSecondaryRequest()) {
           HTTP2SampleResult parent = (HTTP2SampleResult) result.getParent();
                         /*TODO  Review this, If the subResult have a reference to the parent then when 
