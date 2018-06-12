@@ -119,11 +119,10 @@ public class HTTP2Request extends AbstractSampler implements ThreadListener, Loo
   public SampleResult sample() {
 
     JMeterContext threadContext = getThreadContext();
-    JMeterVariables threadVars = threadContext.getVariables();
     int nbActiveThreadsInThreadGroup = threadContext.getThreadGroup().getNumberOfThreads();
     int nbTotalActiveThreads = JMeterContextService.getNumberOfThreads();
 
-    HTTP2SampleResult sampleResult = new HTTP2SampleResult(getName(), threadVars,
+    HTTP2SampleResult sampleResult = new HTTP2SampleResult(getName(), threadContext,
         nbActiveThreadsInThreadGroup, nbTotalActiveThreads, getThreadName());
     try {
       URL url = getUrl();

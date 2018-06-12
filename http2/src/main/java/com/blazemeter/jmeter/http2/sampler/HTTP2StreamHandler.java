@@ -114,20 +114,20 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
       LOG.error("Failed when parsed Push URL", e);
     }
 
-    HTTP2SampleResult sampleResult = new HTTP2SampleResult(url,
-        "PUSHED FROM " + frame.getStreamId() + " " + requestMetadata.getMethod(),
-        result.getThreadVars(), result.getGroupThreads(),
-        result.getAllThreads(), result.getThreadName());
+    HTTP2SampleResult sampleSubResult = result.createSubResult();
+    sampleSubResult.setSampleLabel(url.toString());
+    sampleSubResult.setURL(url);
+    sampleSubResult.setHTTPMethod(requestMetadata.getMethod());
 
     for (HttpField h : requestMetadata.getFields()) {
       switch (h.getName()) {
         case HTTPConstants.HEADER_CONTENT_TYPE:// TODO adapt to translate gzip, etc
         case "content-type":
-          sampleResult.setContentType(h.getValue());
-          sampleResult.setEncodingAndType(h.getValue());
+          sampleSubResult.setContentType(h.getValue());
+          sampleSubResult.setEncodingAndType(h.getValue());
           break;
         case HTTPConstants.HEADER_CONTENT_ENCODING:
-          sampleResult.setDataEncoding(h.getValue());
+          sampleSubResult.setDataEncoding(h.getValue());
           break;
       }
     }
@@ -135,15 +135,12 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
     String rawHeaders = requestMetadata.getFields().toString();
     // we do this replacement and remove final char to be consistent with jmeter HTTP request sampler
     String headers = rawHeaders.replaceAll("\r\n", "\n");
-    sampleResult.setRequestHeaders(headers);
-    sampleResult.setHttpFieldsResponse(requestMetadata.getFields());
-
-    sampleResult.setEmbebedResults(false);
-    sampleResult.setSecondaryRequest(true);
-    sampleResult.sampleStart();
-    result.addSubResult(sampleResult);
+    sampleSubResult.setRequestHeaders(headers);
+    sampleSubResult.setHttpFieldsResponse(requestMetadata.getFields());
+    sampleSubResult.sampleStart();
+    result.addSubResult(sampleSubResult);
     HTTP2StreamHandler hTTP2StreamHandler = new HTTP2StreamHandler(this.parent, url, headerManager,
-        cookieManager, sampleResult);
+        cookieManager, sampleSubResult);
 
     this.parent.addStreamHandler(hTTP2StreamHandler);
     hTTP2StreamHandler.setTimeout(timeout);
@@ -181,9 +178,10 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
     result.setHttpFieldsResponse(frame.getMetaData().getFields());
     if (frame.isEndStream()) {
       result.sampleEnd();
-      result.setPendingResponse(false);
-      completedFuture.complete(null);
+      if (!result.isSecondaryRequest())
+        result.setPendingResponse(false);
       result.completeAsyncSample();
+      completedFuture.complete(null);
 
     }
   }
@@ -222,8 +220,9 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
 
         result.setSuccessful(isSuccessCode(Integer.parseInt(result.getResponseCode())));
         result.setResponseData(this.responseBytes);
-        result.setPendingResponse(false);
-
+        if (!result.isSecondaryRequest())
+          result.setPendingResponse(false);
+        result.completeAsyncSample();
         if (result.isRedirect()) {
           // TODO redirect
         }
@@ -235,17 +234,12 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
 
         if (result.isSecondaryRequest()) {
           HTTP2SampleResult parent = (HTTP2SampleResult) result.getParent();
-                        /*TODO  Review this, If the subResult have a reference to the parent then when 
-                        the parent is serialized throw an exception. The JMeter's HTTP Sampler dont set
-                        the parent null, research why?*/
-          //result.setParent(null);
           // set primary request failed if at least one secondary
           // request fail
           setParentSampleSuccess(parent,
               parent.isSuccessful() && (result == null || result.isSuccessful()));
         }
         completedFuture.complete(null);
-        result.completeAsyncSample();
       }
     } catch (Exception e) {
       e.printStackTrace(); // TODO
@@ -260,9 +254,10 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
     result.sampleEnd();
     result.setSuccessful(((frame.getError() == ErrorCode.NO_ERROR.code))
         ||(frame.getError() == ErrorCode.CANCEL_STREAM_ERROR.code));
-    result.setPendingResponse(false);
-    completedFuture.complete(null);
+    if (!result.isSecondaryRequest())
+      result.setPendingResponse(false);
     result.completeAsyncSample();
+    completedFuture.complete(null);
   }
 
   /**
@@ -387,12 +382,8 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
           continue;
         }
 
-        HTTP2SampleResult subResult = new HTTP2SampleResult(url,
-            "GET", result.getThreadVars(), result.getGroupThreads(),
-            result.getAllThreads(), result.getThreadName());
-
-        subResult.setSecondaryRequest(true);
-        subResult.setEmbebedResultsDepth(res.getEmbebedResultsDepth() - 1);
+        HTTP2SampleResult subResult = result.createSubResult();
+        subResult.setSampleLabel(url.toString());
         res.addSubResult(subResult);
 
         parent.send("GET", url, headerManager, cookieManager, null, subResult, this.timeout);
