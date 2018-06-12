@@ -126,18 +126,4 @@ public class HTTP2RequestTest {
         boolean valueRes = http2Req.getSendFileAsPostBody();
         assertFalse(valueRes);
     }
-
-    @Test
-    public void sampleMainTest() {
-        List<Assertion> assertions = new ArrayList<>();
-        ResponseAssertion assertion = Mockito.mock(ResponseAssertion.class);
-        assertions.add(assertion);
-        assertions.add(assertion);
-        Mockito.when(packMock.getAssertions())
-            .thenReturn(assertions);
-        Mockito.when(threadVars.getObject(JMeterThread.PACKAGE_OBJECT))
-            .thenReturn(packMock);
-        http2Req.sample();
-    }
-
 }
