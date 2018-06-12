@@ -114,9 +114,7 @@ public class HTTP2StreamHandlerTest {
     assertEquals(uri.toURL(), resSR.getURL());
     assertEquals(uri.toURL().toString(), resSR.getSampleLabel());
     assertEquals("GET", resSR.getHTTPMethod());
-    assertEquals(1, resSR.getEmbebedResultsDepth());
-    assertEquals("Pending", resSR.getResponseCode());
-    assertEquals("Pending", resSR.getResponseMessage());
+    assertEquals(0, resSR.getEmbebedResultsDepth());
     assertEquals("name1: value1\nname2: value2\n\n", resSR.getRequestHeaders());
   }
 
