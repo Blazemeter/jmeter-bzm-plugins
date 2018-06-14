@@ -121,9 +121,12 @@ public class HTTP2Request extends AbstractSampler implements ThreadListener, Loo
     JMeterContext threadContext = getThreadContext();
     int nbActiveThreadsInThreadGroup = threadContext.getThreadGroup().getNumberOfThreads();
     int nbTotalActiveThreads = JMeterContextService.getNumberOfThreads();
-
-    HTTP2SampleResult sampleResult = new HTTP2SampleResult(getName(), threadContext,
-        nbActiveThreadsInThreadGroup, nbTotalActiveThreads, getThreadName());
+    HTTP2SampleResult sampleResult = new HTTP2SampleResult(threadContext);
+    sampleResult.setSampleLabel(getName());
+    sampleResult.setGroupThreads(nbActiveThreadsInThreadGroup);
+    sampleResult.setAllThreads(nbTotalActiveThreads);
+    sampleResult.setThreadName(getThreadName());
+    sampleResult.setSync(isSyncRequest());
     try {
       URL url = getUrl();
       sampleResult.setURL(url);
@@ -139,7 +142,10 @@ public class HTTP2Request extends AbstractSampler implements ThreadListener, Loo
     /*How HTTP2 protocol is async then when the Sampler finish there is a possibility that the
      response did not come yet, so this method returns null because when the response finish a
      notifier method is called from HTTP2SampleResult.*/
-    return null;
+    if (!isSyncRequest())
+      return null;
+    else
+      return sampleResult;
   }
 
   /**

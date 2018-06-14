@@ -52,10 +52,10 @@ public class HTTP2SampleResultTest {
   @Test
   public void shouldSetCorrectlyTheErrorResult() throws MalformedURLException {
     URL url = new URL("https", "www.sprint.com", 443, "/");
-    HTTP2SampleResult sampleRes = new HTTP2SampleResult(url, "GET", threadContext, 0, 0, "");
+    HTTP2SampleResult sampleRes = new HTTP2SampleResult(threadContext);
     Throwable e = new Throwable();
     sampleRes.setErrorResult("message", e);
-    HTTP2SampleResult expected = new HTTP2SampleResult(url, "GET", threadContext, 0, 0, "");
+    HTTP2SampleResult expected = new HTTP2SampleResult(threadContext);
     expected.setDataType(HTTPSampleResult.TEXT);
     StringWriter sw = new StringWriter();
     e.printStackTrace(new PrintWriter(sw));

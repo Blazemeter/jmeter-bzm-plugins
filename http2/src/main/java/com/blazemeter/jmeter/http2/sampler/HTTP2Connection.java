@@ -119,7 +119,7 @@ public class HTTP2Connection {
         String headersString = headers.toString().replaceAll("\r\n", "\n");
         sampleResult.setRequestHeaders(headersString.substring(0, headersString.length() - 1));
 
-        HTTP2StreamHandler http2StreamHandler = new HTTP2StreamHandler(this, url, headerManager, cookieManager,
+        HTTP2StreamHandler http2StreamHandler = new HTTP2StreamHandler(this, headerManager, cookieManager,
                 sampleResult);
         http2StreamHandler.setTimeout(timeout);
         sampleResult.setCookies(headers.get(HTTPConstants.HEADER_COOKIE));

@@ -46,6 +46,8 @@ public class HTTP2SampleResult extends HTTPSampleResult {
   private transient List<Assertion> assertions;
   private transient List<PostProcessor> postProcessors;
 
+  private transient boolean isSync;
+
   private static final Logger LOG = LoggerFactory.getLogger(HTTP2SampleResult.class);
 
 
@@ -68,33 +70,19 @@ public class HTTP2SampleResult extends HTTPSampleResult {
   }
 
   public HTTP2SampleResult() {
+    super();
   }
 
-  public HTTP2SampleResult(String sampleName, JMeterContext threadContext,
-      int nbActiveThreadsInThreadGroup, int nbTotalActiveThreads,
-      String threadGroupName) {
-
-    setGroupThreads(nbActiveThreadsInThreadGroup);
-    setAllThreads(nbTotalActiveThreads);
-    setThreadName(threadGroupName);
+  public HTTP2SampleResult(JMeterContext threadContext) {
+    super();
     this.threadContext = threadContext;
     this.threadVars = threadContext.getVariables();
     SamplePackage pack = (SamplePackage) threadVars.getObject(JMeterThread.PACKAGE_OBJECT);
     this.assertions = pack.getAssertions();
     this.postProcessors = pack.getPostProcessors();
     this.sampleListeners = pack.getSampleListeners();
-    setSampleLabel(sampleName);
     this.setPendingResponse(true);
     this.setEmbebedResultsDepth(1);
-  }
-
-  public HTTP2SampleResult(URL url, String method, JMeterContext threadContext,
-      int nbActiveThreadsInThreadGroup, int nbTotalActiveThreads,
-      String threadGroupName) {
-    this(url.toString(), threadContext, nbActiveThreadsInThreadGroup, nbTotalActiveThreads,
-        threadGroupName);
-    this.setHTTPMethod(method);
-    this.setURL(url);
   }
 
   public HTTP2SampleResult(HTTP2SampleResult res) {
@@ -181,42 +169,48 @@ public class HTTP2SampleResult extends HTTPSampleResult {
     this.secondaryRequest = secondaryRequest;
   }
 
-  public JMeterVariables getThreadVars() {
-    return threadVars;
+  public boolean isSync() {
+    return isSync;
   }
 
-  public synchronized void completeAsyncSample() {
-    HTTP2SampleResult parent = (HTTP2SampleResult) this.getParent();
-    if (parent != null) {
-      this.pendingResponse = false;
-      parent.completeAsyncSample();
-    } else if (!isPendingResponse()) {
-      boolean sonsArePendingResponse = false;
-      for (SampleResult s : getSubResults()) {
-        HTTP2SampleResult h = (HTTP2SampleResult) s;
-        if (h.isPendingResponse()) {
-          sonsArePendingResponse = true;
-          break;
+  public void setSync(boolean sync) {
+    isSync = sync;
+  }
+
+  public void completeAsyncSample() {
+    synchronized (threadContext){
+      HTTP2SampleResult parent = (HTTP2SampleResult) this.getParent();
+      if (parent != null) {
+        this.pendingResponse = false;
+        parent.completeAsyncSample();
+      } else if (!isPendingResponse()) {
+        boolean sonsArePendingResponse = false;
+        for (SampleResult s : getSubResults()) {
+          HTTP2SampleResult h = (HTTP2SampleResult) s;
+          if (h.isPendingResponse()) {
+            sonsArePendingResponse = true;
+            break;
+          }
         }
-      }
-      if (!sonsArePendingResponse) {
-        runPostProcessors(postProcessors);
-        checkAssertions(assertions);
-        SampleEvent event = new SampleEvent(this, getThreadName(),
-            threadVars, false);
-        listenerNotifier.notifyListeners(event, this.sampleListeners);
+        if (!sonsArePendingResponse) {
+          runPostProcessors(postProcessors);
+          checkAssertions(assertions);
+          SampleEvent event = new SampleEvent(this, getThreadName(),
+              threadVars, false);
+          listenerNotifier.notifyListeners(event, this.sampleListeners);
+        }
       }
     }
   }
 
-  private void runPostProcessors(List<PostProcessor> extractors) {
-    for (PostProcessor ex : extractors) {
+  private void runPostProcessors(List<PostProcessor> postProcessors) {
+    for (PostProcessor postProcessor : postProcessors) {
       if (threadContext.getVariables() != null) {
-        TestBeanHelper.prepare((TestElement) ex);
-        ex.process();
+        TestBeanHelper.prepare((TestElement) postProcessor);
+        postProcessor.process();
       }
       else{
-        LOG.warn("The Post Processor " + ex.getClass() + "was not executed for the sampler" + getSampleLabel() + ". Use Synchronized Request to avoid this error" );
+        LOG.warn("The Post Processor " + postProcessor.getClass() + "was not executed for the sampler" + getSampleLabel() + ". Use Synchronized Request to avoid this error" );
       }
     }
   }
@@ -232,7 +226,7 @@ public class HTTP2SampleResult extends HTTPSampleResult {
           processAssertion(this, assertion);
         }
         if (scopedAssertion.isScopeVariable(scope)){
-          if (threadContext.getVariables() != null)
+          if (((AbstractScopedAssertion) assertion).getThreadContext().getVariables() != null)
             processAssertion(this, assertion);
           else
             LOG.warn("The Variable Assertion was not executed for the sampler" + getSampleLabel() + ". Use Synchronized Request to avoid this error" );

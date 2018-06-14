@@ -103,7 +103,7 @@ public class HTTP2StreamHandlerTest {
     http2SampleResult = buildThreadVarsResult();
 
     http2SampleResult.setThreadName("");
-    http2StreamHandler = new HTTP2StreamHandler(http2Connection, url, null, null,
+    http2StreamHandler = new HTTP2StreamHandler(http2Connection, null, null,
         http2SampleResult);
 
     HTTP2StreamHandler res = (HTTP2StreamHandler) http2StreamHandler
@@ -152,7 +152,7 @@ public class HTTP2StreamHandlerTest {
     http2SampleResult = buildThreadVarsResult();
 
     http2SampleResult.setThreadName("");
-    http2StreamHandler = new HTTP2StreamHandler(http2Connection, url, null, null,
+    http2StreamHandler = new HTTP2StreamHandler(http2Connection, null, null,
         http2SampleResult);
 
     HTTP2SampleResult resSR = http2StreamHandler.getHTTP2SampleResult();
@@ -182,7 +182,7 @@ public class HTTP2StreamHandlerTest {
 
     http2SampleResult = buildThreadVarsResult();
 
-    http2StreamHandler = new HTTP2StreamHandler(http2Connection, url, null, null,
+    http2StreamHandler = new HTTP2StreamHandler(http2Connection, null, null,
         http2SampleResult);
 
     HTTP2SampleResult resSR = http2StreamHandler.getHTTP2SampleResult();
@@ -216,7 +216,7 @@ public class HTTP2StreamHandlerTest {
 
     http2SampleResult = new HTTP2SampleResult();
 
-    http2StreamHandler = new HTTP2StreamHandler(http2Connection, url, null, null,
+    http2StreamHandler = new HTTP2StreamHandler(http2Connection,null, null,
         http2SampleResult);
 
     HTTP2SampleResult resSR = http2StreamHandler.getHTTP2SampleResult();
@@ -254,7 +254,7 @@ public class HTTP2StreamHandlerTest {
 
     ResetFrame resetFrame = new ResetFrame(0, ErrorCode.REFUSED_STREAM_ERROR.code);
     http2SampleResult = buildThreadVarsResult();
-    http2StreamHandler = new HTTP2StreamHandler(http2Connection, url, null,
+    http2StreamHandler = new HTTP2StreamHandler(http2Connection, null,
         null, http2SampleResult);
     http2SampleResult.sampleStart();
     http2StreamHandler.onReset(stream, resetFrame);
@@ -272,8 +272,6 @@ public class HTTP2StreamHandlerTest {
     when(packMock.getAssertions()).thenReturn(assertions);
     when(packMock.getPostProcessors()).thenReturn(postProcessors);
     when(packMock.getSampleListeners()).thenReturn(sampleListeners );
-    return new HTTP2SampleResult(url,
-        "", threadContext, 1,
-        1, "");
+    return new HTTP2SampleResult(threadContext);
   }
 }
