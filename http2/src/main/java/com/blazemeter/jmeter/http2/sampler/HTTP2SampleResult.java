@@ -7,7 +7,6 @@ import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.URL;
 import java.util.List;
 import org.apache.jmeter.assertions.Assertion;
 import org.apache.jmeter.assertions.AssertionResult;
@@ -70,11 +69,9 @@ public class HTTP2SampleResult extends HTTPSampleResult {
   }
 
   public HTTP2SampleResult() {
-    super();
   }
 
   public HTTP2SampleResult(JMeterContext threadContext) {
-    super();
     this.threadContext = threadContext;
     this.threadVars = threadContext.getVariables();
     SamplePackage pack = (SamplePackage) threadVars.getObject(JMeterThread.PACKAGE_OBJECT);
@@ -178,27 +175,24 @@ public class HTTP2SampleResult extends HTTPSampleResult {
   }
 
   public void completeAsyncSample() {
-    synchronized (threadContext){
-      HTTP2SampleResult parent = (HTTP2SampleResult) this.getParent();
-      if (parent != null) {
-        this.pendingResponse = false;
-        parent.completeAsyncSample();
-      } else if (!isPendingResponse()) {
-        boolean sonsArePendingResponse = false;
-        for (SampleResult s : getSubResults()) {
-          HTTP2SampleResult h = (HTTP2SampleResult) s;
-          if (h.isPendingResponse()) {
-            sonsArePendingResponse = true;
-            break;
-          }
+    HTTP2SampleResult parent = (HTTP2SampleResult) this.getParent();
+    if (parent != null) {
+      parent.completeAsyncSample();
+    } else if (!isPendingResponse()) {
+      boolean sonsArePendingResponse = false;
+      for (SampleResult s : getSubResults()) {
+        HTTP2SampleResult h = (HTTP2SampleResult) s;
+        if (h.isPendingResponse()) {
+          sonsArePendingResponse = true;
+          break;
         }
-        if (!sonsArePendingResponse) {
-          runPostProcessors(postProcessors);
-          checkAssertions(assertions);
-          SampleEvent event = new SampleEvent(this, getThreadName(),
-              threadVars, false);
-          listenerNotifier.notifyListeners(event, this.sampleListeners);
-        }
+      }
+      if (!sonsArePendingResponse) {
+        runPostProcessors(postProcessors);
+        checkAssertions(assertions);
+        SampleEvent event = new SampleEvent(this, getThreadName(),
+            threadVars, false);
+        listenerNotifier.notifyListeners(event, this.sampleListeners);
       }
     }
   }
@@ -208,9 +202,10 @@ public class HTTP2SampleResult extends HTTPSampleResult {
       if (threadContext.getVariables() != null) {
         TestBeanHelper.prepare((TestElement) postProcessor);
         postProcessor.process();
-      }
-      else{
-        LOG.warn("The Post Processor " + postProcessor.getClass() + "was not executed for the sampler" + getSampleLabel() + ". Use Synchronized Request to avoid this error" );
+      } else {
+        LOG.warn(
+            "The Post Processor " + postProcessor.getClass() + "was not executed for the sampler"
+                + getSampleLabel() + ". Use Synchronized Request to avoid this error");
       }
     }
   }
@@ -225,11 +220,13 @@ public class HTTP2SampleResult extends HTTPSampleResult {
             || scopedAssertion.isScopeAll(scope)) {
           processAssertion(this, assertion);
         }
-        if (scopedAssertion.isScopeVariable(scope)){
-          if (((AbstractScopedAssertion) assertion).getThreadContext().getVariables() != null)
+        if (scopedAssertion.isScopeVariable(scope)) {
+          if (((AbstractScopedAssertion) assertion).getThreadContext().getVariables() != null) {
             processAssertion(this, assertion);
-          else
-            LOG.warn("The Variable Assertion was not executed for the sampler" + getSampleLabel() + ". Use Synchronized Request to avoid this error" );
+          } else {
+            LOG.warn("The Variable Assertion was not executed for the sampler" + getSampleLabel()
+                + ". Use Synchronized Request to avoid this error");
+          }
         }
         if (scopedAssertion.isScopeChildren(scope)
             || scopedAssertion.isScopeAll(scope)) {

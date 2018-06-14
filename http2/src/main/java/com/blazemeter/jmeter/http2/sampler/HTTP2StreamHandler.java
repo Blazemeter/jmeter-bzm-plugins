@@ -173,9 +173,7 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
     result.setHttpFieldsResponse(frame.getMetaData().getFields());
     if (frame.isEndStream()) {
       result.sampleEnd();
-      if (!result.isSecondaryRequest()) {
-        result.setPendingResponse(false);
-      }
+      result.setPendingResponse(false);
       if (!result.isSync()) {
         result.completeAsyncSample();
       }
@@ -201,9 +199,7 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
         result.sampleEnd();
         result.setSuccessful(isSuccessCode(Integer.parseInt(result.getResponseCode())));
         result.setResponseData(this.responseBytes);
-        if (!result.isSecondaryRequest()) {
-          result.setPendingResponse(false);
-        }
+        result.setPendingResponse(false);
         if (!result.isSync()) {
           result.completeAsyncSample();
         }
@@ -238,9 +234,7 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
     result.sampleEnd();
     result.setSuccessful(((frame.getError() == ErrorCode.NO_ERROR.code))
         || (frame.getError() == ErrorCode.CANCEL_STREAM_ERROR.code));
-    if (!result.isSecondaryRequest()) {
-      result.setPendingResponse(false);
-    }
+    result.setPendingResponse(false);
     if (!result.isSync()) {
       result.completeAsyncSample();
     }
