@@ -138,9 +138,7 @@ public class HTTP2Connection {
                 for (JMeterProperty prop : headersProps) {
                     Header header = (Header) prop.getObjectValue();
                     String n = header.getName();
-                    // Don't allow override of Content-Length
-                    // TODO - what other headers are not allowed?
-                    if(n.contains(":")){
+                    if(n.startsWith(":")){
                         LOG.warn("The specified pseudo header {} is not allowed "
                             + "and will be ignored", n);
                     }
