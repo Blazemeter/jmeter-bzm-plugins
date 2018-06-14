@@ -172,13 +172,7 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
     result.setHeadersSize(rawHeaders.length());
     result.setHttpFieldsResponse(frame.getMetaData().getFields());
     if (frame.isEndStream()) {
-      result.sampleEnd();
-      result.setPendingResponse(false);
-      if (!result.isSync()) {
-        result.completeAsyncSample();
-      }
-      completedFuture.complete(null);
-
+      completeStream();
     }
   }
 
@@ -196,13 +190,8 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
       setResponseBytes(bytes);
 
       if (frame.isEndStream()) {
-        result.sampleEnd();
         result.setSuccessful(isSuccessCode(Integer.parseInt(result.getResponseCode())));
         result.setResponseData(this.responseBytes);
-        result.setPendingResponse(false);
-        if (!result.isSync()) {
-          result.completeAsyncSample();
-        }
         if (result.isRedirect()) {
           // TODO redirect
         }
@@ -219,7 +208,7 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
           setParentSampleSuccess(parent,
               parent.isSuccessful() && (result == null || result.isSuccessful()));
         }
-        completedFuture.complete(null);
+        completeStream();
       }
     } catch (Exception e) {
       e.printStackTrace(); // TODO
@@ -231,14 +220,9 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
   public void onReset(Stream stream, ResetFrame frame) {
     result.setResponseCode(String.valueOf(frame.getError()));
     result.setResponseMessage(ErrorCode.from(frame.getError()).name());
-    result.sampleEnd();
     result.setSuccessful(((frame.getError() == ErrorCode.NO_ERROR.code))
         || (frame.getError() == ErrorCode.CANCEL_STREAM_ERROR.code));
-    result.setPendingResponse(false);
-    if (!result.isSync()) {
-      result.completeAsyncSample();
-    }
-    completedFuture.complete(null);
+    completeStream();
   }
 
   /**
@@ -428,6 +412,15 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
 
   protected void setTimeout(int timeout) {
     this.timeout = timeout;
+  }
+
+  private void completeStream(){
+    result.sampleEnd();
+    result.setPendingResponse(false);
+    if (!result.isSync()) {
+      result.completeAsyncSample();
+    }
+    completedFuture.complete(null);
   }
 
 }
