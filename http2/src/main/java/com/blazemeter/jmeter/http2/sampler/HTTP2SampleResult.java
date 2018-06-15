@@ -7,32 +7,45 @@ import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.URL;
+import java.util.List;
+import org.apache.jmeter.assertions.Assertion;
+import org.apache.jmeter.assertions.AssertionResult;
+import org.apache.jmeter.processor.PostProcessor;
 import org.apache.jmeter.protocol.http.sampler.HTTPSampleResult;
 import org.apache.jmeter.samplers.SampleEvent;
+import org.apache.jmeter.samplers.SampleListener;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.save.SaveService;
+import org.apache.jmeter.testbeans.TestBeanHelper;
+import org.apache.jmeter.testelement.AbstractScopedAssertion;
+import org.apache.jmeter.testelement.AbstractTestElement;
+import org.apache.jmeter.testelement.TestElement;
+import org.apache.jmeter.threads.JMeterContext;
 import org.apache.jmeter.threads.JMeterThread;
 import org.apache.jmeter.threads.JMeterVariables;
 import org.apache.jmeter.threads.ListenerNotifier;
 import org.apache.jmeter.threads.SamplePackage;
+import org.apache.jorphan.util.JMeterError;
 import org.eclipse.jetty.http.HttpFields;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class HTTP2SampleResult extends HTTPSampleResult {
 
-  private static final String HTTP2_PENDING_RESPONSE = "Pending";
   private int embebedResultsDepth;
-  private HttpFields httpFieldsResponse;
   private boolean embebedResults;
-  private boolean secondaryRequest;
   private String embeddedUrlRE;
-  private transient ListenerNotifier listenerNotifier = new ListenerNotifier();
-  private transient JMeterVariables threadVars;
-  private transient SamplePackage pack;
-  private String redirectLocation;
+  private HttpFields httpFieldsResponse;
+  private boolean secondaryRequest;
   private boolean pendingResponse;
+  private transient ListenerNotifier listenerNotifier = new ListenerNotifier();
+  private transient JMeterContext threadContext;
+  private transient JMeterVariables threadVars;
+  private transient List<SampleListener> sampleListeners;
+  private transient List<Assertion> assertions;
+  private transient List<PostProcessor> postProcessors;
+
+  private transient boolean isSync;
 
   private static final Logger LOG = LoggerFactory.getLogger(HTTP2SampleResult.class);
 
@@ -58,34 +71,19 @@ public class HTTP2SampleResult extends HTTPSampleResult {
   public HTTP2SampleResult() {
   }
 
-  public HTTP2SampleResult(String sampleName, JMeterVariables threadVars,
-      int nbActiveThreadsInThreadGroup, int nbTotalActiveThreads,
-      String threadGroupName) {
-
-    setGroupThreads(nbActiveThreadsInThreadGroup);
-    setAllThreads(nbTotalActiveThreads);
-    setThreadName(threadGroupName);
-    this.threadVars = threadVars;
-    this.pack = (SamplePackage) threadVars.getObject(JMeterThread.PACKAGE_OBJECT);
-    setSampleLabel(sampleName);
+  public HTTP2SampleResult(JMeterContext threadContext) {
+    this.threadContext = threadContext;
+    this.threadVars = threadContext.getVariables();
+    SamplePackage pack = (SamplePackage) threadVars.getObject(JMeterThread.PACKAGE_OBJECT);
+    this.assertions = pack.getAssertions();
+    this.postProcessors = pack.getPostProcessors();
+    this.sampleListeners = pack.getSampleListeners();
     this.setPendingResponse(true);
     this.setEmbebedResultsDepth(1);
-    this.setResponseCode(HTTP2_PENDING_RESPONSE);
-    this.setResponseMessage(HTTP2_PENDING_RESPONSE);
-  }
-
-  public HTTP2SampleResult(URL url, String method, JMeterVariables threadVars,
-      int nbActiveThreadsInThreadGroup, int nbTotalActiveThreads,
-      String threadGroupName) {
-    this(url.toString(), threadVars, nbActiveThreadsInThreadGroup, nbTotalActiveThreads,
-        threadGroupName);
-    this.setHTTPMethod(method);
-    this.setURL(url);
   }
 
   public HTTP2SampleResult(HTTP2SampleResult res) {
     super(res);
-    redirectLocation = res.redirectLocation;
   }
 
   protected void setErrorResult(String message, Throwable e) {
@@ -103,6 +101,20 @@ public class HTTP2SampleResult extends HTTPSampleResult {
   public static HTTP2SampleResult createErrorResult(String message, Throwable e) {
     HTTP2SampleResult result = new HTTP2SampleResult();
     result.setErrorResult(message, e);
+    return result;
+  }
+
+  public HTTP2SampleResult createSubResult() {
+    HTTP2SampleResult result = new HTTP2SampleResult();
+    result.embebedResultsDepth = this.embebedResultsDepth - 1;
+    result.embebedResults = this.embebedResults;
+    result.secondaryRequest = true;
+    result.pendingResponse = true;
+    result.threadContext = this.threadContext;
+    result.threadVars = threadVars;
+    result.sampleListeners = null;
+    result.assertions = null;
+    result.postProcessors = null;
     return result;
   }
 
@@ -138,15 +150,6 @@ public class HTTP2SampleResult extends HTTPSampleResult {
     this.httpFieldsResponse = httpFieldsResponse;
   }
 
-  public void setRedirectLocation(String redirectLocation) {
-    this.redirectLocation = redirectLocation;
-  }
-
-  public String getRedirectLocation() {
-    return redirectLocation;
-  }
-
-
   public void setPendingResponse(boolean pendingResp) {
     pendingResponse = pendingResp;
   }
@@ -163,14 +166,18 @@ public class HTTP2SampleResult extends HTTPSampleResult {
     this.secondaryRequest = secondaryRequest;
   }
 
-  public JMeterVariables getThreadVars() {
-    return threadVars;
+  public boolean isSync() {
+    return isSync;
   }
 
-  public void notifySample() {
+  public void setSync(boolean sync) {
+    isSync = sync;
+  }
+
+  public void completeAsyncSample() {
     HTTP2SampleResult parent = (HTTP2SampleResult) this.getParent();
     if (parent != null) {
-      parent.notifySample();
+      parent.completeAsyncSample();
     } else if (!isPendingResponse()) {
       boolean sonsArePendingResponse = false;
       for (SampleResult s : getSubResults()) {
@@ -181,11 +188,95 @@ public class HTTP2SampleResult extends HTTPSampleResult {
         }
       }
       if (!sonsArePendingResponse) {
+        runPostProcessors(postProcessors);
+        checkAssertions(assertions);
         SampleEvent event = new SampleEvent(this, getThreadName(),
             threadVars, false);
-        listenerNotifier.notifyListeners(event, pack.getSampleListeners());
+        listenerNotifier.notifyListeners(event, this.sampleListeners);
       }
     }
+  }
+
+  private void runPostProcessors(List<PostProcessor> postProcessors) {
+    for (PostProcessor postProcessor : postProcessors) {
+      if (threadContext.getVariables() != null) {
+        TestBeanHelper.prepare((TestElement) postProcessor);
+        postProcessor.process();
+      } else {
+        LOG.warn(
+            "The Post Processor " + postProcessor.getClass() + "was not executed for the sampler"
+                + getSampleLabel() + ". Use Synchronized Request to avoid this error");
+      }
+    }
+  }
+
+  private void checkAssertions(List<Assertion> assertions) {
+    for (Assertion assertion : assertions) {
+      TestBeanHelper.prepare((TestElement) assertion);
+      if (assertion instanceof AbstractScopedAssertion) {
+        AbstractScopedAssertion scopedAssertion = (AbstractScopedAssertion) assertion;
+        String scope = scopedAssertion.fetchScope();
+        if (scopedAssertion.isScopeParent(scope)
+            || scopedAssertion.isScopeAll(scope)) {
+          processAssertion(this, assertion);
+        }
+        if (scopedAssertion.isScopeVariable(scope)) {
+          if (((AbstractScopedAssertion) assertion).getThreadContext().getVariables() != null) {
+            processAssertion(this, assertion);
+          } else {
+            LOG.warn("The Variable Assertion was not executed for the sampler" + getSampleLabel()
+                + ". Use Synchronized Request to avoid this error");
+          }
+        }
+        if (scopedAssertion.isScopeChildren(scope)
+            || scopedAssertion.isScopeAll(scope)) {
+          SampleResult[] children = this.getSubResults();
+          boolean childError = false;
+          for (SampleResult childSampleResult : children) {
+            processAssertion(childSampleResult, assertion);
+            if (!childSampleResult.isSuccessful()) {
+              childError = true;
+            }
+          }
+          // If sampleResult is OK, but child failed, add a message and flag the sampleResult as failed
+          if (childError && this.isSuccessful()) {
+            AssertionResult assertionResult = new AssertionResult(
+                ((AbstractTestElement) assertion).getName());
+            assertionResult.setResultForFailure("One or more sub-samples failed");
+            this.addAssertionResult(assertionResult);
+            this.setSuccessful(false);
+          }
+        }
+      } else {
+        processAssertion(this, assertion);
+      }
+    }
+    threadVars.put("JMeterThread.last_sample_ok", Boolean.toString(this.isSuccessful()));
+  }
+
+  private void processAssertion(SampleResult result, Assertion assertion) {
+    AssertionResult assertionResult;
+    try {
+      assertionResult = assertion.getResult(result);
+    } catch (AssertionError e) {
+      LOG.debug("Error processing Assertion.", e);
+      assertionResult = new AssertionResult("Assertion failed! See log file (debug level, only).");
+      assertionResult.setFailure(true);
+      assertionResult.setFailureMessage(e.toString());
+    } catch (JMeterError e) {
+      LOG.error("Error processing Assertion.", e);
+      assertionResult = new AssertionResult("Assertion failed! See log file.");
+      assertionResult.setError(true);
+      assertionResult.setFailureMessage(e.toString());
+    } catch (Exception e) {
+      LOG.error("Exception processing Assertion.", e);
+      assertionResult = new AssertionResult("Assertion failed! See log file.");
+      assertionResult.setError(true);
+      assertionResult.setFailureMessage(e.toString());
+    }
+    result.setSuccessful(
+        result.isSuccessful() && !(assertionResult.isError() || assertionResult.isFailure()));
+    result.addAssertionResult(assertionResult);
   }
 
   @VisibleForTesting

@@ -21,9 +21,7 @@ import org.apache.jmeter.protocol.http.util.ConversionUtils;
 import org.apache.jmeter.protocol.http.util.HTTPConstants;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.util.JMeterUtils;
-import org.apache.jorphan.logging.LoggingManager;
 import org.apache.jorphan.util.JOrphanUtils;
-import org.apache.log.Logger;
 import org.apache.oro.text.MalformedCachePatternException;
 import org.apache.oro.text.regex.Pattern;
 import org.apache.oro.text.regex.Perl5Matcher;
@@ -38,33 +36,42 @@ import org.eclipse.jetty.http2.frames.HeadersFrame;
 import org.eclipse.jetty.http2.frames.PushPromiseFrame;
 import org.eclipse.jetty.http2.frames.ResetFrame;
 import org.eclipse.jetty.util.Callback;
+import org.slf4j.LoggerFactory;
 
 public class HTTP2StreamHandler extends Stream.Listener.Adapter {
 
-  private static final String HTTP2_RESPONSE_CODE_4 = "Not Found";
-  private static final String HTTP2_RESPONSE_RECEIVED = "Received";
   private static final String USER_AGENT = "User-Agent";
   private static final Map<String, String> PARSERS_FOR_CONTENT_TYPE = new HashMap<>();
+  private static final String RESPONSE_PARSERS = JMeterUtils.getProperty("HTTPResponse.parsers");
+  private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(HTTP2StreamHandler.class);
+  private static final boolean IGNORE_FAILED_EMBEDDED_RESOURCES = JMeterUtils.
+      getPropDefault("httpsampler.ignore_failed_embedded_resources", false);
 
-  private static final String RESPONSE_PARSERS = // list of parsers
-      JMeterUtils.getProperty("HTTPResponse.parsers");//$NON-NLS-1$
 
-  private static final Logger LOG = LoggingManager.getLoggerForClass();
-
-  private static final boolean IGNORE_FAILED_EMBEDDED_RESOURCES = JMeterUtils
-      .getPropDefault("httpsampler.ignore_failed_embedded_resources", false); // $NON-NLS-1$
+  private final CompletableFuture<Void> completedFuture = new CompletableFuture<>();
+  private HTTP2SampleResult result;
+  private HTTP2Connection parent;
+  private byte[] responseBytes;
+  private HeaderManager headerManager;
+  private CookieManager cookieManager;
+  private boolean first = true;
+  private int timeout = 0;
 
   static {
+    getParsers();
+  }
+
+  private static void getParsers() {
     String[] parsers = JOrphanUtils.split(RESPONSE_PARSERS, " ", true);
     for (final String parser : parsers) {
-      String classname = JMeterUtils.getProperty(parser + ".className");//$NON-NLS-1$
+      String classname = JMeterUtils.getProperty(parser + ".className");
       if (classname == null) {
         LOG.error(
             "Cannot find .className property for " + parser + ", ensure you set property:'" + parser
                 + ".className'");
         continue;
       }
-      String typeList = JMeterUtils.getProperty(parser + ".types");//$NON-NLS-1$
+      String typeList = JMeterUtils.getProperty(parser + ".types");
       if (typeList != null) {
         String[] types = JOrphanUtils.split(typeList, " ", true);
         for (final String type : types) {
@@ -74,27 +81,15 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
       } else {
         LOG.warn("Cannot find .types property for " + parser
             + ", as a consequence parser will not be used, to make it usable, define property:'"
-            + parser
-            + ".types'");
+            + parser + ".types'");
       }
     }
   }
 
-  private final CompletableFuture<Void> completedFuture = new CompletableFuture<>();
-  private HTTP2SampleResult result;
-  private HTTP2Connection parent;
-  private URL url;
-  private byte[] responseBytes;
-  private HeaderManager headerManager;
-  private CookieManager cookieManager;
-  private boolean first = true;
-  private int timeout = 0;
-
-  public HTTP2StreamHandler(HTTP2Connection parent, URL url, HeaderManager headerManager,
+  public HTTP2StreamHandler(HTTP2Connection parent, HeaderManager headerManager,
       CookieManager cookieManager, HTTP2SampleResult sampleResult) {
     this.result = sampleResult;
     this.parent = parent;
-    this.url = url;
     this.cookieManager = cookieManager;
     this.headerManager = headerManager;
   }
@@ -114,20 +109,20 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
       LOG.error("Failed when parsed Push URL", e);
     }
 
-    HTTP2SampleResult sampleResult = new HTTP2SampleResult(url,
-        "PUSHED FROM " + frame.getStreamId() + " " + requestMetadata.getMethod(),
-        result.getThreadVars(), result.getGroupThreads(),
-        result.getAllThreads(), result.getThreadName());
+    HTTP2SampleResult sampleSubResult = result.createSubResult();
+    sampleSubResult.setSampleLabel(url.toString());
+    sampleSubResult.setURL(url);
+    sampleSubResult.setHTTPMethod(requestMetadata.getMethod());
 
     for (HttpField h : requestMetadata.getFields()) {
       switch (h.getName()) {
-        case HTTPConstants.HEADER_CONTENT_TYPE:// TODO adapt to translate gzip, etc
+        case HTTPConstants.HEADER_CONTENT_TYPE:
         case "content-type":
-          sampleResult.setContentType(h.getValue());
-          sampleResult.setEncodingAndType(h.getValue());
+          sampleSubResult.setContentType(h.getValue());
+          sampleSubResult.setEncodingAndType(h.getValue());
           break;
         case HTTPConstants.HEADER_CONTENT_ENCODING:
-          sampleResult.setDataEncoding(h.getValue());
+          sampleSubResult.setDataEncoding(h.getValue());
           break;
       }
     }
@@ -135,15 +130,11 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
     String rawHeaders = requestMetadata.getFields().toString();
     // we do this replacement and remove final char to be consistent with jmeter HTTP request sampler
     String headers = rawHeaders.replaceAll("\r\n", "\n");
-    sampleResult.setRequestHeaders(headers);
-    sampleResult.setHttpFieldsResponse(requestMetadata.getFields());
-
-    sampleResult.setEmbebedResults(false);
-    sampleResult.setSecondaryRequest(true);
-    sampleResult.sampleStart();
-    result.addSubResult(sampleResult);
-    HTTP2StreamHandler hTTP2StreamHandler = new HTTP2StreamHandler(this.parent, url, headerManager,
-        cookieManager, sampleResult);
+    sampleSubResult.setRequestHeaders(headers);
+    sampleSubResult.sampleStart();
+    result.addSubResult(sampleSubResult);
+    HTTP2StreamHandler hTTP2StreamHandler = new HTTP2StreamHandler(this.parent, headerManager,
+        cookieManager, sampleSubResult);
 
     this.parent.addStreamHandler(hTTP2StreamHandler);
     hTTP2StreamHandler.setTimeout(timeout);
@@ -155,9 +146,10 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
 
     MetaData.Response responseMetadata = ((MetaData.Response) frame.getMetaData());
     result.setResponseCode(Integer.toString(responseMetadata.getStatus()));
+    result.setResponseMessage(responseMetadata.getReason());
     for (HttpField h : frame.getMetaData().getFields()) {
       switch (h.getName()) {
-        case HTTPConstants.HEADER_CONTENT_TYPE:// TODO adapt to translate gzip, etc
+        case HTTPConstants.HEADER_CONTENT_TYPE:
         case "content-type":
           result.setContentType(h.getValue());
           result.setEncodingAndType(h.getValue());
@@ -180,11 +172,7 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
     result.setHeadersSize(rawHeaders.length());
     result.setHttpFieldsResponse(frame.getMetaData().getFields());
     if (frame.isEndStream()) {
-      result.sampleEnd();
-      result.setPendingResponse(false);
-      completedFuture.complete(null);
-      result.notifySample();
-
+      completeStream();
     }
   }
 
@@ -202,28 +190,8 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
       setResponseBytes(bytes);
 
       if (frame.isEndStream()) {
-        result.sampleEnd();
-        // Now collect the results into the HTTP2SampleResult:
-        // TODO Collect connect time and sent bytes
-        int responseLevel = Integer.parseInt(result.getResponseCode()) / 100;
-        switch (responseLevel) {
-          case 3:
-            break;
-          case 4:
-            result.setResponseMessage(HTTP2_RESPONSE_CODE_4);
-            // TODO message depends on the code number
-            break;
-          case 5:
-            break;
-          default:
-            result.setResponseMessage(HTTP2_RESPONSE_RECEIVED);
-            break;
-        }
-
         result.setSuccessful(isSuccessCode(Integer.parseInt(result.getResponseCode())));
         result.setResponseData(this.responseBytes);
-        result.setPendingResponse(false);
-
         if (result.isRedirect()) {
           // TODO redirect
         }
@@ -235,17 +203,12 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
 
         if (result.isSecondaryRequest()) {
           HTTP2SampleResult parent = (HTTP2SampleResult) result.getParent();
-                        /*TODO  Review this, If the subResult have a reference to the parent then when 
-                        the parent is serialized throw an exception. The JMeter's HTTP Sampler dont set
-                        the parent null, research why?*/
-          //result.setParent(null);
           // set primary request failed if at least one secondary
           // request fail
           setParentSampleSuccess(parent,
               parent.isSuccessful() && (result == null || result.isSuccessful()));
         }
-        completedFuture.complete(null);
-        result.notifySample();
+        completeStream();
       }
     } catch (Exception e) {
       e.printStackTrace(); // TODO
@@ -257,12 +220,9 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
   public void onReset(Stream stream, ResetFrame frame) {
     result.setResponseCode(String.valueOf(frame.getError()));
     result.setResponseMessage(ErrorCode.from(frame.getError()).name());
-    result.sampleEnd();
     result.setSuccessful(((frame.getError() == ErrorCode.NO_ERROR.code))
-        ||(frame.getError() == ErrorCode.CANCEL_STREAM_ERROR.code));
-    result.setPendingResponse(false);
-    completedFuture.complete(null);
-    result.notifySample();
+        || (frame.getError() == ErrorCode.CANCEL_STREAM_ERROR.code));
+    completeStream();
   }
 
   /**
@@ -387,12 +347,8 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
           continue;
         }
 
-        HTTP2SampleResult subResult = new HTTP2SampleResult(url,
-            "GET", result.getThreadVars(), result.getGroupThreads(),
-            result.getAllThreads(), result.getThreadName());
-
-        subResult.setSecondaryRequest(true);
-        subResult.setEmbebedResultsDepth(res.getEmbebedResultsDepth() - 1);
+        HTTP2SampleResult subResult = result.createSubResult();
+        subResult.setSampleLabel(url.toString());
         res.addSubResult(subResult);
 
         parent.send("GET", url, headerManager, cookieManager, null, subResult, this.timeout);
@@ -456,6 +412,15 @@ public class HTTP2StreamHandler extends Stream.Listener.Adapter {
 
   protected void setTimeout(int timeout) {
     this.timeout = timeout;
+  }
+
+  private void completeStream(){
+    result.sampleEnd();
+    result.setPendingResponse(false);
+    if (!result.isSync()) {
+      result.completeAsyncSample();
+    }
+    completedFuture.complete(null);
   }
 
 }

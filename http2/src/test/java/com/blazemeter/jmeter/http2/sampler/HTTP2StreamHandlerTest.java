@@ -5,15 +5,25 @@ import static org.eclipse.jetty.http.MetaData.Response;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
+
 import kg.apc.emulators.TestJMeterUtils;
+import org.apache.jmeter.assertions.Assertion;
+import org.apache.jmeter.assertions.ResponseAssertion;
+import org.apache.jmeter.processor.PostProcessor;
 import org.apache.jmeter.protocol.http.util.HTTPConstants;
+import org.apache.jmeter.samplers.SampleListener;
 import org.apache.jmeter.samplers.SampleResult;
+import org.apache.jmeter.threads.JMeterContext;
 import org.apache.jmeter.threads.JMeterVariables;
 import org.apache.jmeter.threads.ListenerNotifier;
 import org.apache.jmeter.threads.SamplePackage;
@@ -46,9 +56,10 @@ public class HTTP2StreamHandlerTest {
   private DataFrame dataFrame;
   private JMeterVariables threadVars;
   private ListenerNotifier listener;
-  private SamplePackage pack;
+  private SamplePackage packMock;
   private Request mockRequestMetadata;
   private HttpURI mockHttpURI;
+  private transient JMeterContext threadContext;
 
   @Before
   public void setup() throws MalformedURLException {
@@ -68,9 +79,10 @@ public class HTTP2StreamHandlerTest {
     dataFrame = Mockito.mock(DataFrame.class);
     threadVars = Mockito.mock(JMeterVariables.class);
     listener = Mockito.mock(ListenerNotifier.class);
-    pack = Mockito.mock(SamplePackage.class);
+    packMock = Mockito.mock(SamplePackage.class);
     mockRequestMetadata = Mockito.mock(Request.class);
     mockHttpURI = Mockito.mock(HttpURI.class);
+    threadContext = Mockito.mock(JMeterContext.class);
   }
 
   @Test
@@ -91,7 +103,7 @@ public class HTTP2StreamHandlerTest {
     http2SampleResult = buildThreadVarsResult();
 
     http2SampleResult.setThreadName("");
-    http2StreamHandler = new HTTP2StreamHandler(http2Connection, url, null, null,
+    http2StreamHandler = new HTTP2StreamHandler(http2Connection, null, null,
         http2SampleResult);
 
     HTTP2StreamHandler res = (HTTP2StreamHandler) http2StreamHandler
@@ -101,10 +113,8 @@ public class HTTP2StreamHandlerTest {
 
     assertEquals(uri.toURL(), resSR.getURL());
     assertEquals(uri.toURL().toString(), resSR.getSampleLabel());
-    assertEquals("PUSHED FROM " + 5 + " GET", resSR.getHTTPMethod());
-    assertEquals(1, resSR.getEmbebedResultsDepth());
-    assertEquals("Pending", resSR.getResponseCode());
-    assertEquals("Pending", resSR.getResponseMessage());
+    assertEquals("GET", resSR.getHTTPMethod());
+    assertEquals(0, resSR.getEmbebedResultsDepth());
     assertEquals("name1: value1\nname2: value2\n\n", resSR.getRequestHeaders());
   }
 
@@ -123,7 +133,7 @@ public class HTTP2StreamHandlerTest {
     Mockito.when(responseMetadata.getHttpVersion())
         .thenReturn(HttpVersion.HTTP_2);
 
-    Mockito.when(pack.getSampleListeners()).thenReturn(null);
+    Mockito.when(packMock.getSampleListeners()).thenReturn(null);
 
     HttpFields httpFields = new HttpFields();
     httpFields.add("Header1", "value1");
@@ -142,7 +152,7 @@ public class HTTP2StreamHandlerTest {
     http2SampleResult = buildThreadVarsResult();
 
     http2SampleResult.setThreadName("");
-    http2StreamHandler = new HTTP2StreamHandler(http2Connection, url, null, null,
+    http2StreamHandler = new HTTP2StreamHandler(http2Connection, null, null,
         http2SampleResult);
 
     HTTP2SampleResult resSR = http2StreamHandler.getHTTP2SampleResult();
@@ -172,7 +182,7 @@ public class HTTP2StreamHandlerTest {
 
     http2SampleResult = buildThreadVarsResult();
 
-    http2StreamHandler = new HTTP2StreamHandler(http2Connection, url, null, null,
+    http2StreamHandler = new HTTP2StreamHandler(http2Connection, null, null,
         http2SampleResult);
 
     HTTP2SampleResult resSR = http2StreamHandler.getHTTP2SampleResult();
@@ -206,7 +216,7 @@ public class HTTP2StreamHandlerTest {
 
     http2SampleResult = new HTTP2SampleResult();
 
-    http2StreamHandler = new HTTP2StreamHandler(http2Connection, url, null, null,
+    http2StreamHandler = new HTTP2StreamHandler(http2Connection,null, null,
         http2SampleResult);
 
     HTTP2SampleResult resSR = http2StreamHandler.getHTTP2SampleResult();
@@ -225,6 +235,13 @@ public class HTTP2StreamHandlerTest {
     resSR.setResponseData(data.getBytes());
     resSR.setEmbeddedUrlRE("");
 
+    List<Assertion> assertions = new ArrayList<>();
+    ResponseAssertion assertion = Mockito.mock(ResponseAssertion.class);
+    assertions.add(assertion);
+    assertions.add(assertion);
+    Mockito.when(packMock.getAssertions())
+        .thenReturn(assertions);
+
     http2StreamHandler.onData(stream, dataFrame, callback);
 
     resSR = http2StreamHandler.getHTTP2SampleResult();
@@ -237,7 +254,7 @@ public class HTTP2StreamHandlerTest {
 
     ResetFrame resetFrame = new ResetFrame(0, ErrorCode.REFUSED_STREAM_ERROR.code);
     http2SampleResult = buildThreadVarsResult();
-    http2StreamHandler = new HTTP2StreamHandler(http2Connection, url, null,
+    http2StreamHandler = new HTTP2StreamHandler(http2Connection, null,
         null, http2SampleResult);
     http2SampleResult.sampleStart();
     http2StreamHandler.onReset(stream, resetFrame);
@@ -245,10 +262,16 @@ public class HTTP2StreamHandlerTest {
     assertEquals(String.valueOf(ErrorCode.REFUSED_STREAM_ERROR.code), http2SampleResult.getResponseCode());
   }
 
-  public HTTP2SampleResult buildThreadVarsResult(){
-    Mockito.when(threadVars.getObject(Mockito.any(String.class))).thenReturn(pack);
-    return new HTTP2SampleResult(url,
-        "", threadVars, 1,
-        1, "");
+  private HTTP2SampleResult buildThreadVarsResult(){
+    List<SampleListener> sampleListeners = new ArrayList<>();
+    List<Assertion> assertions = new ArrayList<>();
+    List<PostProcessor> postProcessors = new ArrayList<>();
+    TestJMeterUtils.createJmeterEnv();
+    when(threadContext.getVariables()).thenReturn(threadVars);
+    when(threadVars.getObject(any(String.class))).thenReturn(packMock);
+    when(packMock.getAssertions()).thenReturn(assertions);
+    when(packMock.getPostProcessors()).thenReturn(postProcessors);
+    when(packMock.getSampleListeners()).thenReturn(sampleListeners );
+    return new HTTP2SampleResult(threadContext);
   }
 }
