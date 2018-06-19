@@ -1,0 +1,22 @@
+modules:
+  jmeter:
+    path: .jmeter/4.0
+    version: "4.0"
+    properties:
+      log_level: DEBUG
+  console:
+    disable: true
+
+execution:
+- concurrency: 2
+  scenario: http2
+  iterations : 2
+  
+scenarios:
+  http2:
+    script: HTTP2SamplerTest.jmx
+
+reporting:
+- module: passfail
+  criteria:
+  - failures>0% 

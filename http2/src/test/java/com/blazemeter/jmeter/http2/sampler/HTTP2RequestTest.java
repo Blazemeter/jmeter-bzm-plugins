@@ -1,5 +1,7 @@
 package com.blazemeter.jmeter.http2.sampler;
 
+import org.apache.jmeter.assertions.Assertion;
+import org.apache.jmeter.assertions.ResponseAssertion;
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.protocol.http.control.CacheManager;
 import org.apache.jmeter.protocol.http.control.CookieManager;
@@ -8,8 +10,12 @@ import org.apache.jmeter.protocol.http.util.HTTPArgument;
 import org.apache.jmeter.protocol.http.util.HTTPConstants;
 import org.apache.jmeter.protocol.http.util.HTTPFileArg;
 import org.apache.jmeter.protocol.http.util.HTTPFileArgs;
+import org.apache.jmeter.testelement.AbstractScopedAssertion;
 import org.apache.jmeter.testelement.property.BooleanProperty;
 import org.apache.jmeter.testelement.property.TestElementProperty;
+import org.apache.jmeter.threads.JMeterThread;
+import org.apache.jmeter.threads.JMeterVariables;
+import org.apache.jmeter.threads.SamplePackage;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -19,6 +25,8 @@ import kg.apc.emulators.TestJMeterUtils;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -26,6 +34,8 @@ public class HTTP2RequestTest {
 
     private HTTP2Connection http2ConnectionMock;
     private HTTP2Request http2Req;
+    private JMeterVariables threadVars;
+    private SamplePackage packMock;
 
     @Before
     public void setup() {
@@ -34,64 +44,13 @@ public class HTTP2RequestTest {
         http2Req = new HTTP2Request();
         http2Req.setThreadName("10");
         http2Req.setProperty(HTTP2Request.DOMAIN, "www.sprint.com");
+        threadVars = Mockito.mock(JMeterVariables.class);
+        packMock = Mockito.mock(SamplePackage.class);
     }
 
     @After
     public void teardown() {
         http2Req.threadFinished();
-    }
-
-    @Test
-    public void sampleTest1() throws Exception {
-        URL url = new URL(http2Req.getProtocol(), "www.sprint.com", 443, "/");
-
-        HTTP2Connection connection = Mockito.mock(HTTP2Connection.class);
-
-        Mockito.when(connection.isClosed()).thenReturn(true);
-        Mockito.doNothing().when(connection).connect(Mockito.any(String.class), Mockito.any(Integer.class));
-        Mockito.when(connection.getConnectionId()).thenReturn("www.sprint.com:443");
-
-        http2Req.setProperty(HTTP2Request.METHOD, "GET");
-        HTTP2SampleResult sampleResult = new HTTP2SampleResult(url, http2Req.getMethod());
-        http2Req.addConnection("10www.sprint.com443", connection);
-        http2Req.setConnection(url, sampleResult);
-        http2Req.setProperty(new BooleanProperty(HTTP2Request.SYNC_REQUEST, true));
-        http2Req.sample(url, "GET", http2ConnectionMock, sampleResult);
-    }
-
-    @Test
-    public void sampleTest2() throws Exception {
-        Arguments args = new Arguments();
-        String text = "{\"header\":{\"applicationId\":\"HJS\"},\"initSession\":{}}";
-        HTTPArgument arg = new HTTPArgument("", text.replaceAll("\n", "\r\n"), false);
-        arg.setAlwaysEncoded(false);
-        args.addArgument(arg);
-        http2Req.setProperty(new TestElementProperty(HTTP2Request.ARGUMENTS, args));
-
-        URL url = new URL("https", "www.sprint.com", 443, "/apiservices/framework/initSession");
-
-        HTTP2Connection connection = Mockito.mock(HTTP2Connection.class);
-
-        Mockito.when(connection.isClosed()).thenReturn(true);
-        Mockito.doNothing().when(connection).connect(Mockito.any(String.class), Mockito.any(Integer.class));
-        Mockito.when(connection.getConnectionId()).thenReturn("www.sprint.com:443");
-
-        HTTP2SampleResult sampleResult = new HTTP2SampleResult(url, "POST");
-        http2Req.addConnection("10www.sprint.com443", connection);
-        http2Req.setConnection(url, sampleResult);
-        http2Req.setProperty(new BooleanProperty(HTTP2Request.SYNC_REQUEST, true));
-        http2Req.sample(url, "POST", http2Req.getConnection(), sampleResult);
-    }
-
-    @Test
-    public void sampleTest3() throws Exception {
-        URL url = new URL(http2Req.getProtocol(), "www.sprint.com", 443, "/");
-        HTTP2SampleResult sampleRes = new HTTP2SampleResult(url, "GET");
-
-        // connection is null so sample fails
-        http2Req.sample(url, "GET", null, sampleRes);
-        assertFalse(sampleRes.isPendingResponse());
-        assertFalse(sampleRes.isSuccessful());
     }
 
     @Test
@@ -167,10 +126,4 @@ public class HTTP2RequestTest {
         boolean valueRes = http2Req.getSendFileAsPostBody();
         assertFalse(valueRes);
     }
-
-    @Test
-    public void sampleMainTest() {
-        http2Req.sample();
-    }
-
 }
