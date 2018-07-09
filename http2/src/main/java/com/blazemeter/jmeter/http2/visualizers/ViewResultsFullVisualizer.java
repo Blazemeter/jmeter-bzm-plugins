@@ -111,7 +111,7 @@ public class ViewResultsFullVisualizer extends AbstractVisualizer
   }
 
   public ViewResultsFullVisualizer() {
-    collector = new ResultCollectorHttp2();
+    collector = new ResultCollector();
     buffer = new LinkedHashSet();
     init();
     new Timer(REFRESH_PERIOD, e -> updateGui()).start();

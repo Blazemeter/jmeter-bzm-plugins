@@ -1,6 +1,6 @@
 package com.blazemeter.jmeter.http2.sampler;
 
-import com.blazemeter.jmeter.http2.visualizers.ResultCollectorHttp2;
+import com.blazemeter.jmeter.http2.visualizers.ResultCollector;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
@@ -150,10 +150,10 @@ public class HTTP2Request extends AbstractSampler implements ThreadListener, Loo
       SamplePackage pack = (SamplePackage) threadContext.getVariables()
           .getObject(JMeterThread.PACKAGE_OBJECT);
       for (SampleListener l : pack.getSampleListeners()) {
-        if (l instanceof ResultCollectorHttp2) {
+        if (l instanceof ResultCollector) {
           SampleEvent event = new SampleEvent(sampleResult, getThreadName(),
               threadContext.getVariables(), false);
-          ((ResultCollectorHttp2) l).sampleOccurred(event);
+          ((ResultCollector) l).sampleOccurred(event);
         }
       }
       return null;
