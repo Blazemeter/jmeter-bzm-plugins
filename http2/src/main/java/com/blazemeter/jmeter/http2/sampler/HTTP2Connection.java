@@ -29,9 +29,12 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HTTP2Connection {
 
+    private static Logger LOG = LoggerFactory.getLogger(HTTP2Connection.class);
     private String connectionId;
     private Session session;
     private HTTP2Client client;
@@ -116,7 +119,7 @@ public class HTTP2Connection {
         String headersString = headers.toString().replaceAll("\r\n", "\n");
         sampleResult.setRequestHeaders(headersString.substring(0, headersString.length() - 1));
 
-        HTTP2StreamHandler http2StreamHandler = new HTTP2StreamHandler(this, url, headerManager, cookieManager,
+        HTTP2StreamHandler http2StreamHandler = new HTTP2StreamHandler(this, headerManager, cookieManager,
                 sampleResult);
         http2StreamHandler.setTimeout(timeout);
         sampleResult.setCookies(headers.get(HTTPConstants.HEADER_COOKIE));
@@ -135,9 +138,11 @@ public class HTTP2Connection {
                 for (JMeterProperty prop : headersProps) {
                     Header header = (Header) prop.getObjectValue();
                     String n = header.getName();
-                    // Don't allow override of Content-Length
-                    // TODO - what other headers are not allowed?
-                    if (!HTTPConstants.HEADER_CONTENT_LENGTH.equalsIgnoreCase(n)) {
+                    if(n.startsWith(":")){
+                        LOG.warn("The specified pseudo header {} is not allowed "
+                            + "and will be ignored", n);
+                    }
+                    else if (!HTTPConstants.HEADER_CONTENT_LENGTH.equalsIgnoreCase(n)) {
                         String v = header.getValue();
                         v = v.replaceFirst(":\\d+$", ""); // remove any port
                         headers.put(n, v);
@@ -146,7 +151,6 @@ public class HTTP2Connection {
             }
             // TODO CacheManager
         }
-
         if (cookieManager != null) {
             String cookieHeader = cookieManager.getCookieHeaderForURL(url);
             if (cookieHeader != null) {
@@ -175,7 +179,7 @@ public class HTTP2Connection {
                 h.getCompletedFuture().get(h.getTimeout(), TimeUnit.MILLISECONDS);
             } catch (ExecutionException | TimeoutException e) {
                 HTTP2SampleResult sample = h.getHTTP2SampleResult();
-                HTTP2SampleResult.setResultError(sample, e);
+                sample.setErrorResult("Error while await for response", e);
                 sample.setResponseHeaders("");
             }
         }

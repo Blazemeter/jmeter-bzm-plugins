@@ -59,13 +59,35 @@ Send Parameters With the Request - All the fields are equivalent to HTTP/1.1 fie
 
 ### Limitations
 
-HTTP/2 is an asynchronous protocol, meaning we don’t have to wait for the response of the server to continue the communication. But the JMeter model executes synchronously. Therefore, if we want to add assertions or post processors to our HTTP/2 Requests, i. e. process the response, we need to select the checkbox Synchronized Request to indicate that JMeter needs to wait until receiving the response before sending more requests.
+HTTP/2 is an asynchronous protocol, meaning we don’t have to wait for the response of the server to continue the communication. But the JMeter model executes synchronously. Therefore, if we want to add assertions or post processors to our HTTP/2 Requests, i. e. process the response, we need to select the checkbox Synchronized Request to indicate that JMeter needs to wait until receiving the response before sending more requests. On the other hand, not having synchronized requests enabled may be useful if we want to simulate the regular HTTP2 communication without waiting for a response every time we send a request. Apart from that, it is possible to execute post processor and assertions over asynchronous requests but there is no guarantee that it works in all cases as is wanted because the context of the execution could be different than the expected. So the only guaranteed assertions that will work as expected will be the ones that use the response data of the executed sampler. The actions to be taken after a Sampler error do not work with asynchronous request
 
 ![](syncRequest.png)
 
-### View Result Tree Http2
+### Run HTTP2 Plugin on Blazemeter
 
-The View Results Tree Listener isn’t fit for HTTP/2, which can send more than one request at the same time without waiting for a response. Using the regular listener means we won’t be able to see the responses of all asynchronous requests.
-To solve this problem, you can use the View Result Tree Http2. This specialized listener provides a way to visualize a request that has not received a response yet. These requests will be written in blue, as you can see in the image below. When the response is received, the writing will turn immediately to black, and you will be able to see the response message. 
+In order to run HTTP2 plugin on Blazemeter, its required to add the java argument ```-Xbootclasspath/p:<path.to.jar>``` to the JVM that runs jmeter. This can be achieved using a taurus .yaml implemented as following:
 
-![](viewResultTree.png)
+```yaml
+services:
+- module: shellexec
+  startup:
+  - chmod +x mod-script.sh && ./mod-script.sh 
+execution:
+- scenario: scenario_name    
+  concurrency: 5
+  iteration: 10
+  ramp-up: 1m
+
+  files:
+  - alpn-boot-8.1.12.v20180117.jar
+  - mod-script.sh
+scenarios:....
+modules:...
+```
+
+With the shellexec module, we are allowing taurus to run a shellscript, which will have this command: 
+
+```bash
+sed -i "s/^java /java -Xbootclasspath\/p:alpn-boot-8.1.12.v20180117.jar /" ~/.bzt/jmeter-taurus/3.3/bin/jmeter.sh
+```
+
