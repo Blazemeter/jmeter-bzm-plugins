@@ -63,7 +63,7 @@ public class HTTP2SampleResult extends HTTPSampleResult {
       target.setAccessible(true);
       XStream JTLSAVER = (XStream) target.get(null);
       method.invoke(null, HTTP2ResultConverter.class.getCanonicalName(), JTLSAVER, true);
-    } catch (NoSuchMethodException | NoSuchFieldException | InvocationTargetException | IllegalAccessException e) {
+    } catch (ReflectiveOperationException e) {
       throw new RuntimeException(e);
     }
   }
