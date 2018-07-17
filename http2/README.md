@@ -1,3 +1,5 @@
+![](Labs_logo_3x.png)
+
 # HTTP2 Plugin for JMeter
 
 ## HTTP2 Sampler for JMeter 
@@ -20,6 +22,7 @@ As Java 8 does not have native support for HTTP/2, you will need to ensure you h
 ### To create your test:
 
 1 - Create a Thread Group.
+
 2 - Add the HTTP Sampler Add->Sampler->HTTP2 Sampler
 
 ![](addHTTP2Sampler.png)

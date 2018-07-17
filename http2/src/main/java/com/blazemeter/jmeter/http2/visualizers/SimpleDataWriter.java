@@ -1,6 +1,7 @@
 package com.blazemeter.jmeter.http2.visualizers;
 
 import java.awt.BorderLayout;
+import java.util.Collection;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.visualizers.gui.AbstractVisualizer;
 
@@ -11,6 +12,12 @@ public class SimpleDataWriter extends AbstractVisualizer {
   public SimpleDataWriter() {
     init();
     setName(SIMPLE_DATA_WRITER_HTTP2_TITLE);
+  }
+
+  public Collection<String> getMenuCategories() {
+    Collection<String> categories = super.getMenuCategories();
+    categories.remove(SIMPLE_DATA_WRITER_HTTP2_TITLE);
+    return categories;
   }
 
   @Override
