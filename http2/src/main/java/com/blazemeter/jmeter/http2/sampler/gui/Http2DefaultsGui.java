@@ -75,12 +75,12 @@ public class Http2DefaultsGui extends AbstractConfigGui {
         tabbedPane.add(JMeterUtils
                 .getResString("web_testing_advanced"), advancedPanel);
 
-        JPanel emptyPanel = new JPanel();
-        emptyPanel.setMaximumSize(new Dimension());
+        JPanel logoPanel = new JPanel();
+        logoPanel.add(new BlazemeterLabsLogo());
 
         add(makeTitlePanel(), BorderLayout.NORTH);
         add(tabbedPane, BorderLayout.CENTER);
-        add(emptyPanel, BorderLayout.SOUTH);
+        add(logoPanel, BorderLayout.SOUTH);
     }
 
     private JPanel createEmbeddedRsrcPanel() {

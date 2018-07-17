@@ -32,6 +32,9 @@ public class HTTP2RequestGui extends AbstractSamplerGui {
         setLayout(new BorderLayout(0, 5));
         setBorder(makeBorder());
 
+        JPanel logoPanel = new JPanel();
+        logoPanel.add(new BlazemeterLabsLogo());
+
         http2RequestPanel = new HTTP2RequestPanel(true);
 
         JPanel advancedPanel = new VerticalPanel();
@@ -45,12 +48,9 @@ public class HTTP2RequestGui extends AbstractSamplerGui {
         tabbedPane.add(JMeterUtils
                 .getResString("web_testing_advanced"), advancedPanel);
 
-        JPanel emptyPanel = new JPanel();
-        emptyPanel.setMaximumSize(new Dimension());
-
         add(makeTitlePanel(), BorderLayout.NORTH);
+        add(logoPanel, BorderLayout.SOUTH);
         add(tabbedPane, BorderLayout.CENTER);
-        add(emptyPanel, BorderLayout.SOUTH);
     }
     
     private JPanel createEmbeddedRsrcPanel() {
