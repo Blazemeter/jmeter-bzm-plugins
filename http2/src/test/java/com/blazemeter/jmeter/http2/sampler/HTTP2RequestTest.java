@@ -1,51 +1,34 @@
 package com.blazemeter.jmeter.http2.sampler;
 
-import org.apache.jmeter.assertions.Assertion;
-import org.apache.jmeter.assertions.ResponseAssertion;
-import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.protocol.http.control.CacheManager;
 import org.apache.jmeter.protocol.http.control.CookieManager;
 import org.apache.jmeter.protocol.http.control.HeaderManager;
-import org.apache.jmeter.protocol.http.util.HTTPArgument;
 import org.apache.jmeter.protocol.http.util.HTTPConstants;
 import org.apache.jmeter.protocol.http.util.HTTPFileArg;
 import org.apache.jmeter.protocol.http.util.HTTPFileArgs;
-import org.apache.jmeter.testelement.AbstractScopedAssertion;
-import org.apache.jmeter.testelement.property.BooleanProperty;
 import org.apache.jmeter.testelement.property.TestElementProperty;
-import org.apache.jmeter.threads.JMeterThread;
 import org.apache.jmeter.threads.JMeterVariables;
 import org.apache.jmeter.threads.SamplePackage;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-
 import kg.apc.emulators.TestJMeterUtils;
-
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.junit.Assert.*;
 
 public class HTTP2RequestTest {
 
-    private HTTP2Connection http2ConnectionMock;
     private HTTP2Request http2Req;
-    private JMeterVariables threadVars;
-    private SamplePackage packMock;
+
 
     @Before
     public void setup() {
     	TestJMeterUtils.createJmeterEnv();
-        http2ConnectionMock = Mockito.mock(HTTP2Connection.class);
         http2Req = new HTTP2Request();
         http2Req.setThreadName("10");
         http2Req.setProperty(HTTP2Request.DOMAIN, "www.sprint.com");
-        threadVars = Mockito.mock(JMeterVariables.class);
-        packMock = Mockito.mock(SamplePackage.class);
     }
 
     @After
