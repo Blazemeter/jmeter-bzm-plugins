@@ -15,14 +15,12 @@ public class SimpleDataWriter extends org.apache.jmeter.visualizers.SimpleDataWr
   }
 
   public Collection<String> getMenuCategories() {
-    Collection<String> categories = super.getMenuCategories();
-    categories.remove(SIMPLE_DATA_WRITER_HTTP2_TITLE);
-    return categories;
+    return null;
   }
 
   @Override
   public String getLabelResource() {
-    return SIMPLE_DATA_WRITER_HTTP2_TITLE; // $NON-NLS-1$
+    return SIMPLE_DATA_WRITER_HTTP2_TITLE;
   }
 
 
