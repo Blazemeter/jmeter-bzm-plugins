@@ -50,18 +50,22 @@ public class BlazemeterLabsLogo extends JLabel {
 
       @Override
       public void mousePressed(MouseEvent mouseEvent) {
+        //no action
       }
 
       @Override
       public void mouseReleased(MouseEvent mouseEvent) {
+        //no action
       }
 
       @Override
       public void mouseEntered(MouseEvent mouseEvent) {
+        //no action
       }
 
       @Override
       public void mouseExited(MouseEvent mouseEvent) {
+        //no action
       }
 
     });

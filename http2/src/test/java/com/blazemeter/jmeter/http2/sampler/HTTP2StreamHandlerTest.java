@@ -88,17 +88,17 @@ public class HTTP2StreamHandlerTest {
   @Test
   public void onPushTest() throws URISyntaxException, MalformedURLException {
 
-    Mockito.when(pushPromisFrame.getStreamId()).thenReturn(5);
-    Mockito.when(pushPromisFrame.toString()).thenReturn("TestString");
-    Mockito.when(pushPromisFrame.getMetaData()).thenReturn(mockRequestMetadata);
-    Mockito.when(mockRequestMetadata.getURI()).thenReturn(mockHttpURI);
+    when(pushPromisFrame.getStreamId()).thenReturn(5);
+    when(pushPromisFrame.toString()).thenReturn("TestString");
+    when(pushPromisFrame.getMetaData()).thenReturn(mockRequestMetadata);
+    when(mockRequestMetadata.getURI()).thenReturn(mockHttpURI);
     URI uri = new URI("http://www.test.com");
-    Mockito.when(mockHttpURI.toURI()).thenReturn(uri);
+    when(mockHttpURI.toURI()).thenReturn(uri);
     HttpFields httpFields = new HttpFields();
     httpFields.add("name1","value1");
     httpFields.add("name2","value2");
-    Mockito.when(mockRequestMetadata.getFields()).thenReturn(httpFields);
-    Mockito.when(mockRequestMetadata.getMethod()).thenReturn("GET");
+    when(mockRequestMetadata.getFields()).thenReturn(httpFields);
+    when(mockRequestMetadata.getMethod()).thenReturn("GET");
 
     http2SampleResult = buildThreadVarsResult();
 
@@ -121,19 +121,19 @@ public class HTTP2StreamHandlerTest {
   @Test
   public void onHeadersTest() {
 
-    Mockito.when(headersFrame.getMetaData())
+    when(headersFrame.getMetaData())
         .thenReturn(responseMetadata);
 
-    Mockito.when(headersFrame.isEndStream())
+    when(headersFrame.isEndStream())
         .thenReturn(true);
 
-    Mockito.when(responseMetadata.getStatus())
+    when(responseMetadata.getStatus())
         .thenReturn(200);
 
-    Mockito.when(responseMetadata.getHttpVersion())
+    when(responseMetadata.getHttpVersion())
         .thenReturn(HttpVersion.HTTP_2);
 
-    Mockito.when(packMock.getSampleListeners()).thenReturn(null);
+    when(packMock.getSampleListeners()).thenReturn(null);
 
     HttpFields httpFields = new HttpFields();
     httpFields.add("Header1", "value1");
@@ -142,7 +142,7 @@ public class HTTP2StreamHandlerTest {
     httpFields.add("content-type", "application/json");
     httpFields.add(HTTPConstants.HEADER_CONTENT_ENCODING, "UTF-8");
 
-    Mockito.when(responseMetadata.getFields())
+    when(responseMetadata.getFields())
         .thenReturn(httpFields);
 
     String headers =
@@ -174,10 +174,10 @@ public class HTTP2StreamHandlerTest {
   @Test
   public void onDataTest() {
 
-    Mockito.when(dataFrame.getData())
+    when(dataFrame.getData())
         .thenReturn(ByteBuffer.allocate(1024 * 15));
 
-    Mockito.when(dataFrame.isEndStream())
+    when(dataFrame.isEndStream())
         .thenReturn(true);
 
     http2SampleResult = buildThreadVarsResult();
@@ -208,10 +208,10 @@ public class HTTP2StreamHandlerTest {
 
     ByteBuffer b = ByteBuffer.wrap(data.getBytes());
 
-    Mockito.when(dataFrame.getData())
+    when(dataFrame.getData())
         .thenReturn(b);
 
-    Mockito.when(dataFrame.isEndStream())
+    when(dataFrame.isEndStream())
         .thenReturn(true);
 
     http2SampleResult = new HTTP2SampleResult();
@@ -239,7 +239,7 @@ public class HTTP2StreamHandlerTest {
     ResponseAssertion assertion = Mockito.mock(ResponseAssertion.class);
     assertions.add(assertion);
     assertions.add(assertion);
-    Mockito.when(packMock.getAssertions())
+    when(packMock.getAssertions())
         .thenReturn(assertions);
 
     http2StreamHandler.onData(stream, dataFrame, callback);

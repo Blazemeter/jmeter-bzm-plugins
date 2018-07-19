@@ -208,7 +208,7 @@ public class ViewResultsFullVisualizer extends AbstractVisualizer
 
   @Override
   public void itemStateChanged(ItemEvent e) {
-
+    //no action
   }
 
   @Override
