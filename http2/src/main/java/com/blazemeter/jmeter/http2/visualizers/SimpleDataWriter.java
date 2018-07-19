@@ -5,46 +5,27 @@ import java.util.Collection;
 import org.apache.jmeter.samplers.SampleResult;
 import org.apache.jmeter.visualizers.gui.AbstractVisualizer;
 
-public class SimpleDataWriter extends AbstractVisualizer {
+public class SimpleDataWriter extends org.apache.jmeter.visualizers.SimpleDataWriter {
 
   private static final String SIMPLE_DATA_WRITER_HTTP2_TITLE = "DEPRECATED Simple Data Writer Http2";
 
   public SimpleDataWriter() {
-    init();
+    super();
     setName(SIMPLE_DATA_WRITER_HTTP2_TITLE);
   }
 
   public Collection<String> getMenuCategories() {
-    Collection<String> categories = super.getMenuCategories();
-    categories.remove(SIMPLE_DATA_WRITER_HTTP2_TITLE);
-    return categories;
+    return null;
   }
 
   @Override
   public String getLabelResource() {
-    return SIMPLE_DATA_WRITER_HTTP2_TITLE; // $NON-NLS-1$
+    return SIMPLE_DATA_WRITER_HTTP2_TITLE;
   }
 
 
   @Override
   public String getStaticLabel() {
     return SIMPLE_DATA_WRITER_HTTP2_TITLE;
-  }
-
-  private void init() { // WARNING: called from ctor so must not be overridden (i.e. must be private or final)
-    setLayout(new BorderLayout());
-    setBorder(makeBorder());
-
-    add(makeTitlePanel(), BorderLayout.NORTH);
-  }
-
-  @Override
-  public void clearData() {
-
-  }
-
-  @Override
-  public void add(SampleResult sampleResult) {
-
   }
 }
