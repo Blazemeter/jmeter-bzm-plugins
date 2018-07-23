@@ -2,7 +2,9 @@
 
 # HTTP2 Plugin for JMeter
 
-## HTTP2 Sampler for JMeter 
+![labs-logo](blazemeter-labs-logo.png)
+
+This plugin provides an HTTP2 Sampler and a custom View Result Tree to work with HTTP/2 protocol.
 
 ### Step to use HTTP2 Sampler
 
