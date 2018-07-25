@@ -15,6 +15,8 @@ import org.apache.log.Logger;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.List;
 
 public class WeightedSwitchController extends GenericController implements Serializable {
     private static final Logger log = LoggingManager.getLoggerForClass();
@@ -79,9 +81,28 @@ public class WeightedSwitchController extends GenericController implements Seria
                 // will generate new parent Sample
                 nullifyRes((TransactionController) element);
             }
+        } else if (element instanceof GenericController) {
+            // reset all nested controllers
+            GenericController ctrl = (GenericController) element;
+            List<TestElement> subControllersAndSamplers = getSubControllersAndSamplers(ctrl);
+            for (TestElement te : subControllersAndSamplers) {
+                if (te instanceof Controller) {
+                    resetController((Controller) te);
+                }
+            }
         }
-
         element.triggerEndOfLoop();
+    }
+
+    private List<TestElement> getSubControllersAndSamplers(GenericController ctrl) {
+        try {
+            Field subControllersAndSamplers = GenericController.class.getDeclaredField("subControllersAndSamplers");
+            subControllersAndSamplers.setAccessible(true);
+            return (List<TestElement>) subControllersAndSamplers.get(ctrl);
+        } catch (Throwable ex) {
+            log.warn("Failed to get SubControllers And Samplers", ex);
+            return Collections.emptyList();
+        }
     }
 
     private void reInitializeController(TransactionController element) {
@@ -157,33 +178,7 @@ public class WeightedSwitchController extends GenericController implements Seria
         for (int i = 0; i <  data.size(); i++) {
             JMeterProperty property = data.get(i);
             if (property instanceof CollectionProperty) {
-
                 CollectionProperty prop = (CollectionProperty) property;
-
-                if (subControllersAndSamplers.size() > 0) {
-                    boolean isFindSubChild = false;
-                    for (TestElement child : subControllersAndSamplers) {
-                        if (child.getName().equals(prop.get(0).getStringValue())) {
-                            if (prop.size() == 2) {
-                                prop.addItem(Boolean.toString(child.isEnabled()));
-                            } else {
-                                prop.set(2, Boolean.toString(child.isEnabled()));
-                            }
-                            isFindSubChild = true;
-                            break;
-                        }
-                    }
-
-                    if (!isFindSubChild) {
-                        // means, that this element disable in test tree
-                        if (prop.size() == 2) {
-                            prop.addItem("false");
-                        } else {
-                            prop.set(2, "false");
-                        }
-                    }
-                }
-
                 if (prop.size() == 2) {
                     prop.addItem("true");
                 }
