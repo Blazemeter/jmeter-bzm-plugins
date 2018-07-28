@@ -6,16 +6,17 @@
 
 ### Step to use HTTP2 Sampler
 
-As Java 8 does not have native support for HTTP/2, you will need to ensure you have alpn-boot on your system and edit JVM_ARGS as follows:
+As Java 8 does not have native support for HTTP/2, you will need to ensure you have alpn-boot on your system and edit `JVM_ARGS` as follows:
 
-1- Download alpn-boot according to your JVM version
-		https://www.eclipse.org/jetty/documentation/9.4.x/alpn-chapter.html
+> Please note that you need to install OpenJDK version 8 as newer version won't work.
+
+1- Download alpn-boot from [here](https://mvnrepository.com/artifact/org.mortbay.jetty.alpn/alpn-boot) according to your JVM version as stated at the bottom of this this [page](https://www.eclipse.org/jetty/documentation/9.4.x/alpn-chapter.html)
 	
 2- On Windows at the start of jmeter.bat add the next line:
-		set JVM_ARGS= -Xbootclasspath/p:<path.to.jar>;
+		`set JVM_ARGS= -Xbootclasspath/p:<path.to.jar>;`
 
-   On Linux and Mac at the start of jmeter.sh add the next line:
-		JVM_ARGS="-Xbootclasspath/p:<path.to.jar>"	
+   On Linux and Mac at the start of jmeter.sh add the next line (see _Notes JMeter for macOS_ section at the bottom as well):
+		`JVM_ARGS="-Xbootclasspath/p:<path.to.jar>"`
 
 3- Restart JMeter
 
@@ -94,3 +95,7 @@ With the shellexec module, we are allowing taurus to run a shellscript, which wi
 sed -i "s/^java /java -Xbootclasspath\/p:alpn-boot-8.1.12.v20180117.jar /" ~/.bzt/jmeter-taurus/3.3/bin/jmeter.sh
 ```
 
+### Notes JMeter for macOS
+
+* You can install pre-built binary of OpenJDK 8 via https://github.com/AdoptOpenJDK/homebrew-openjdk by using brew to install, just follow along with 2 commands to execute as shown on its repository's README.
+* You need to ensure that `$JAVA_HOME` is set to OpenJDK 8's path. You might have to edit your `~/.bash_profile` and set `JAVA_HOME=/you/openjdk/path` then source it again via `source ~/.bash_profile`.
