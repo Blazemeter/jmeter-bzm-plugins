@@ -1,6 +1,5 @@
 package com.blazemeter.csv;
 
-import org.apache.jmeter.save.CSVSaveService;
 import org.apache.jmeter.services.FileServer;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
@@ -83,7 +82,7 @@ public class RandomCSVReader {
 
     private void initHeader() {
         try (BufferedReader reader = new BufferedReader(createReader())) {
-            header = CSVSaveService.csvReadFile(reader, delim);
+            header = CSVReader.csvReadFile(reader, delim);
         } catch (IOException ex) {
             LOGGER.error("Cannot read CSV header ", ex);
             throw new RuntimeException("Cannot read CSV header: " + ex.getMessage(), ex);
@@ -134,7 +133,7 @@ public class RandomCSVReader {
     public String[] readNextLine() {
         try {
             curPos++;
-            return CSVSaveService.csvReadFile(consistentReader, delim);
+            return CSVReader.csvReadFile(consistentReader, delim);
         } catch (IOException ex) {
             LOGGER.error("Cannot get next record from csv file: ", ex);
             throw new RuntimeException("Cannot get next record from csv file: " + ex.getMessage(), ex);
@@ -158,7 +157,7 @@ public class RandomCSVReader {
     public String[] readLineWithSeek(long pos) {
         try {
             rbr.get().seek(pos);
-            return CSVSaveService.csvReadFile(rbr.get(), delim);
+            return CSVReader.csvReadFile(rbr.get(), delim);
         } catch (ClosedChannelException ex) {
             LOGGER.warn("The channel has been closed");
             return new String[0];
@@ -185,7 +184,7 @@ public class RandomCSVReader {
         try (BufferedReaderExt reader = new BufferedReaderExt(createReader(), encoding)) {
             long fileSize = file.length();
             while (reader.getPos() < fileSize) {
-                CSVSaveService.csvReadFile(reader, delim);
+                CSVReader.csvReadFile(reader, delim);
                 if (reader.getPos() < fileSize) {
                     offsets.add(reader.getPos());
                 }

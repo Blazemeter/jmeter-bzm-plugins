@@ -20,7 +20,7 @@ public class RandomCSVReaderTest {
     }
 
     @Test
-    public void testRandomReadWithHeaderAndWithoutRepeat() throws Exception {
+    public void testRandomReadWithHeaderAndWithoutRepeat() {
         String path = this.getClass().getResource("/JMeterCsvResults.csv").getPath();
 
         RandomCSVReader reader = new RandomCSVReader(path, "UTF-8", ",", true, false, false, false);
@@ -29,24 +29,45 @@ public class RandomCSVReaderTest {
                 Arrays.toString(reader.getHeader()));
 
         String timeStamps = "1393227741256,1393227741257,1393227741258";
+        String threadGroupName = "Thread Group 1-1{\n" +
+                "asdasdasdd\n" +
+                "fds\n" +
+                "fs\n" +
+                "sds}";
+        boolean isThreadGroupFound = false;
+        String[] line;
+
+
         long lineAddr;
         assertTrue(reader.hasNextRecord());
         lineAddr = reader.getNextLineAddr();
-        assertTrue(timeStamps.contains(reader.readLineWithSeek(lineAddr)[0]));
+        line = reader.readLineWithSeek(lineAddr);
+        assertTrue(timeStamps.contains(line[0]));
+        if (threadGroupName.equals(line[5])) {
+            isThreadGroupFound = true;
+        }
 
         assertTrue(reader.hasNextRecord());
         lineAddr = reader.getNextLineAddr();
-        assertTrue(timeStamps.contains(reader.readLineWithSeek(lineAddr)[0]));
+        line = reader.readLineWithSeek(lineAddr);
+        assertTrue(timeStamps.contains(line[0]));
+        if (threadGroupName.equals(line[5])) {
+            isThreadGroupFound = true;
+        }
 
         assertTrue(reader.hasNextRecord());
         lineAddr = reader.getNextLineAddr();
-        assertTrue(timeStamps.contains(reader.readLineWithSeek(lineAddr)[0]));
-
+        line = reader.readLineWithSeek(lineAddr);
+        assertTrue(timeStamps.contains(line[0]));
+        if (threadGroupName.equals(line[5])) {
+            isThreadGroupFound = true;
+        }
+        assertTrue("Thread group with name" + threadGroupName + " not found", isThreadGroupFound);
         assertFalse(reader.hasNextRecord());
     }
 
     @Test
-    public void testReadWithHeaderAndRepeat() throws Exception {
+    public void testReadWithHeaderAndRepeat() {
         String path = this.getClass().getResource("/JMeterCsvResults.csv").getPath();
 
         RandomCSVReader reader = new RandomCSVReader(path, "UTF-8", ",", false, false, true, true);
@@ -58,7 +79,13 @@ public class RandomCSVReaderTest {
         assertEquals("1393227741256", reader.readNextLine()[0]);
 
         assertTrue(reader.hasNextRecord());
-        assertEquals("1393227741257", reader.readNextLine()[0]);
+        String[] line = reader.readNextLine();
+        assertEquals("1393227741257", line[0]);
+        assertEquals("Thread Group 1-1{\n" +
+                "asdasdasdd\n" +
+                "fds\n" +
+                "fs\n" +
+                "sds}", line[5]);
 
         assertTrue(reader.hasNextRecord());
         assertEquals("1393227741258", reader.readNextLine()[0]);
@@ -74,7 +101,7 @@ public class RandomCSVReaderTest {
     }
 
     @Test
-    public void testMultiBytes() throws Exception {
+    public void testMultiBytes() {
         String path = this.getClass().getResource("/text.csv").getPath();
 
         RandomCSVReader reader = new RandomCSVReader(path, "UTF-8", ";", true, false, false, false);
@@ -96,22 +123,22 @@ public class RandomCSVReaderTest {
 
     private void assertRecord(String[] record) {
         switch (record[0]) {
-            case "Hänsel" :
+            case "Hänsel":
                 assertEquals("Mustermann", record[1]);
                 assertEquals("Einbahnstraße", record[2]);
                 assertEquals("Hamburg", record[3]);
                 break;
-            case "André" :
+            case "André":
                 assertEquals("Lecompte", record[1]);
                 assertEquals("Rue du marché", record[2]);
                 assertEquals("Moÿ-de-l'Aisne", record[3]);
                 break;
-            case "Ἀλέξανδρος" :
+            case "Ἀλέξανδρος":
                 assertEquals("Павлов", record[1]);
                 assertEquals("Большая Пироговская улица", record[2]);
                 assertEquals("Москва́", record[3]);
                 break;
-            case "בנימין" : // idea shows incorrect this line. firstname is real Benjamin -> 'בנימין'
+            case "בנימין": // idea shows incorrect this line. firstname is real Benjamin -> 'בנימין'
                 assertEquals("يعقوب", record[1]);
                 assertEquals("Street", record[2]);
                 assertEquals("Megapolis", record[3]);
@@ -122,7 +149,7 @@ public class RandomCSVReaderTest {
     }
 
     @Test
-    public void testRecordsCount() throws Exception {
+    public void testRecordsCount() {
         String path = this.getClass().getResource("/JMeterCsvResults.csv").getPath();
 
         // test random
@@ -164,7 +191,7 @@ public class RandomCSVReaderTest {
     }
 
     @Test
-    public void testTabDelimiter() throws Exception {
+    public void testTabDelimiter() {
         String path = this.getClass().getResource("/TabDelimiter.csv").getPath();
 
         RandomCSVReader reader = new RandomCSVReader(path, "UTF-8", "\t", false, false, false, false);
@@ -174,7 +201,7 @@ public class RandomCSVReaderTest {
     }
 
     @Test
-    public void testSpaceDelimiter() throws Exception {
+    public void testSpaceDelimiter() {
         String path = this.getClass().getResource("/SpaceDelimiter.csv").getPath();
 
         RandomCSVReader reader = new RandomCSVReader(path, "UTF-8", " ", false, false, false, false);
@@ -185,15 +212,15 @@ public class RandomCSVReaderTest {
 
 
     @Test
-    public void testEmptyLastLine() throws Exception {
+    public void testEmptyLastLine() {
         String path = this.getClass().getResource("/EmptyLastLine.csv").getPath();
 
         RandomCSVReader reader = new RandomCSVReader(path, "UTF-8", " ", true, true, true, false);
 
         List<String> results = new ArrayList<>();
-        results.add(Arrays.toString(new String[] {"1","2","3"}));
-        results.add(Arrays.toString(new String[] {"4","5","6"}));
-        results.add(Arrays.toString(new String[] {"7","8","9"}));
+        results.add(Arrays.toString(new String[]{"1", "2", "3"}));
+        results.add(Arrays.toString(new String[]{"4", "5", "6"}));
+        results.add(Arrays.toString(new String[]{"7", "8", "9"}));
 
         long addr;
         assertTrue(reader.hasNextRecord());
@@ -216,5 +243,79 @@ public class RandomCSVReaderTest {
 
         assertFalse(reader.hasNextRecord());
         assertEquals(0, results.size());
+    }
+
+    @Test
+    public void testInnerMultiLineXml() {
+        String path = this.getClass().getResource("/data1.csv").getPath();
+
+        RandomCSVReader reader = new RandomCSVReader(path, "UTF-8", ",", true, false, false, false);
+
+        assertEquals("[1, 2, 3]",
+                Arrays.toString(reader.getHeader()));
+
+
+        assertTrue(reader.hasNextRecord());
+        long addr = reader.getNextLineAddr();
+        String[] record = reader.readLineWithSeek(addr);
+
+        System.out.println(Arrays.toString(record));
+        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<jmeterTestPlan version=\"1.2\" properties=\"5.0\" jmeter=\"4.1-SNAPSHOT.20180827\">", record[1]);
+    }
+
+    @Test
+    public void testInnerSingleLineXml() {
+        String path = this.getClass().getResource("/data2.csv").getPath();
+
+        RandomCSVReader reader = new RandomCSVReader(path, "UTF-8", ",", true, false, false, false);
+
+        assertEquals("[1, 2, 3]",
+                Arrays.toString(reader.getHeader()));
+
+
+        assertTrue(reader.hasNextRecord());
+        long addr = reader.getNextLineAddr();
+        String[] record = reader.readLineWithSeek(addr);
+
+        System.out.println(Arrays.toString(record));
+        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+                "<jmeterTestPlan version=\"1.2\" properties=\"5.0\" jmeter=\"4.1-SNAPSHOT.20180827\">", record[1]);
+    }
+
+    @Test
+    public void testInnerSingleLineXmlConsistentReader() {
+        String path = this.getClass().getResource("/data2.csv").getPath();
+
+        RandomCSVReader reader = new RandomCSVReader(path, "UTF-8", ",", false, false, false, false);
+
+        assertEquals("[1, 2, 3]",
+                Arrays.toString(reader.getHeader()));
+
+
+        assertTrue(reader.hasNextRecord());
+        String[] record = reader.readNextLine();
+
+        System.out.println(Arrays.toString(record));
+        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+                "<jmeterTestPlan version=\"1.2\" properties=\"5.0\" jmeter=\"4.1-SNAPSHOT.20180827\">", record[1]);
+    }
+
+    @Test
+    public void testInnerMultiLineXmlConsistentReader() {
+        String path = this.getClass().getResource("/data1.csv").getPath();
+
+        RandomCSVReader reader = new RandomCSVReader(path, "UTF-8", ",", false, false, false, false);
+
+        assertEquals("[1, 2, 3]",
+                Arrays.toString(reader.getHeader()));
+
+
+        assertTrue(reader.hasNextRecord());
+        String[] record = reader.readNextLine();
+
+        System.out.println(Arrays.toString(record));
+        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<jmeterTestPlan version=\"1.2\" properties=\"5.0\" jmeter=\"4.1-SNAPSHOT.20180827\">", record[1]);
     }
 }
