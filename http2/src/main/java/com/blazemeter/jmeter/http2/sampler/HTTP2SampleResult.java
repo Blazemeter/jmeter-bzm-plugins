@@ -34,9 +34,9 @@ public class HTTP2SampleResult extends HTTPSampleResult {
   private int embebedResultsDepth;
   private boolean embebedResults;
   private String embeddedUrlRE;
-  private HttpFields httpFieldsResponse;
   private boolean secondaryRequest;
   private boolean pendingResponse;
+  private transient HttpFields httpFieldsResponse;
   private transient ListenerNotifier listenerNotifier = new ListenerNotifier();
   private transient JMeterContext threadContext;
   private transient JMeterVariables threadVars;
