@@ -7,7 +7,7 @@
   <groupId>com.blazemeter</groupId>
   <artifactId>jmeter-bzm-http2</artifactId>
   <packaging>jar</packaging>
-  <version>1.3-snapshot</version>
+  <version>1.4</version>
   <name>HTTP/2 Sampler</name>
   <description>HTTP/2 protocol sampler</description>
   <licenses>
