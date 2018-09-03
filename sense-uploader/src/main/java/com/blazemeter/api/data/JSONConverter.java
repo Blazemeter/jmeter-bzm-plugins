@@ -99,7 +99,7 @@ public class JSONConverter {
                     JSONObject obj = new JSONObject();
                     obj.put("m", sample.getResponseMessage());
                     obj.put("rc", sample.getResponseCode());
-                    obj.put("failures", sample.getErrorCount());
+                    obj.put("count", sample.getErrorCount());
                     errors.add(obj);
                 }
             }
