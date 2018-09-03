@@ -4,9 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>kg.apc</groupId>
+    <groupId>com.blazemeter</groupId>
     <artifactId>jmeter-plugins-senseuploader</artifactId>
-    <version>3.4</version>
+    <version>3.5</version>
 
     <name>BlazeMeter Sense Uploader</name>
     <description>BlazeMeter Sense Uploader</description>
