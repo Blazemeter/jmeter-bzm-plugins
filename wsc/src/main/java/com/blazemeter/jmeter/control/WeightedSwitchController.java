@@ -15,12 +15,14 @@ import org.apache.log.Logger;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class WeightedSwitchController extends GenericController implements Serializable {
     private static final Logger log = LoggingManager.getLoggerForClass();
     public static final String WEIGHTS = "Weights";
+    public static final String IS_RANDOM_CHOICE = "IsRandomChoice";
     private boolean chosen = false;
     protected long[] counts = null;
     protected long totalCount = 0;
@@ -41,6 +43,14 @@ public class WeightedSwitchController extends GenericController implements Seria
             log.warn("Returning empty collection");
             return new CollectionProperty();
         }
+    }
+
+    public void setIsRandomChoice(boolean value) {
+        setProperty(IS_RANDOM_CHOICE, value);
+    }
+
+    public boolean isRandomChoice() {
+        return getPropertyAsBoolean(IS_RANDOM_CHOICE, false);
     }
 
     @Override
@@ -134,6 +144,7 @@ public class WeightedSwitchController extends GenericController implements Seria
         }
 
         double[] weights = getWeights(data);
+        final ArrayList<Integer> maxDiffIndexes = new ArrayList<>();
 
         double maxDiff = Double.MIN_VALUE;
         int maxDiffIndex = Integer.MIN_VALUE;
@@ -143,6 +154,10 @@ public class WeightedSwitchController extends GenericController implements Seria
             if (diff > maxDiff) {
                 maxDiff = diff;
                 maxDiffIndex = n;
+                maxDiffIndexes.clear();
+                maxDiffIndexes.add(n);
+            } else if (diff == maxDiff) {
+                maxDiffIndexes.add(n);
             }
         }
 
@@ -152,13 +167,20 @@ public class WeightedSwitchController extends GenericController implements Seria
                 if (diff > maxDiff) {
                     maxDiff = diff;
                     maxDiffIndex = n;
+                    maxDiffIndexes.clear();
+                    maxDiffIndexes.add(n);
+                } else if (diff == maxDiff) {
+                    maxDiffIndexes.add(n);
                 }
             }
         }
 
+        Collections.shuffle(maxDiffIndexes);
+
+        int ind = isRandomChoice() ? maxDiffIndexes.get(0) : maxDiffIndex;
         totalCount++;
-        counts[maxDiffIndex]++;
-        current = currentCopy = maxDiffIndex;
+        counts[ind]++;
+        current = currentCopy = ind;
     }
 
     private CollectionProperty removeDisableSubGroups(CollectionProperty data) {

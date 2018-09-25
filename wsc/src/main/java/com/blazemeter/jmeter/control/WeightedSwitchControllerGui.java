@@ -24,6 +24,7 @@ public class WeightedSwitchControllerGui extends AbstractControllerGui {
     private static final Logger log = LoggingManager.getLoggerForClass();
     public static final String WEIGHTS = "Weight";
     private Grid grid;
+    private JCheckBox isRandomChoiceCheckBox;
 
     public WeightedSwitchControllerGui() {
         super();
@@ -61,7 +62,31 @@ public class WeightedSwitchControllerGui extends AbstractControllerGui {
         table.removeColumn(table.getColumn("Enabled"));
 
         grid.getComponent(2).setVisible(false); // hide grid mgmt buttons
-        add(grid, BorderLayout.CENTER);
+        JPanel mainPanel = new JPanel(new GridBagLayout());
+
+        GridBagConstraints labelConstraints = new GridBagConstraints();
+        labelConstraints.anchor = GridBagConstraints.FIRST_LINE_END;
+
+        GridBagConstraints editConstraints = new GridBagConstraints();
+        editConstraints.anchor = GridBagConstraints.FIRST_LINE_START;
+        editConstraints.weightx = 1.0;
+        editConstraints.fill = GridBagConstraints.HORIZONTAL;
+
+
+        addToPanel(mainPanel, labelConstraints, 0, 0, new JLabel("Random choice: ", JLabel.RIGHT));
+        addToPanel(mainPanel, editConstraints, 1, 0, isRandomChoiceCheckBox = new JCheckBox());
+
+        JPanel container = new JPanel(new BorderLayout());
+        container.add(mainPanel, BorderLayout.NORTH);
+        container.add(grid);
+
+        add(container, BorderLayout.CENTER);
+    }
+
+    private void addToPanel(JPanel panel, GridBagConstraints constraints, int col, int row, JComponent component) {
+        constraints.gridx = col;
+        constraints.gridy = row;
+        panel.add(component, constraints);
     }
 
     @Override
@@ -89,6 +114,7 @@ public class WeightedSwitchControllerGui extends AbstractControllerGui {
             if (grid.getModel().getRowCount() > 0){
                 wsc.setData(grid.getModel());
             }
+            wsc.setIsRandomChoice(isRandomChoiceCheckBox.isSelected());
         }
     }
 
@@ -104,7 +130,7 @@ public class WeightedSwitchControllerGui extends AbstractControllerGui {
             CollectionProperty oldData = wsc.getData();
 
             grid.getModel().clearData();
-
+            isRandomChoiceCheckBox.setSelected(wsc.isRandomChoice());
             if (isShowing()) {
                 fillGridFromTree(wsc, oldData);
             } else {
