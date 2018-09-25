@@ -15,6 +15,7 @@ import org.apache.log.Logger;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -134,6 +135,7 @@ public class WeightedSwitchController extends GenericController implements Seria
         }
 
         double[] weights = getWeights(data);
+        final ArrayList<Integer> maxDiffIndexes = new ArrayList<>();
 
         double maxDiff = Double.MIN_VALUE;
         int maxDiffIndex = Integer.MIN_VALUE;
@@ -143,6 +145,11 @@ public class WeightedSwitchController extends GenericController implements Seria
             if (diff > maxDiff) {
                 maxDiff = diff;
                 maxDiffIndex = n;
+                maxDiffIndexes.clear();
+                maxDiffIndexes.add(n);
+            } else if (diff == maxDiff) {
+                maxDiffIndexes.add(n);
+                maxDiffIndex = n;
             }
         }
 
@@ -151,14 +158,20 @@ public class WeightedSwitchController extends GenericController implements Seria
                 double diff = weights[n];
                 if (diff > maxDiff) {
                     maxDiff = diff;
-                    maxDiffIndex = n;
+                    maxDiffIndexes.clear();
+                    maxDiffIndexes.add(n);
+                } else if (diff == maxDiff) {
+                    maxDiffIndexes.add(n);
                 }
             }
         }
 
+        Collections.shuffle(maxDiffIndexes);
+
+        int ind = maxDiffIndexes.get(0);
         totalCount++;
-        counts[maxDiffIndex]++;
-        current = currentCopy = maxDiffIndex;
+        counts[ind]++;
+        current = currentCopy = ind;
     }
 
     private CollectionProperty removeDisableSubGroups(CollectionProperty data) {
