@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -68,9 +69,9 @@ public class WeightedSwitchControllerTest {
         for (int n = 0; n < 800; n++) {
             Sampler s = obj.next();
             log.info("Sampler: " + s.getName());
-            Assert.assertNotNull(s);
-            Assert.assertNull(obj.next());
-            Assert.assertNotEquals(s.getName(), "0");
+            assertNotNull(s);
+            assertNull(obj.next());
+            assertNotEquals(s.getName(), "0");
         }
     }
 
@@ -375,7 +376,6 @@ public class WeightedSwitchControllerTest {
     }
 
 
-
     @Test
     public void testNestedTransactionControllersWithParentSample() throws Exception {
         JMeterContextService.getContext().setVariables(new JMeterVariables());
@@ -614,5 +614,35 @@ public class WeightedSwitchControllerTest {
         public void sampleStopped(SampleEvent e) {
             events.add(e);
         }
+    }
+
+    @Test
+    public void testRandomChoice() {
+        WeightedSwitchController obj = new WeightedSwitchController();
+        obj.setIsRandomChoice(true);
+        obj.addTestElement(getSampler("0"));
+        obj.addTestElement(getSampler("1"));
+        PowerTableModel mdl = new PowerTableModel(new String[]{"name", WeightedSwitchController.WEIGHTS}, new Class[]{String.class, String.class});
+        mdl.addRow(new String[]{"0", "50"});
+        mdl.addRow(new String[]{"1", "50"});
+        obj.setData(mdl);
+
+        Map<String, Integer> counter = new HashMap<>();
+        for (int n = 0; n < 10; n++) {
+            Sampler sampler = obj.next();
+            assertNotNull(sampler);
+            String name = sampler.getName();
+            Integer integer = counter.get(name);
+            if (integer == null) {
+                counter.put(name, 1);
+            } else {
+                counter.put(name, integer + 1);
+            }
+            assertTrue("0".equals(name) || "1".equals(name));
+            assertNull(obj.next());
+        }
+
+        assertEquals(5, counter.get("0").intValue());
+        assertEquals(5, counter.get("1").intValue());
     }
 }
