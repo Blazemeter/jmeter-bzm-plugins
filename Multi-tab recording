@@ -1,0 +1,3 @@
+The current extension records the user session from a single tab at the click by the user, and stops the recording at the other click and then converts it into jmeter script that can be used for load testing. Is it possible to record sessions that can record sessions from multiple tabs? 
+The current extension just records the single tab session. 
+Some new feature that can record multiple tab session
