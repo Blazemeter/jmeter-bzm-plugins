@@ -65,7 +65,7 @@ public class HTTP2Connection {
         FuturePromise<Session> sessionFuture = new FuturePromise<>();
         this.client.connect(this.sslContextFactory, new InetSocketAddress(hostname, port),
                 new Session.Listener.Adapter(), sessionFuture);
-        setSession(sessionFuture.get(10, TimeUnit.SECONDS));
+        setSession(sessionFuture.get(20, TimeUnit.SECONDS));
     }
 
     public boolean isClosed() {
