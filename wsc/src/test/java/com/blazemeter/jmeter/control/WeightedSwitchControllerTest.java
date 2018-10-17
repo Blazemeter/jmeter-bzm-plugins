@@ -24,7 +24,6 @@ import org.apache.jorphan.collections.HashTree;
 import org.apache.jorphan.collections.ListedHashTree;
 import org.apache.jorphan.logging.LoggingManager;
 import org.apache.log.Logger;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -618,31 +617,43 @@ public class WeightedSwitchControllerTest {
 
     @Test
     public void testRandomChoice() {
-        WeightedSwitchController obj = new WeightedSwitchController();
-        obj.setIsRandomChoice(true);
-        obj.addTestElement(getSampler("0"));
-        obj.addTestElement(getSampler("1"));
-        PowerTableModel mdl = new PowerTableModel(new String[]{"name", WeightedSwitchController.WEIGHTS}, new Class[]{String.class, String.class});
-        mdl.addRow(new String[]{"0", "50"});
-        mdl.addRow(new String[]{"1", "50"});
-        obj.setData(mdl);
+        LoggingManager.setPriority("INFO");
+        try {
+            final int iterations = 1000000;
+            WeightedSwitchController obj = new WeightedSwitchController();
+            obj.setIsRandomChoice(true);
+            obj.addTestElement(getSampler("0"));
+            obj.addTestElement(getSampler("1"));
+            PowerTableModel mdl = new PowerTableModel(new String[]{"name", WeightedSwitchController.WEIGHTS}, new Class[]{String.class, String.class});
+            mdl.addRow(new String[]{"0", "95"});
+            mdl.addRow(new String[]{"1", "5"});
+            obj.setData(mdl);
 
-        Map<String, Integer> counter = new HashMap<>();
-        for (int n = 0; n < 10; n++) {
-            Sampler sampler = obj.next();
-            assertNotNull(sampler);
-            String name = sampler.getName();
-            Integer integer = counter.get(name);
-            if (integer == null) {
-                counter.put(name, 1);
-            } else {
-                counter.put(name, integer + 1);
+            int sampler0Counter = 0;
+            int sampler1Counter = 0;
+            for (int n = 0; n < iterations; n++) {
+                Sampler sampler = obj.next();
+                assertNotNull(sampler);
+                String name = sampler.getName();
+                if ("0".equals(name)) {
+                    sampler0Counter++;
+                } else {
+                    sampler1Counter++;
+                }
+                assertNull(obj.next());
             }
-            assertTrue("0".equals(name) || "1".equals(name));
-            assertNull(obj.next());
-        }
 
-        assertEquals(5, counter.get("0").intValue());
-        assertEquals(5, counter.get("1").intValue());
+            double sampler0Percent = ((double) sampler0Counter / iterations) * 100;
+            String msg0 = "Sampler 0 was ran " + sampler0Counter + " times. Total percent: " + sampler0Percent;
+            assertTrue(msg0, 94.5 < sampler0Percent);
+            assertTrue(msg0, 95.5 > sampler0Percent);
+
+            double sampler1Percent = ((double) sampler1Counter / iterations) * 100;
+            String msg1 = "Sampler 1 was ran " + sampler1Counter + " times. Total percent: " + sampler1Percent;
+            assertTrue(msg1, 4.5 < sampler1Percent);
+            assertTrue(msg1, 5.5 > sampler1Percent);
+        } finally {
+            LoggingManager.setPriority("DEBUG");
+        }
     }
 }
