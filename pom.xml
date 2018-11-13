@@ -18,7 +18,6 @@
         <module>wsc</module>
         <module>xmpp</module>
         <module>hls</module>
-        <module>http2</module>
         <module>websocket</module>
         <module>random-csv-data-set</module>
     </modules>
