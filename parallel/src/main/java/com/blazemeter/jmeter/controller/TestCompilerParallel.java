@@ -82,4 +82,16 @@ public class TestCompilerParallel extends TestCompiler {
     public Set<AbstractTestElement> getKnownElements() {
         return knownElements;
     }
+
+    @Override
+    public void addNode(Object node, HashTree subTree) {
+        // Override, because in JMeterThread.run().initRun()
+        // it will break SamplePackage config
+    }
+
+    @Override
+    public void subtractNode() {
+        // Override, because in JMeterThread.run().initRun()
+        // it will break SamplePackage config
+    }
 }
