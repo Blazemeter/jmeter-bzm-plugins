@@ -118,7 +118,7 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
 
             @Override
             public boolean isDone() {
-                return isFinished;
+                return isFinished || super.isDone();
             }
 
             @Override
