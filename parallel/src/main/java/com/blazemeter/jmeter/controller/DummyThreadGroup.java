@@ -15,6 +15,10 @@ public class DummyThreadGroup extends AbstractThreadGroup {
     private static final Logger log = LoggerFactory.getLogger(ParallelSampler.class);
     private final List<JMeterThread> jMeterThreads = new LinkedList<>();
 
+    public void reset() {
+        this.jMeterThreads.clear();
+    }
+
     public void addThread(JMeterThread thread) {
         this.jMeterThreads.add(thread);
     }
