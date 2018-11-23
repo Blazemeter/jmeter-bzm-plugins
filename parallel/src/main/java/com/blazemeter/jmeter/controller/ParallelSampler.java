@@ -47,6 +47,7 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
     protected List<TestElement> controllers = new ArrayList<>();
     protected final ParallelListenerNotifier notifier = new ParallelListenerNotifier();
     private ExecutorService executorService;
+    private DummyThreadGroup threadGroup;
 
     @Override
     public void addTestElement(TestElement te) {
@@ -79,16 +80,14 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
         final List<JMeterThread> jMeterThreads = new LinkedList<>();
 
 
-        StandardJMeterEngine engine = JMeterContextService.getContext().getEngine();
-        final DummyThreadGroup threadGroup = new DummyThreadGroup();
-        addThreadGroupToEngine(engine, threadGroup);
+        threadGroup.reset();
         StringBuilder reqText = new StringBuilder("Parallel items:\n");
         for (TestElement ctl : controllers) {
             reqText.append(ctl.getName()).append("\n");
             JMeterThread jmThread = new JMeterThreadParallel(getTestTree(ctl), this, notifier, getGenerateParent());
             jmThread.setThreadName("parallel " + this.getName());
             jmThread.setThreadGroup(threadGroup);
-            jmThread.setEngine(engine);
+            jmThread.setEngine(JMeterContextService.getContext().getEngine());
             injectVariables(jmThread, this.getThreadContext());
             jMeterThreads.add(jmThread);
             threadGroup.addThread(jmThread);
@@ -118,11 +117,7 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
         return getGenerateParent() ? res : null;
     }
 
-    private void addThreadGroupToEngine(StandardJMeterEngine engine, AbstractThreadGroup group) {
-
-    }
-
-    private HashTree getTestTree(TestElement te) {
+     private HashTree getTestTree(TestElement te) {
         // can't use GenericController because of infinite looping
         LoopController wrapper = new LoopController() {
             private boolean isFinished = false;
@@ -277,12 +272,39 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
     public void threadStarted() {
         changeVariablesMap();
         executorService = Executors.newCachedThreadPool(new ParallelThreadFactory(this.getName()));
+        threadGroup = new DummyThreadGroup();
+        addThreadGroupToEngine(threadGroup);
     }
 
 
     @Override
     public void threadFinished() {
         executorService.shutdown();
+        removeThreadGroupFromEngine(threadGroup);
+    }
+
+    private void addThreadGroupToEngine(AbstractThreadGroup group) {
+        try {
+            StandardJMeterEngine engine = JMeterContextService.getContext().getEngine();
+            Field groupsField = StandardJMeterEngine.class.getDeclaredField("groups");
+            groupsField.setAccessible(true);
+            List<AbstractThreadGroup> groups = (List<AbstractThreadGroup>) groupsField.get(engine);
+            groups.add(group);
+        } catch (ReflectiveOperationException ex) {
+            log.warn("Can not add DummyThreadGroup to engine", ex);
+        }
+    }
+
+    private void removeThreadGroupFromEngine(AbstractThreadGroup group) {
+        try {
+            StandardJMeterEngine engine = JMeterContextService.getContext().getEngine();
+            Field groupsField = StandardJMeterEngine.class.getDeclaredField("groups");
+            groupsField.setAccessible(true);
+            List<AbstractThreadGroup> groups = (List<AbstractThreadGroup>) groupsField.get(engine);
+            groups.remove(group);
+        } catch (ReflectiveOperationException ex) {
+            log.warn("Can not remove DummyThreadGroup from engine", ex);
+        }
     }
 
     @Override
