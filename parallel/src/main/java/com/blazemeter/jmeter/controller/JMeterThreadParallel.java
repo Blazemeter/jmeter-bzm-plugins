@@ -16,8 +16,6 @@ public class JMeterThreadParallel extends JMeterThread {
     public JMeterThreadParallel(HashTree test, JMeterThreadMonitor monitor, ListenerNotifier notifier, boolean generateParent) {
         super(test, monitor, notifier);
         this.generateParent = generateParent;
-        setThreadGroup(new DummyThreadGroup());
-        super.setEngine(JMeterContextService.getContext().getEngine());
         try {
             copyCompilerFromParent();
         } catch (IllegalAccessException | NoSuchFieldException e) {

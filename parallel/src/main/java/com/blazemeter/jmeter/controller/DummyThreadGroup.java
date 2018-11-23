@@ -8,8 +8,16 @@ import org.apache.jorphan.collections.ListedHashTree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.LinkedList;
+import java.util.List;
+
 public class DummyThreadGroup extends AbstractThreadGroup {
     private static final Logger log = LoggerFactory.getLogger(ParallelSampler.class);
+    private final List<JMeterThread> jMeterThreads = new LinkedList<>();
+
+    public void addThread(JMeterThread thread) {
+        this.jMeterThreads.add(thread);
+    }
 
     @Override
     public boolean stopThread(String s, boolean b) {

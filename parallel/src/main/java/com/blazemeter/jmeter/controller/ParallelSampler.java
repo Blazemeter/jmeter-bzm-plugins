@@ -14,6 +14,7 @@ import org.apache.jmeter.testelement.AbstractTestElement;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.TestStateListener;
 import org.apache.jmeter.testelement.ThreadListener;
+import org.apache.jmeter.threads.AbstractThreadGroup;
 import org.apache.jmeter.threads.JMeterContext;
 import org.apache.jmeter.threads.JMeterContextService;
 import org.apache.jmeter.threads.JMeterContextServiceAccessorParallel;
@@ -77,14 +78,20 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
 
         final List<JMeterThread> jMeterThreads = new LinkedList<>();
 
+
+        StandardJMeterEngine engine = JMeterContextService.getContext().getEngine();
+        final DummyThreadGroup threadGroup = new DummyThreadGroup();
+        addThreadGroupToEngine(engine, threadGroup);
         StringBuilder reqText = new StringBuilder("Parallel items:\n");
         for (TestElement ctl : controllers) {
             reqText.append(ctl.getName()).append("\n");
             JMeterThread jmThread = new JMeterThreadParallel(getTestTree(ctl), this, notifier, getGenerateParent());
             jmThread.setThreadName("parallel " + this.getName());
-            jmThread.setThreadGroup(new DummyThreadGroup());
+            jmThread.setThreadGroup(threadGroup);
+            jmThread.setEngine(engine);
             injectVariables(jmThread, this.getThreadContext());
             jMeterThreads.add(jmThread);
+            threadGroup.addThread(jmThread);
         }
 
 
@@ -109,6 +116,10 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
             res.sampleEnd();
         }
         return getGenerateParent() ? res : null;
+    }
+
+    private void addThreadGroupToEngine(StandardJMeterEngine engine, AbstractThreadGroup group) {
+
     }
 
     private HashTree getTestTree(TestElement te) {
