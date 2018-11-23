@@ -23,6 +23,12 @@ public class DummyThreadGroup extends AbstractThreadGroup {
         this.jMeterThreads.add(thread);
     }
 
+    public void stopAllThreads() {
+        for (JMeterThread thread : jMeterThreads) {
+            thread.stop();
+        }
+    }
+
     @Override
     public boolean stopThread(String s, boolean b) {
         return false;
@@ -50,12 +56,12 @@ public class DummyThreadGroup extends AbstractThreadGroup {
 
     @Override
     public void tellThreadsToStop() {
-
+        stopAllThreads();
     }
 
     @Override
     public void stop() {
-
+        stopAllThreads();
     }
 
     @Override
