@@ -233,7 +233,7 @@ public class ParallelSamplerTest {
     }
 
     @Test(timeout=3000)
-    public void testInfinityWhileController() throws Exception {
+    public void testInfinityWhileController() {
         JMeterContextService.getContext().setVariables(new JMeterVariables());
         TestSampleListener listener = new TestSampleListener();
 
@@ -271,7 +271,49 @@ public class ParallelSamplerTest {
         thread.run();
 
         assertEquals(1, listener.events.size());
-        System.out.println();
+    }
+
+    @Test(timeout=3000)
+    public void testInfinityStopTest() {
+        JMeterContextService.getContext().setVariables(new JMeterVariables());
+        TestSampleListener listener = new TestSampleListener();
+
+        TestAction action = new TestAction();
+        action.setAction(0);
+        action.setTarget(2);
+
+        WhileController whileController = new WhileController();
+
+        ParallelSampler sampler = new ParallelSampler();
+        sampler.setGenerateParent(true);
+        LoopController loop = new LoopController();
+        loop.setLoops(1);
+        loop.setContinueForever(false);
+
+        // test tree
+        ListedHashTree hashTree = new ListedHashTree();
+        hashTree.add(loop);
+        hashTree.add(loop, sampler);
+        hashTree.add(sampler, listener);
+        hashTree.add(sampler, whileController);
+        hashTree.add(whileController, action);
+        hashTree.add(whileController, listener);
+
+        TestCompiler compiler = new TestCompiler(hashTree);
+        hashTree.traverse(compiler);
+
+        ThreadGroup threadGroup = new ThreadGroup();
+        threadGroup.setNumThreads(1);
+
+        ListenerNotifier notifier = new ListenerNotifier();
+
+        JMeterThread thread = new JMeterThread(hashTree, threadGroup, notifier);
+        thread.setThreadGroup(threadGroup);
+        thread.setOnErrorStopThread(true);
+        thread.setEngine(new StandardJMeterEngine());
+        thread.run();
+
+        assertEquals(1, listener.events.size());
     }
 
     public class TestSampleListener extends ResultCollector implements SampleListener {
