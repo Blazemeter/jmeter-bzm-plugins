@@ -69,6 +69,7 @@ public class ParallelSamplerTest {
     @Test
     public void sample() throws Exception {
         JMeterThread dummy = new JMeterThread(new HashTree(new GenericController()), null, null);
+        JMeterContextService.getContext().setEngine(new StandardJMeterEngine());
         JMeterContextService.getContext().setThread(dummy);
         JMeterThread thr = JMeterContextService.getContext().getThread();
         for (int n = 0; n < 1000; n++) {// we're doing good check here because of multi-threads
@@ -267,6 +268,7 @@ public class ParallelSamplerTest {
 
         JMeterThread thread = new JMeterThread(hashTree, threadGroup, notifier);
         thread.setThreadGroup(threadGroup);
+        thread.setEngine(new StandardJMeterEngine());
         thread.setOnErrorStopThread(true);
         thread.run();
 
