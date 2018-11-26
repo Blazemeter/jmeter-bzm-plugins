@@ -119,20 +119,7 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
 
      private HashTree getTestTree(TestElement te) {
         // can't use GenericController because of infinite looping
-        LoopController wrapper = new LoopController() {
-            private boolean isFinished = false;
-
-            @Override
-            public boolean isDone() {
-                return isFinished || super.isDone();
-            }
-
-            @Override
-            public void triggerEndOfLoop() {
-                isFinished = true;
-                super.triggerEndOfLoop();
-            }
-        };
+        CustomLoopController wrapper = new CustomLoopController(JMeterContextService.getContext());
         wrapper.setLoops(1);
         wrapper.setContinueForever(false);
 
@@ -148,6 +135,30 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
             tree.add(wrapper);
         }
         return tree;
+    }
+
+    private static class CustomLoopController extends LoopController {
+        private final JMeterContext context;
+        private boolean isFinished = false;
+
+        /**
+         * @param context from parent Thread
+         */
+        public CustomLoopController(JMeterContext context) {
+            this.context = context;
+        }
+
+        @Override
+        public boolean isDone() {
+            return isFinished || super.isDone();
+        }
+
+        @Override
+        public void triggerEndOfLoop() {
+            isFinished = true;
+            context.setRestartNextLoop(true);
+            super.triggerEndOfLoop();
+        }
     }
 
     private HashTree getSubTree(TestElement te) {
