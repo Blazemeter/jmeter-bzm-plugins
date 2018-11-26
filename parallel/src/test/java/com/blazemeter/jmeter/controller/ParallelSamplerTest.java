@@ -234,45 +234,62 @@ public class ParallelSamplerTest {
     }
 
     @Test(timeout=3000)
-    public void testInfinityWhileController() {
+    public void testStartNextIteration() {
         JMeterContextService.getContext().setVariables(new JMeterVariables());
         TestSampleListener listener = new TestSampleListener();
 
         TestAction action = new TestAction();
         action.setAction(3);
 
+        DebugSampler samplerBefore = new DebugSampler();
+        samplerBefore.setName("samplerBefore");
+
+        DebugSampler samplerAfter = new DebugSampler();
+        samplerAfter.setName("samplerAfter");
+
         WhileController whileController = new WhileController();
 
         ParallelSampler sampler = new ParallelSampler();
         sampler.setGenerateParent(true);
         LoopController loop = new LoopController();
-        loop.setLoops(1);
+        loop.setLoops(2);
         loop.setContinueForever(false);
 
-        // test tree
-        ListedHashTree hashTree = new ListedHashTree();
-        hashTree.add(loop);
-        hashTree.add(loop, sampler);
-        hashTree.add(sampler, listener);
-        hashTree.add(sampler, whileController);
-        hashTree.add(whileController, action);
-        hashTree.add(whileController, listener);
+        // parallel subtree
+        ListedHashTree parallelTree = new ListedHashTree();
+        parallelTree.add(samplerBefore);
+        parallelTree.add(action);
 
-        TestCompiler compiler = new TestCompiler(hashTree);
-        hashTree.traverse(compiler);
+        // while subtree
+        ListedHashTree whileTree = new ListedHashTree();
+        whileTree.add(whileController, parallelTree);
 
+        // parallel Sampler subtree
+        ListedHashTree parallelSamplerTree = new ListedHashTree();
+        parallelSamplerTree.add(sampler, whileTree);
+
+        // TG sub tree
         ThreadGroup threadGroup = new ThreadGroup();
         threadGroup.setNumThreads(1);
+        threadGroup.setSamplerController(loop);
+
+        ListedHashTree loopTree = new ListedHashTree();
+        loopTree.add(threadGroup, parallelSamplerTree);
+        loopTree.add(threadGroup, samplerAfter);
+        loopTree.add(threadGroup, listener);
+
+        TestCompiler compiler = new TestCompiler(loopTree);
+        loopTree.traverse(compiler);
 
         ListenerNotifier notifier = new ListenerNotifier();
 
-        JMeterThread thread = new JMeterThread(hashTree, threadGroup, notifier);
+        JMeterThread thread = new JMeterThread(loopTree, threadGroup, notifier);
         thread.setThreadGroup(threadGroup);
         thread.setEngine(new StandardJMeterEngine());
         thread.setOnErrorStopThread(true);
         thread.run();
 
-        assertEquals(1, listener.events.size());
+        assertEquals(2, listener.events.size());
     }
 
     @Test(timeout=3000)
