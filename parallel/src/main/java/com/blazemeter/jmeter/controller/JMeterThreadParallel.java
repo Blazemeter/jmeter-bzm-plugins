@@ -12,10 +12,16 @@ public class JMeterThreadParallel extends JMeterThread {
     private static final Logger log = LoggerFactory.getLogger(ParallelSampler.class);
     private TestCompilerParallel parallelCompiler;
     private boolean generateParent;
+    private boolean isStopped = false;
+    private final JMeterThread parentThread;
 
     public JMeterThreadParallel(HashTree test, JMeterThreadMonitor monitor, ListenerNotifier notifier, boolean generateParent) {
         super(test, monitor, notifier);
         this.generateParent = generateParent;
+        parentThread = JMeterContextService.getContext().getThread();
+        if (parentThread == null) {
+            throw new NullPointerException();
+        }
         try {
             copyCompilerFromParent();
         } catch (IllegalAccessException | NoSuchFieldException e) {
@@ -26,10 +32,6 @@ public class JMeterThreadParallel extends JMeterThread {
     protected void copyCompilerFromParent() throws IllegalAccessException, NoSuchFieldException {
         Field field = JMeterThread.class.getDeclaredField("compiler");
         field.setAccessible(true);
-        JMeterThread parentThread = JMeterContextService.getContext().getThread();
-        if (parentThread == null) {
-            throw new NullPointerException();
-        }
         TestCompiler parentCompiler = (TestCompiler) field.get(parentThread);
         parallelCompiler = cloneTestCompiler(parentCompiler);
         field.set(this, parallelCompiler);
@@ -57,5 +59,16 @@ public class JMeterThreadParallel extends JMeterThread {
     public void run() {
         JMeterContextServiceAccessorParallel.decrNumberOfThreads();
         super.run();
+        if (isStopped) {
+            log.info("Stopping current thread");
+            parentThread.stop();
+        }
+    }
+
+    @Override
+    public void stop() {
+        isStopped = true;
+        log.debug("Parallel Thread was stopped. Parent thread will be stopped after parallel sampler.");
+        super.stop();
     }
 }
