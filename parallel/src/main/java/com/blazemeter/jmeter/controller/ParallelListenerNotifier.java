@@ -19,15 +19,12 @@ public class ParallelListenerNotifier extends ListenerNotifier implements Serial
     public void notifyListeners(SampleEvent res, List<SampleListener> listeners) {
         log.debug("Adding subresult " + res.getResult());
         SampleResult result = res.getResult();
-        String label = result.getSampleLabel();
         synchronized (this) {
-            container.addSubResult(result);
+            container.addSubResult(result, false);
             if (!res.getResult().isSuccessful()) {
                 container.setSuccessful(false);
             }
         }
-        // because https://bz.apache.org/bugzilla/show_bug.cgi?id=62550 in JMeter 5.0
-        result.setSampleLabel(label);
         super.notifyListeners(res, listeners);
         log.debug("Added subresult " + res.getResult());
     }
