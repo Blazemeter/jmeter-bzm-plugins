@@ -11,19 +11,23 @@ import org.apache.jmeter.threads.JMeterVariables;
 import org.apache.jorphan.util.JMeterStopThreadException;
 
 import java.io.File;
+import java.io.Serializable;
 
 public class DirectoryListingConfig extends ConfigTestElement implements NoThreadClone, LoopIterationListener, TestStateListener {
     public static final String DEFAULT_DESTINATION_VARIABLE_NAME = "filename";
     public static final String DEFAULT_SOURCE_DIRECTORY = ".";
 
 
-    private final ThreadLocal<DirectoryListingIterator> threadLocalIterator = new ThreadLocal<DirectoryListingIterator>(){
+    private final ThreadLocal<DirectoryListingIterator> threadLocalIterator = new ThreadLocalSerializable<DirectoryListingIterator>(){
         @Override
         protected DirectoryListingIterator initialValue()
         {
             return createDirectoryListingIterator();
         }
     };
+
+    private static class ThreadLocalSerializable<T> extends ThreadLocal<T> implements Serializable {
+    }
 
     public static final String SOURCE_DIRECTORY = "directory";
     public static final String DESTINATION_VARIABLE_NAME = "variableName";
