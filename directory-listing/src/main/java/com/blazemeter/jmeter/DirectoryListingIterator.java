@@ -35,7 +35,7 @@ public class DirectoryListingIterator implements Iterator<File>{
     private Iterator<File> iterator;
     private List<File> list;
 
-    public boolean hasNext() {
+    synchronized public boolean hasNext() {
         if (!iterator.hasNext()) {
             if (isRewindOnEndOfList) {
                 if (isReReadDirectory) {
@@ -52,7 +52,7 @@ public class DirectoryListingIterator implements Iterator<File>{
         return iterator.hasNext();
     }
 
-    public File next() {
+    synchronized public File next() {
         return iterator.next();
     }
 
