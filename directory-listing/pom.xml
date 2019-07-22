@@ -6,7 +6,7 @@
 
     <groupId>com.blazemeter</groupId>
     <artifactId>jmeter-plugins-directory-listing</artifactId>
-    <version>0.2</version>
+    <version>0.3</version>
 
     <name>Directory listing data source</name>
     <description>Directory listing data source</description>
