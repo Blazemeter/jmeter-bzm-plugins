@@ -71,4 +71,9 @@ public class JMeterThreadParallel extends JMeterThread {
         log.debug("Parallel Thread was stopped. Parent thread will be stopped after parallel sampler.");
         super.stop();
     }
+
+    public void softStop() {
+        log.debug("Parallel Thread was stopped. Parent thread will NOT be stopped after parallel sampler.");
+        super.stop();
+    }
 }
