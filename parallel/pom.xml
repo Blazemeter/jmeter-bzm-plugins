@@ -6,7 +6,7 @@
 
     <groupId>com.blazemeter</groupId>
     <artifactId>jmeter-parallel</artifactId>
-    <version>0.9</version>
+    <version>0.10</version>
     <name>Parallel Sampling for JMeter</name>
     <description>Parallel Sampling for JMeter</description>
     <licenses>
@@ -67,13 +67,13 @@
         <dependency>
             <groupId>kg.apc</groupId>
             <artifactId>jmeter-plugins-emulators</artifactId>
-            <version>LATEST</version>
+            <version>0.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>kg.apc</groupId>
             <artifactId>jmeter-plugins-dummy</artifactId>
-            <version>LATEST</version>
+            <version>0.4</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
