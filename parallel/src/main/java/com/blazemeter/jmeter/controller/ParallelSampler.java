@@ -85,7 +85,8 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
         for (TestElement ctl : controllers) {
             reqText.append(ctl.getName()).append("\n");
             JMeterThread jmThread = new JMeterThreadParallel(getTestTree(ctl), this, notifier, getGenerateParent());
-            jmThread.setThreadName("parallel " + this.getName());
+            String name = JMeterContextService.getContext().getThread() + " - " + this.getName() + " - " + ctl.getName();
+            jmThread.setThreadName(name);
             jmThread.setThreadGroup(threadGroup);
             jmThread.setEngine(JMeterContextService.getContext().getEngine());
             injectVariables(jmThread, this.getThreadContext());
