@@ -46,14 +46,18 @@ public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThrea
     private RandomCSVReader randomCSVReader = null;
     private String filename;	// Real filename, with substituted variables
 
-    @Override
-    public void iterationStart(LoopIterationEvent loopIterationEvent) {
+    // Public: will be called from TestRandomCSVAction as well
+    public void trySetFinalFilename() {
     	if(filename == null) {
     		filename = getFinalFilename();
     		randomCSVReader = createRandomCSVReader();
     		threadLocalRandomCSVReader.set(createRandomCSVReader());
     	}
+    }
 
+    @Override
+    public void iterationStart(LoopIterationEvent loopIterationEvent) {
+    	trySetFinalFilename();
         boolean isIndependentListPerThread = isIndependentListPerThread();
 
         if (!isIndependentListPerThread && randomCSVReader == null) {
