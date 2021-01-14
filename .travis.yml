@@ -15,7 +15,7 @@ jdk:
 
 before_install: 
   - sudo apt-get -y update
-  - sudo apt-get -y install python default-jre-headless python-tk python-pip python-dev libxml2-dev libxslt-dev zlib1g-dev net-tools
+  - sudo apt-get -y install python3 default-jre-headless python3-tk python3-pip python-dev libxml2-dev libxslt-dev zlib1g-dev net-tools
   - sudo pip install bzt==1.15.1
   - chmod -R +x ./.travis
   - "sh ./.travis/install-maven-dependency.sh https://github.com/inventit/mqtt-websocket-java/releases/download/$MQTT_WEBSOCKET_VERSION/mqtt-websocket-java-$MQTT_WEBSOCKET_VERSION.jar io.inventit.dev mqtt-websocket-java $MQTT_WEBSOCKET_VERSION"
