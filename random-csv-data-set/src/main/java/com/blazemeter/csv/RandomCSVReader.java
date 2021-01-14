@@ -107,10 +107,7 @@ public class RandomCSVReader {
             LOGGER.debug("Reset cursor position");
             curPos = 0;
             return true;
-        } else if (curPos < offsets.size()) {
-            return true;
-        }
-        return false;
+        } else return curPos < offsets.size();
     }
 
     private void reInitialize() {

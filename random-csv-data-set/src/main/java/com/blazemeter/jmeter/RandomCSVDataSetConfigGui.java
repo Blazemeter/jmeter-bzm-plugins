@@ -15,7 +15,6 @@ public class RandomCSVDataSetConfigGui extends AbstractConfigGui {
     public static final String WIKIPAGE = "RandomCSVDataSetConfig";
 
     private JTextField filenameField;
-    private JButton browseButton;
 
     private JTextField fileEncodingField;
     private JTextField variableNamesField;
@@ -26,7 +25,6 @@ public class RandomCSVDataSetConfigGui extends AbstractConfigGui {
     private JCheckBox isRewindOnTheEndCheckBox;
     private JCheckBox isIndependentListCheckBox;
 
-    private JButton checkButton;
     private JTextArea checkArea;
 
     public RandomCSVDataSetConfigGui() {
@@ -56,6 +54,7 @@ public class RandomCSVDataSetConfigGui extends AbstractConfigGui {
         int row = 0;
         addToPanel(mainPanel, labelConstraints, 0, row, new JLabel("Filename: ", JLabel.RIGHT));
         addToPanel(mainPanel, editConstraints, 1, row, filenameField = new JTextField(20));
+        JButton browseButton;
         addToPanel(mainPanel, labelConstraints, 2, row, browseButton = new JButton("Browse..."));
         row++;
         GuiBuilderHelper.strechItemToComponent(filenameField, browseButton);
@@ -96,6 +95,7 @@ public class RandomCSVDataSetConfigGui extends AbstractConfigGui {
         editConstraints.insets = new java.awt.Insets(4, 0, 0, 0);
         labelConstraints.insets = new java.awt.Insets(4, 0, 0, 2);
 
+        JButton checkButton;
         addToPanel(mainPanel, labelConstraints, 0, row, checkButton = new JButton("Test CSV Reading"));
 
         labelConstraints.insets = new java.awt.Insets(4, 0, 0, 0);

@@ -44,20 +44,20 @@ public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThrea
     }
 
     private RandomCSVReader randomCSVReader = null;
-    private String filename;	// Real filename, with substituted variables
+    private String filename;    // Real filename, with substituted variables
 
     // Public: will be called from TestRandomCSVAction as well
     public void trySetFinalFilename() {
-    	if(filename == null) {
-    		filename = getFinalFilename();
-    		randomCSVReader = createRandomCSVReader();
-    		threadLocalRandomCSVReader.set(createRandomCSVReader());
-    	}
+        if (filename == null) {
+            filename = getFinalFilename();
+            randomCSVReader = createRandomCSVReader();
+            threadLocalRandomCSVReader.set(createRandomCSVReader());
+        }
     }
 
     @Override
     public void iterationStart(LoopIterationEvent loopIterationEvent) {
-    	trySetFinalFilename();
+        trySetFinalFilename();
         boolean isIndependentListPerThread = isIndependentListPerThread();
 
         if (!isIndependentListPerThread && randomCSVReader == null) {
@@ -72,24 +72,24 @@ public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThrea
     }
 
     private String getFinalFilename() {
-    	String ret = getFilename();
+        String ret = getFilename();
 
-    	JMeterVariables variables = JMeterContextService.getContext().getVariables();
-    	Pattern pattern = Pattern.compile("\\$\\{([a-z]+)\\}");
-    	Matcher matcher = pattern.matcher(ret);
-    	while(matcher.find()) {
-    		String contents;
-    		try {
-    			contents = variables.get(matcher.group(1));
-    		} catch(NullPointerException e) {
-    			contents = null;
-    		}
+        JMeterVariables variables = JMeterContextService.getContext().getVariables();
+        Pattern pattern = Pattern.compile("\\$\\{([a-z]+)}");
+        Matcher matcher = pattern.matcher(ret);
+        while (matcher.find()) {
+            String contents;
+            try {
+                contents = variables.get(matcher.group(1));
+            } catch (NullPointerException e) {
+                contents = null;
+            }
 
-    		if(contents != null)
-    			ret = ret.replace(matcher.group(), contents);
-    	}
+            if (contents != null)
+                ret = ret.replace(matcher.group(), contents);
+        }
 
-    	return ret;
+        return ret;
     }
 
     private void readRandom() {
@@ -142,7 +142,7 @@ public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThrea
     }
 
     private void putVariables(JMeterVariables variables, String[] keys, String[] values) {
-        int minLen = (keys.length > values.length) ? values.length : keys.length;
+        int minLen = Math.min(keys.length, values.length);
         for (int i = 0; i < minLen; i++) {
             variables.put(keys[i], values[i]);
         }
@@ -196,7 +196,8 @@ public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThrea
     }
 
     @Override
-    public void testStarted(String s) {}
+    public void testStarted(String s) {
+    }
 
     @Override
     public void testEnded() {
