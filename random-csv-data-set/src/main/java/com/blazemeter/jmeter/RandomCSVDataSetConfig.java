@@ -16,6 +16,8 @@ import org.apache.log.Logger;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThreadClone, LoopIterationListener, TestStateListener, ThreadListener {
 
@@ -34,17 +36,28 @@ public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThrea
     private final ThreadLocal<RandomCSVReader> threadLocalRandomCSVReader = new ThreadLocalSerializable<RandomCSVReader>() {
         @Override
         protected RandomCSVReader initialValue() {
-            return createRandomCSVReader();
+            return null;
         }
     };
 
     private static class ThreadLocalSerializable<T> extends ThreadLocal<T> implements Serializable {
     }
 
-    private RandomCSVReader randomCSVReader;
+    private RandomCSVReader randomCSVReader = null;
+    private String filename;	// Real filename, with substituted variables
+
+    // Public: will be called from TestRandomCSVAction as well
+    public void trySetFinalFilename() {
+    	if(filename == null) {
+    		filename = getFinalFilename();
+    		randomCSVReader = createRandomCSVReader();
+    		threadLocalRandomCSVReader.set(createRandomCSVReader());
+    	}
+    }
 
     @Override
     public void iterationStart(LoopIterationEvent loopIterationEvent) {
+    	trySetFinalFilename();
         boolean isIndependentListPerThread = isIndependentListPerThread();
 
         if (!isIndependentListPerThread && randomCSVReader == null) {
@@ -56,6 +69,27 @@ public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThrea
         } else {
             readConsistent();
         }
+    }
+
+    private String getFinalFilename() {
+    	String ret = getFilename();
+
+    	JMeterVariables variables = JMeterContextService.getContext().getVariables();
+    	Pattern pattern = Pattern.compile("\\$\\{([a-z]+)\\}");
+    	Matcher matcher = pattern.matcher(ret);
+    	while(matcher.find()) {
+    		String contents;
+    		try {
+    			contents = variables.get(matcher.group(1));
+    		} catch(NullPointerException e) {
+    			contents = null;
+    		}
+
+    		if(contents != null)
+    			ret = ret.replace(matcher.group(), contents);
+    	}
+
+    	return ret;
     }
 
     private void readRandom() {
@@ -120,7 +154,7 @@ public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThrea
 
     private RandomCSVReader createRandomCSVReader() {
         return new RandomCSVReader(
-                getFilename(),
+                filename,
                 getFileEncoding(),
                 getDelimiter(),
                 isRandomOrder(),
@@ -162,9 +196,7 @@ public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThrea
     }
 
     @Override
-    public void testStarted(String s) {
-        randomCSVReader = createRandomCSVReader();
-    }
+    public void testStarted(String s) {}
 
     @Override
     public void testEnded() {

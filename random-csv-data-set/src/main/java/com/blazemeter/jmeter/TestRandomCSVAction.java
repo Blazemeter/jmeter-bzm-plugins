@@ -46,6 +46,7 @@ public class TestRandomCSVAction implements ActionListener {
 
             final List<Map<String, String>> result = new ArrayList<>();
 
+            config.trySetFinalFilename();
             config.testStarted();
 
             String[] destinationVariableKeys = config.getDestinationVariableKeys();
