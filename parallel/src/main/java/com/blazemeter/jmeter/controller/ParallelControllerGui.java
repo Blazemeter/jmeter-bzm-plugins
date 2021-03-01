@@ -7,13 +7,20 @@ import org.apache.jmeter.testelement.TestElement;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
-public class ParallelControllerGui extends LogicControllerGui {
+public class ParallelControllerGui extends LogicControllerGui implements ActionListener {
     private static final String MSG = "All direct child elements of this controller" +
             " will be executed as parallel.";
     public static final String WIKIPAGE = "https://github.com/Blazemeter/jmeter-bzm-plugins/tree/master/jmeter-parallel-http/Parallel.md#parallel-controller";
 
     private JCheckBox generateParentSamples;
+
+    private JCheckBox limitMaxThreadNumber;
+
+    private JSpinner maxThreadNumber;
+    private SpinnerNumberModel model;
 
     public ParallelControllerGui() {
         super();
@@ -39,7 +46,23 @@ public class ParallelControllerGui extends LogicControllerGui {
         mainPanel.add(generateParentSamples);
         mainPanel.add(new JLabel("Generate parent sample", JLabel.RIGHT));
 
+        limitMaxThreadNumber = new JCheckBox();
+        mainPanel.add(limitMaxThreadNumber);
+        mainPanel.add(new JLabel("Limit max thread number", JLabel.RIGHT));
+        limitMaxThreadNumber.addActionListener(this);
+
+        model = new SpinnerNumberModel(6, 1, 10, 1);
+        maxThreadNumber = new JSpinner(model);
+        maxThreadNumber.setEnabled(false);
+        mainPanel.add(new JLabel("Max threads: ", JLabel.RIGHT));
+        mainPanel.add(maxThreadNumber);
+
         topPanel.add(mainPanel);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        maxThreadNumber.setEnabled(limitMaxThreadNumber.isSelected());
     }
 
     @Override
@@ -64,7 +87,9 @@ public class ParallelControllerGui extends LogicControllerGui {
         super.configureTestElement(te);
         if (te instanceof ParallelSampler) {
             ParallelSampler parallelSampler = (ParallelSampler) te;
+            parallelSampler.setMaxThreadNumber(model.getNumber().intValue());
             parallelSampler.setGenerateParent(this.generateParentSamples.isSelected());
+            parallelSampler.setLimitMaxThreadNumber(this.limitMaxThreadNumber.isSelected());
         }
     }
 
@@ -73,7 +98,9 @@ public class ParallelControllerGui extends LogicControllerGui {
         super.configure(element);
 
         if (element instanceof ParallelSampler) {
+            model.setValue(((ParallelSampler) element).getMaxThreadNumber());
             generateParentSamples.setSelected(((ParallelSampler) element).getGenerateParent());
+            limitMaxThreadNumber.setSelected(((ParallelSampler) element).getLimitMaxThreadNumber());
         }
     }
 }
