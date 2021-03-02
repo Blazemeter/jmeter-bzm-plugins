@@ -10,7 +10,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class ParallelControllerGui extends LogicControllerGui implements ActionListener {
+public class ParallelControllerGui extends LogicControllerGui {
     private static final String MSG = "All direct child elements of this controller" +
             " will be executed as parallel.";
     public static final String WIKIPAGE = "https://github.com/Blazemeter/jmeter-bzm-plugins/tree/master/jmeter-parallel-http/Parallel.md#parallel-controller";
@@ -49,7 +49,12 @@ public class ParallelControllerGui extends LogicControllerGui implements ActionL
         limitMaxThreadNumber = new JCheckBox();
         mainPanel.add(limitMaxThreadNumber);
         mainPanel.add(new JLabel("Limit max thread number", JLabel.RIGHT));
-        limitMaxThreadNumber.addActionListener(this);
+        limitMaxThreadNumber.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                maxThreadNumber.setEnabled(limitMaxThreadNumber.isSelected());
+            }
+        });
 
         model = new SpinnerNumberModel(6, 1, 10, 1);
         maxThreadNumber = new JSpinner(model);
@@ -58,11 +63,6 @@ public class ParallelControllerGui extends LogicControllerGui implements ActionL
         mainPanel.add(maxThreadNumber);
 
         topPanel.add(mainPanel);
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        maxThreadNumber.setEnabled(limitMaxThreadNumber.isSelected());
     }
 
     @Override
@@ -101,6 +101,7 @@ public class ParallelControllerGui extends LogicControllerGui implements ActionL
             model.setValue(((ParallelSampler) element).getMaxThreadNumber());
             generateParentSamples.setSelected(((ParallelSampler) element).getGenerateParent());
             limitMaxThreadNumber.setSelected(((ParallelSampler) element).getLimitMaxThreadNumber());
+            maxThreadNumber.setEnabled(limitMaxThreadNumber.isSelected());
         }
     }
 }
