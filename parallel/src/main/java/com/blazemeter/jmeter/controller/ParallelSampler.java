@@ -44,6 +44,8 @@ import java.util.concurrent.ThreadFactory;
 public class ParallelSampler extends AbstractSampler implements Controller, ThreadListener, Interruptible, JMeterThreadMonitor, TestStateListener, Serializable {
     private static final Logger log = LoggerFactory.getLogger(ParallelSampler.class);
     private static final String GENERATE_PARENT = "PARENT_SAMPLE";
+    private static final String MAX_THREAD_NUMBER = "MAX_THREAD_NUMBER";
+    private static final String LIMIT_MAX_THREAD_NUMBER = "LIMIT_MAX_THREAD_NUMBER";
     protected List<TestElement> controllers = new ArrayList<>();
     protected final ParallelListenerNotifier notifier = new ParallelListenerNotifier();
     private ExecutorService executorService;
@@ -233,6 +235,21 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
     public void removeIterationListener(LoopIterationListener iterationListener) {
 
     }
+    public int getMaxThreadNumber() {
+        return getPropertyAsInt(MAX_THREAD_NUMBER, 6);
+    }
+
+    public void setMaxThreadNumber(int value) {
+        setProperty(MAX_THREAD_NUMBER, value);
+    }
+
+    public boolean getLimitMaxThreadNumber() {
+        return getPropertyAsBoolean(LIMIT_MAX_THREAD_NUMBER);
+    }
+
+    public void setLimitMaxThreadNumber(boolean value) {
+        setProperty(LIMIT_MAX_THREAD_NUMBER, value);
+    }
 
     public boolean getGenerateParent() {
         return getPropertyAsBoolean(GENERATE_PARENT);
@@ -283,7 +300,12 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
     @Override
     public void threadStarted() {
         changeVariablesMap();
-        executorService = Executors.newCachedThreadPool(new ParallelThreadFactory(this.getName()));
+        if (getLimitMaxThreadNumber()) {
+            log.info("Starting up to {} threads", getMaxThreadNumber());
+            executorService = Executors.newFixedThreadPool(getMaxThreadNumber(), new ParallelThreadFactory(this.getName()));
+        } else {
+            executorService = Executors.newCachedThreadPool(new ParallelThreadFactory(this.getName()));
+        }
         threadGroup = new DummyThreadGroup();
         addThreadGroupToEngine(threadGroup);
     }

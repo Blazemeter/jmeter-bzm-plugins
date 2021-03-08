@@ -9,6 +9,12 @@ Can be used to simulate a load using AJAX, download resources and many other dif
 
 Use option _Generate parent sample_ to generate one parent sample that unite all child elements
 
+Use option _Limit max thread number_ to limit the concurrent thread simultaneosly active.
+
+If _Limit max thread number_ is select it's possible to specify thread number (by default 6)
+
+If _Limit max thread number_ is not selected, no limit will be set.
+
 ### Limitations
 
 Parallel Controller does **not** support work with **Transaction Controller** so if used you can get an unexpected results.
