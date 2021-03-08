@@ -37,18 +37,19 @@ public class ParallelControllerGui extends LogicControllerGui {
 
         add(topPanel, BorderLayout.NORTH);
 
-        JPanel mainPanel = new HorizontalPanel();
+        JPanel parentSamplePanel = new HorizontalPanel();
 
         JLabel lbl = new JLabel(MSG, JLabel.CENTER);
         topPanel.add(lbl);
 
         generateParentSamples = new JCheckBox();
-        mainPanel.add(generateParentSamples);
-        mainPanel.add(new JLabel("Generate parent sample", JLabel.RIGHT));
+        parentSamplePanel.add(generateParentSamples);
+        parentSamplePanel.add(new JLabel("Generate parent sample", JLabel.RIGHT));
 
+        JPanel limitPanel = new HorizontalPanel();
         limitMaxThreadNumber = new JCheckBox();
-        mainPanel.add(limitMaxThreadNumber);
-        mainPanel.add(new JLabel("Limit max thread number", JLabel.RIGHT));
+        limitPanel.add(limitMaxThreadNumber);
+        limitPanel.add(new JLabel("Limit max thread number", JLabel.RIGHT));
         limitMaxThreadNumber.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -56,13 +57,19 @@ public class ParallelControllerGui extends LogicControllerGui {
             }
         });
 
+
+        JPanel threadsPanel = new HorizontalPanel();
         model = new SpinnerNumberModel(6, 1, 10, 1);
         maxThreadNumber = new JSpinner(model);
         maxThreadNumber.setEnabled(false);
-        mainPanel.add(new JLabel("Max threads: ", JLabel.RIGHT));
-        mainPanel.add(maxThreadNumber);
+        threadsPanel.add(new JLabel("Max threads: ", JLabel.RIGHT));
+        threadsPanel.add(maxThreadNumber);
+        HorizontalPanel limitThreadsWrap = new HorizontalPanel();
+        limitThreadsWrap.add(limitPanel);
+        limitThreadsWrap.add(threadsPanel);
 
-        topPanel.add(mainPanel);
+        topPanel.add(parentSamplePanel);
+        topPanel.add(limitThreadsWrap);
     }
 
     @Override
