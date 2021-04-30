@@ -5,22 +5,12 @@ import org.apache.jmeter.control.Controller;
 import org.apache.jmeter.control.LoopController;
 import org.apache.jmeter.engine.StandardJMeterEngine;
 import org.apache.jmeter.engine.event.LoopIterationListener;
-import org.apache.jmeter.samplers.AbstractSampler;
-import org.apache.jmeter.samplers.Entry;
-import org.apache.jmeter.samplers.Interruptible;
-import org.apache.jmeter.samplers.SampleResult;
-import org.apache.jmeter.samplers.Sampler;
+import org.apache.jmeter.samplers.*;
 import org.apache.jmeter.testelement.AbstractTestElement;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.TestStateListener;
 import org.apache.jmeter.testelement.ThreadListener;
-import org.apache.jmeter.threads.AbstractThreadGroup;
-import org.apache.jmeter.threads.JMeterContext;
-import org.apache.jmeter.threads.JMeterContextService;
-import org.apache.jmeter.threads.JMeterContextServiceAccessorParallel;
-import org.apache.jmeter.threads.JMeterThread;
-import org.apache.jmeter.threads.JMeterThreadMonitor;
-import org.apache.jmeter.threads.JMeterVariables;
+import org.apache.jmeter.threads.*;
 import org.apache.jorphan.collections.HashTree;
 import org.apache.jorphan.collections.SearchByClass;
 import org.slf4j.Logger;
@@ -28,17 +18,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.ThreadFactory;
+import java.util.*;
+import java.util.concurrent.*;
+import java.lang.ThreadGroup;
 
 // we implement Controller only to enable GUI to add child elements into it
 public class ParallelSampler extends AbstractSampler implements Controller, ThreadListener, Interruptible, JMeterThreadMonitor, TestStateListener, Serializable {
@@ -389,6 +371,7 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
 
         public Thread newThread(Runnable r) {
             Thread t = new Thread(group, r, namePrefix, 0);
+            cleanThreadContext(t);
             if (t.isDaemon()) {
                 t.setDaemon(false);
             }
@@ -396,6 +379,16 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
                 t.setPriority(Thread.NORM_PRIORITY);
             }
             return t;
+        }
+
+        private void cleanThreadContext(Thread thread) {
+            try {
+                Field field2 = Thread.class.getDeclaredField("inheritableThreadLocals");
+                field2.setAccessible(true);
+                field2.set(thread, null);
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+                e.printStackTrace();
+            }
         }
     }
 
