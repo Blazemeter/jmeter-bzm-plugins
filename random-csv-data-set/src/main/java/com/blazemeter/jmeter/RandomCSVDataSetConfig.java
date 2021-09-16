@@ -57,7 +57,7 @@ public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThrea
 
     @Override
     public void iterationStart(LoopIterationEvent loopIterationEvent) {
-        trySetFinalFilename();
+        
         boolean isIndependentListPerThread = isIndependentListPerThread();
 
         if (!isIndependentListPerThread && randomCSVReader == null) {
@@ -197,6 +197,7 @@ public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThrea
 
     @Override
     public void testStarted(String s) {
+        trySetFinalFilename();
     }
 
     @Override
