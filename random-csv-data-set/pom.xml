@@ -18,7 +18,7 @@
     <scm>
         <url>https://github.com/blazemeter/jmeter-bzm-plugins</url>
         <connection>scm:git:ssh://git@github.com/blazemeter/jmeter-bzm-plugins.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com:blazemeter/jmeter-bzm-plugins.git</developerConnection>
+        <developerConnection>scm:git:ssh://git@github.com/blazemeter/jmeter-bzm-plugins.git</developerConnection>
       <tag>jmeter-plugins-random-csv-data-set-0.8</tag>
   </scm>
     <developers>
