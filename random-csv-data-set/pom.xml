@@ -6,7 +6,7 @@
 
     <groupId>com.blazemeter</groupId>
     <artifactId>jmeter-plugins-random-csv-data-set</artifactId>
-    <version>0.9</version>
+    <version>0.8</version>
     <name>Random CSV Data Set</name>
     <description>Config item that allows reading CSV files in random order</description>
     <licenses>
@@ -18,8 +18,8 @@
     </licenses>
     <url>http://jmeter-plugins.org/</url>
     <scm>
-        <url>https://github.com/blazemeter/jmeter-bzm-plugins</url>
-        <connection>https://github.com/blazemeter/jmeter-bzm-plugins.git</connection>
+        <url>scm:git:ssh://github.com/blazemeter/jmeter-bzm-plugins</url>
+        <connection>scm:git:ssh://github.com/blazemeter/jmeter-bzm-plugins.git</connection>
         <developerConnection>git@github.com:blazemeter/jmeter-bzm-plugins.git</developerConnection>
     </scm>
     <developers>
