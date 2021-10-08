@@ -17,8 +17,8 @@
     <url>http://jmeter-plugins.org/</url>
     <scm>
         <url>https://github.com/blazemeter/jmeter-bzm-plugins</url>
-        <connection>https://github.com/blazemeter/jmeter-bzm-plugins.git</connection>
-        <developerConnection>https://github.com/blazemeter/jmeter-bzm-plugins.git</developerConnection>
+        <connection>https://dnyaneshnagre@github.com/blazemeter/jmeter-bzm-plugins.git</connection>
+        <developerConnection>https://dnyaneshnagre@github.com/blazemeter/jmeter-bzm-plugins.git</developerConnection>
       <tag>jmeter-plugins-random-csv-data-set-0.8</tag>
   </scm>
     <developers>
