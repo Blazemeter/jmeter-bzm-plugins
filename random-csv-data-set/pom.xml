@@ -4,7 +4,7 @@
 
     <groupId>com.blazemeter</groupId>
     <artifactId>jmeter-plugins-random-csv-data-set</artifactId>
-    <version>0.9-SNAPSHOT</version>
+    <version>0.8-SNAPSHOT</version>
     <name>Random CSV Data Set</name>
     <description>Config item that allows reading CSV files in random order</description>
     <licenses>
@@ -50,6 +50,35 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>release-sign-artifacts</id>
+            <activation>
+                <property>
+                    <name>performRelease</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
     <dependencies>
         <dependency>
