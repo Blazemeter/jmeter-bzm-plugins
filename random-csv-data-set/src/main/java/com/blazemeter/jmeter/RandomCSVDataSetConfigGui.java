@@ -11,8 +11,8 @@ import java.awt.*;
 
 public class RandomCSVDataSetConfigGui extends AbstractConfigGui {
 
-    // TODO: use full URL and change cmn version to 0.6 after it has been released
-    public static final String WIKIPAGE = "RandomCSVDataSetConfig";
+    // TODO: change cmn version to 0.6 after it has been released
+    public static final String WIKIPAGE = "https://github.com/Blazemeter/jmeter-bzm-plugins/blob/master/random-csv-data-set/RandomCSVDataSetConfig.md";
 
     private JTextField filenameField;
 
