@@ -6,6 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
+import java.util.IdentityHashMap;
+import java.util.Map;
 
 public class JMeterThreadParallel extends JMeterThread {
     private static final Logger log = LoggerFactory.getLogger(ParallelSampler.class);
@@ -41,11 +43,11 @@ public class JMeterThreadParallel extends JMeterThread {
 
         Field samplerConfigMap = TestCompiler.class.getDeclaredField("samplerConfigMap");
         samplerConfigMap.setAccessible(true);
-        samplerConfigMap.set(cloned, (samplerConfigMap.get(parent)).clone());
+        samplerConfigMap.set(cloned, new IdentityHashMap((Map) samplerConfigMap.get(parent)));
 
         Field transactionControllerConfigMap = TestCompiler.class.getDeclaredField("transactionControllerConfigMap");
         transactionControllerConfigMap.setAccessible(true);
-        transactionControllerConfigMap.set(cloned, (transactionControllerConfigMap.get(parent)).clone());
+        transactionControllerConfigMap.set(cloned, new IdentityHashMap( (Map) transactionControllerConfigMap.get(parent)));
 
         return cloned;
     }
