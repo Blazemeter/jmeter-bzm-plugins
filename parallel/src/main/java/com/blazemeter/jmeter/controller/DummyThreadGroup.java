@@ -45,11 +45,6 @@ public class DummyThreadGroup extends AbstractThreadGroup {
     }
 
     @Override
-    public JMeterThread addNewThread(int delay, StandardJMeterEngine engine) {
-        return null;
-    }
-
-    @Override
     public boolean verifyThreadsStopped() {
         return false;
     }
