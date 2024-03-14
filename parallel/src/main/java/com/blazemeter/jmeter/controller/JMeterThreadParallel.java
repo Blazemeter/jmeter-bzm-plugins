@@ -7,6 +7,9 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
+import java.util.Map;
+import java.util.Objects;
 
 public class JMeterThreadParallel extends JMeterThread {
     private static final Logger log = LoggerFactory.getLogger(ParallelSampler.class);
@@ -37,16 +40,30 @@ public class JMeterThreadParallel extends JMeterThread {
         field.set(this, parallelCompiler);
     }
 
-    private TestCompilerParallel cloneTestCompiler(TestCompiler parent) throws NoSuchFieldException, IllegalAccessException {
-        TestCompilerParallel cloned = new TestCompilerParallel(new HashTree(), generateParent);
+    private TestCompilerParallel cloneTestCompiler(final TestCompiler parent) throws NoSuchFieldException, IllegalAccessException {
+        final TestCompilerParallel cloned = new TestCompilerParallel(new HashTree(), generateParent);
 
-        Field samplerConfigMap = TestCompiler.class.getDeclaredField("samplerConfigMap");
-        samplerConfigMap.setAccessible(true);
-        samplerConfigMap.set(cloned, ((HashMap) (samplerConfigMap.get(parent))).clone());
+        final Field samplerConfigMapField = TestCompiler.class.getDeclaredField("samplerConfigMap");
+        samplerConfigMapField.setAccessible(true);
 
-        Field transactionControllerConfigMap = TestCompiler.class.getDeclaredField("transactionControllerConfigMap");
-        transactionControllerConfigMap.setAccessible(true);
-        transactionControllerConfigMap.set(cloned, ((HashMap) (transactionControllerConfigMap.get(parent))).clone());
+        final Field transactionControllerConfigMapField = TestCompiler.class.getDeclaredField("transactionControllerConfigMap");
+        transactionControllerConfigMapField.setAccessible(true);
+
+        final Map<?, ?> sampleConfigMap;
+        final Map<?, ?> transactionMap;
+
+        if (Objects.equals(IdentityHashMap.class, samplerConfigMapField.getType())) {
+            // JMeter >= 5.6
+            sampleConfigMap = new IdentityHashMap<>((Map<?, ?>) samplerConfigMapField.get(parent));
+            transactionMap = new IdentityHashMap((Map<?, ?>) transactionControllerConfigMapField.get(parent));
+        } else {
+            // Backward compatibility with JMeter <= 5.5
+            sampleConfigMap = new HashMap<>((Map<?, ?>) samplerConfigMapField.get(parent));
+            transactionMap = new HashMap<>((Map<?, ?>) transactionControllerConfigMapField.get(parent));
+        }
+
+        samplerConfigMapField.set(cloned, sampleConfigMap);
+        transactionControllerConfigMapField.set(cloned, transactionMap);
 
         return cloned;
     }
