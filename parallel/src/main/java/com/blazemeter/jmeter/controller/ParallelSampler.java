@@ -247,10 +247,40 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
                 Class<JMeterThread> cls = JMeterThread.class;
                 Field vars = cls.getDeclaredField("threadVars");
                 vars.setAccessible(true);
-                vars.set(jmThread, threadContext.getVariables());
+                
+                JMeterVariables parentVars = threadContext.getVariables();
+                JMeterVariables customVars = new ParentIterationVariables(parentVars, threadContext.getThread());
+                vars.set(jmThread, customVars);
             } catch (Throwable ex) {
                 log.warn("Cannot inject variables into parallel thread ", ex);
             }
+        }
+    }
+
+    /**
+     * Custom JMeterVariables implementation that delegates to parent thread's variables
+     * but returns the parent thread's iteration count instead of this thread's iteration count.
+     */
+    private static class ParentIterationVariables extends JMeterVariables {
+        private final JMeterVariables parentVars;
+
+        public ParentIterationVariables(JMeterVariables parentVars, JMeterThread parentThread) {
+            this.parentVars = parentVars;
+        }
+
+        @Override
+        public int getIteration() {
+            return parentVars.getIteration();
+        }
+
+        @Override
+        public String get(String key) {
+            return parentVars.get(key);
+        }
+
+        @Override
+        public void put(String key, String value) {
+            parentVars.put(key, value);
         }
     }
 
