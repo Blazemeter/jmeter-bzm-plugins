@@ -124,6 +124,34 @@ public class ParallelSamplerTest {
         assertEquals(5, EmulSampler.count.get());
     }
 
+   @Test
+   public void underLoopWithIterationNumber() throws Exception {
+      EmulSampler payload = new NameChangingEmulSampler();
+      payload.setName("payload");
+
+      ParallelSampler sam = new ParallelSampler();
+      sam.threadStarted();
+      sam.setName("Parallel Sampler");
+      sam.addTestElement(payload);
+
+      LoopController ctl = getLoopController(5);
+      ctl.addTestElement(sam);
+
+      JMeterThread thr = new JMeterThread(new HashTree(ctl), sam, sam.notifier);
+      thr.setThreadName("root");
+      thr.setThreadGroup(new DummyThreadGroup());
+      JMeterContextService.getContext().setThread(thr);
+
+      addToContext(sam, thr);
+      addToContext(payload, thr);
+
+      sam.setRunningVersion(true);
+      ctl.setRunningVersion(true);
+      payload.setRunningVersion(true);
+      thr.run();
+      assertEquals(5, EmulSampler.count.get());
+   }
+
     private LoopController getLoopController(int loops) {
         LoopController ctl = new LoopControllerTracked();
         ctl.setName("Top Loop");
@@ -149,7 +177,7 @@ public class ParallelSamplerTest {
 
     public static class EmulSampler extends DummySampler {
         private volatile transient static int instances = 0;
-        private volatile transient static AtomicInteger count = new AtomicInteger();
+        protected volatile transient static AtomicInteger count = new AtomicInteger();
 
         public EmulSampler() {
             instances++;
@@ -164,6 +192,17 @@ public class ParallelSamplerTest {
         }
     }
 
+   public static class NameChangingEmulSampler extends EmulSampler {
+
+      public NameChangingEmulSampler() {
+         super();
+      }
+
+      @Override
+      public String getName() {
+         return super.getName() + count.get();
+      }
+   }
 
     @Test
     public void testThreadSafeCookieManager() throws Exception {
