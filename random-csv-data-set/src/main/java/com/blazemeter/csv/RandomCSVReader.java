@@ -30,17 +30,15 @@ public class RandomCSVReader {
     private final ThreadLocal<RandomBufferedReader> rbr = new ThreadLocal<RandomBufferedReader>() {
         @Override
         protected RandomBufferedReader initialValue() {
-            try {
-                return new RandomBufferedReader(createReader(), new RandomAccessFile(file, "r"), encoding);
-            } catch (IOException e) {
-                LOGGER.error("Cannot create RandomBufferedReader", e);
-                throw new RuntimeException("Cannot create RandomBufferedReader", e);
-            }
+            
+            return randomBufferedReader;
         }
     };
     private Random random;
 
+    private RandomBufferedReader randomBufferedReader;
     private BufferedReader consistentReader;
+    //private BufferedReader randomReader;
     private String[] header;
 
     private boolean isSkipFirstLine;
@@ -65,6 +63,17 @@ public class RandomCSVReader {
                 initConsistentReader();
             }
             initHeader();
+
+            try {
+                
+                this.randomBufferedReader = new RandomBufferedReader(createReader(), new RandomAccessFile(file, "r"), encoding);
+
+            } catch (IOException e) {
+                LOGGER.error("Cannot create RandomBufferedReader", e);
+                throw new RuntimeException("Cannot create RandomBufferedReader", e);
+            }
+            
+
         } catch (IOException ex) {
             LOGGER.error("Cannot initialize RandomCSVReader, because of error: ", ex);
             throw new RuntimeException("Cannot initialize RandomCSVReader, because of error: " + ex.getMessage(), ex);

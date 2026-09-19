@@ -180,17 +180,7 @@ public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThrea
 
     @Override
     public void threadFinished() {
-        RandomCSVReader reader = getReader();
-        if (reader != null) {
-            reader.close();
-            if (!isRandomOrder() && isIndependentListPerThread()) {
-                try {
-                    reader.closeConsistentReader();
-                } catch (IOException e) {
-                    LOGGER.warn("Failed to close Consistent Reader", e);
-                }
-            }
-        }
+
     }
 
     @Override
@@ -210,12 +200,16 @@ public class RandomCSVDataSetConfig extends ConfigTestElement implements NoThrea
 
     @Override
     public void testEnded(String s) {
-        try {
-            if (randomCSVReader != null && !isRandomOrder()) {
-                randomCSVReader.closeConsistentReader();
+        RandomCSVReader reader = getReader();
+        if (reader != null) {
+            reader.close();
+            if (!isRandomOrder() && isIndependentListPerThread()) {
+                try {
+                    reader.closeConsistentReader();
+                } catch (IOException e) {
+                    LOGGER.warn("Failed to close Consistent Reader", e);
+                }
             }
-        } catch (IOException e) {
-            LOGGER.warn("Failed to close Consistent Reader", e);
         }
         randomCSVReader = null;
     }
