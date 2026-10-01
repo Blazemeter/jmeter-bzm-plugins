@@ -249,7 +249,7 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
                 vars.setAccessible(true);
                 
                 JMeterVariables parentVars = threadContext.getVariables();
-                JMeterVariables customVars = new ParentIterationVariables(parentVars, threadContext.getThread());
+                JMeterVariables customVars = new ParentIterationVariables(parentVars);
                 vars.set(jmThread, customVars);
             } catch (Throwable ex) {
                 log.warn("Cannot inject variables into parallel thread ", ex);
@@ -258,19 +258,31 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
     }
 
     /**
-     * Custom JMeterVariables implementation that delegates to parent thread's variables
-     * but returns the parent thread's iteration count instead of this thread's iteration count.
+     * Delegates variable storage to the parent thread, and reports the parent iteration.
+     * Parallel threads must not call {@link JMeterVariables#incIteration()} on the parent:
+     * {@code JMeterThread} increments the counter when the thread starts, which previously
+     * advanced the parent iteration once per parallel branch.
+     * <p>
+     * Every map operation has to be forwarded. Loop controllers store {@code __jm__*__idx}
+     * with {@link JMeterVariables#putObject(String, Object)}, and expressions read it back
+     * with {@link JMeterVariables#get(String)}. Forwarding only get/put leaves that index
+     * on this wrapper, so the loop condition never sees it change.
      */
-    private static class ParentIterationVariables extends JMeterVariables {
+    static class ParentIterationVariables extends JMeterVariables {
         private final JMeterVariables parentVars;
 
-        public ParentIterationVariables(JMeterVariables parentVars, JMeterThread parentThread) {
+        ParentIterationVariables(JMeterVariables parentVars) {
             this.parentVars = parentVars;
         }
 
         @Override
         public int getIteration() {
             return parentVars.getIteration();
+        }
+
+        @Override
+        public void incIteration() {
+            // Do not advance the parent counter. See class comment.
         }
 
         @Override
@@ -281,6 +293,49 @@ public class ParallelSampler extends AbstractSampler implements Controller, Thre
         @Override
         public void put(String key, String value) {
             parentVars.put(key, value);
+        }
+
+        @Override
+        public Object getObject(String key) {
+            return parentVars.getObject(key);
+        }
+
+        @Override
+        public void putObject(String key, Object value) {
+            parentVars.putObject(key, value);
+        }
+
+        @Override
+        public Object remove(String key) {
+            return parentVars.remove(key);
+        }
+
+        @Override
+        public void putAll(Map<String, ?> vars) {
+            parentVars.putAll(vars);
+        }
+
+        @Override
+        public void putAll(JMeterVariables vars) {
+            parentVars.putAll(vars);
+        }
+
+        @Override
+        public Iterator<Map.Entry<String, Object>> getIterator() {
+            return parentVars.getIterator();
+        }
+
+        @Override
+        public Set<Map.Entry<String, Object>> entrySet() {
+            return parentVars.entrySet();
+        }
+
+        /**
+         * Present on JMeter 5.5+. Not on the 3.1 type this module compiles against,
+         * so this is not annotated {@code @Override}; at runtime it still overrides.
+         */
+        public boolean isSameUserOnNextIteration() {
+            return Boolean.TRUE.equals(parentVars.getObject("__jmv_SAME_USER"));
         }
     }
 
